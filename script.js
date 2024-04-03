@@ -1,6 +1,6 @@
 btnR.addEventListener('click', () => {  
     location.reload();
-    selectedColor = '#dddddd'
+    /*selectedColor = '#dddddd'*/
 
     /*path1.style.fill = '#dddddd'
     path2.style.fill = '#dddddd'
