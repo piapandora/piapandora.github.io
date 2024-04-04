@@ -34,8 +34,7 @@ p {
   background-color: #222222;
   border: none;
   color: #dddddd;
-  width: 200px;
-  height: 60px; /*68.33*/
+  height: 60px;
   text-align: center;
   font-size: 18px;
   font-weight: bold;
@@ -48,7 +47,6 @@ p {
 
 .menu-container {
   display: flex;
-  flex-wrap: wrap-reverse;
   justify-content: center;
   margin-top: 0px;
   margin-bottom: 0px;
@@ -65,6 +63,14 @@ p {
   color: #ffffff;
 }
 
+.svg-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  transition-duration: 1s;
+}
+
 .color-container {
   display: flex;
   justify-content: center;
@@ -78,11 +84,10 @@ p {
   height: 48px;
   margin: 0px 0px;
   cursor: pointer;
-  transform: translateY(-4px);
   transition-duration: 0.3s;
 }
 
-.color-item:hover {transform: translateY(-13.33px);}
+.color-item:hover {transform: translateY(-12px);}
 
 img {border-radius: 20px;}
 

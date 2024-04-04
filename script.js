@@ -1,29 +1,5 @@
 btnR.addEventListener('click', () => {  
     location.reload();
-    /*selectedColor = '#dddddd'*/
-
-    /*path1.style.fill = '#dddddd'
-    path2.style.fill = '#dddddd'
-    path3.style.fill = '#dddddd'
-    path4.style.fill = '#dddddd'
-    path5.style.fill = '#dddddd'
-    path6.style.fill = '#dddddd'
-    path7.style.fill = '#dddddd'
-    path8.style.fill = '#dddddd'
-    path9.style.fill = '#dddddd'
-    path10.style.fill = '#dddddd'
-
-
-    path1b.style.fill = '#dddddd'
-    path2b.style.fill = '#dddddd'
-    path3b.style.fill = '#dddddd'
-    path4b.style.fill = '#dddddd'
-    path5b.style.fill = '#dddddd'
-    path6b.style.fill = '#dddddd'
-    path7b.style.fill = '#dddddd'
-    path8b.style.fill = '#dddddd'
-    path9b.style.fill = '#dddddd'
-    path10b.style.fill = '#dddddd'*/
 })
 
 let selectedColor = '#dddddd'
@@ -36,14 +12,6 @@ function colorPath(pathId) {
     const path = document.getElementById(pathId);
     path.style.fill = selectedColor;
     }
-
-/* setTimeout(delayedCodeForMenu, 5000)
-function delayedCodeForMenu() {
-    menu.style.opacity = 0;}
-    
-setTimeout(delayedCodeForColors, 5000)
-function delayedCodeForColors() {
-    colors.style.opacity = 0;} */
 
 menu.addEventListener("mouseenter", function() {
     menu.style.opacity = 1;
@@ -64,8 +32,6 @@ btnH.addEventListener('click', () => {
     colors.style.opacity = 0
     document.body.style.background = '#222222'
 })
-
-/* const btnF = document.getElementById('btnF'); ??? */
 
 btnF.addEventListener('click', () => {
   if (document.fullscreenElement) {
