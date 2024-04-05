@@ -1,6 +1,6 @@
-html {width:100%; height:100%;}
+body {text-align: center; background-color: #3c3c3c; margin: 0}
 
-body {text-align: center; background-color: #3c3c3c; width:100%; height:100%; margin: 0;}
+/* width:100%; height:100%;  */
 
 h1 {
   font-family: Arial, sans-serif;
@@ -30,7 +30,7 @@ p {
   font-style: normal;
 }
 
-.button {
+button {
   background-color: #222222;
   border: none;
   color: #dddddd;
@@ -88,13 +88,12 @@ p {
 
 .color-item:hover {transform: translateY(-12px);}
 
-img {border-radius: 20px;}
 
 .trio-container {
     display: grid;
     grid-template-columns: 400px 400px 400px;
     grid-gap: 20px;
-    width: fit-content
+    width: fit-content;
 }
 
 .trio-item {
@@ -103,6 +102,21 @@ img {border-radius: 20px;}
     padding: 40px;
     margin: 10px;
     text-align: center;
+}
+
+.gallery-container {
+  background-color: #222222;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 5px;
+  margin-top: 130px;
+  margin-bottom: 130px;
+  width: fit-content;
+}
+
+
+.gallery-item {
+  border-radius: 20px; filter: grayscale(100%); width:300px; height:300px; vertical-align:middle; margin:6px 3px;
 }
 
 .footer-container {
