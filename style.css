@@ -1,6 +1,4 @@
-body {text-align: center; background-color: #3c3c3c; margin: 0}
-
-/* width:100%; height:100%;  */
+body {text-align: center; background-color: #222222; margin: 0}
 
 h1 {
   font-family: Arial, sans-serif;
@@ -31,63 +29,59 @@ p {
 }
 
 button {
-  background-color: #222222;
+  background-color: darkgreen;
   border: none;
-  color: #dddddd;
+  color: #ffffff;
   height: 60px;
   text-align: center;
   font-size: 18px;
   font-weight: bold;
-  margin: 0px 0px;
-  cursor: pointer;
   transition-duration: 0.3s;
 }
 
-.button2 {background-color: darkgreen; color: #ffffff;/*cursor: default;*/}
+.menu-btn {
+  background-color: #222222;
+  width: 32px;
+  height: 32px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  padding-left: 29px;
+  padding-right: 29px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+  margin-bottom: -4px;
+}
+
+.menu-btn:hover {
+  background-color: darkgreen;
+  color: #ffffff;
+}
 
 .menu-container {
   display: flex;
   justify-content: center;
-  margin-top: 0px;
-  margin-bottom: 0px;
   transition-duration: 1s;
-}
-
-.button:hover {
-  background-color: darkgreen;
-  color: #ffffff;
-}
-
-.button2:hover {
-  background-color: darkgreen;
-  color: #ffffff;
 }
 
 .svg-container {
   display: flex;
   justify-content: center;
-  margin-top: 0px;
-  margin-bottom: 0px;
 }
 
 .color-container {
   display: flex;
   justify-content: center;
-  margin-top: 0px;
-  margin-bottom: 0px;
   transition-duration: 1s;
 }
 
 .color-item {
-  width: 48px;
-  height: 48px;
-  margin: 0px 0px;
+  width: 51.2px;
+  height: 60px;
   cursor: pointer;
   transition-duration: 0.3s;
 }
 
 .color-item:hover {transform: translateY(-12px);}
-
 
 .trio-container {
     display: grid;
@@ -114,7 +108,6 @@ button {
   width: fit-content;
 }
 
-
 .gallery-item {
   border-radius: 20px; filter: grayscale(100%); width:300px; height:300px; vertical-align:middle; margin:6px 3px;
 }
@@ -123,6 +116,4 @@ button {
   background-color: darkgreen;
   display: flex;
   justify-content: center;
-  margin-top: 0px;
-  margin-bottom: 0px;
 }
