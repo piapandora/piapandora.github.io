@@ -15,19 +15,19 @@ btnR.addEventListener('click', () => {
 
 menu.addEventListener("mouseenter", function() {
     menu.style.opacity = 1;
-    // colors.style.opacity = 1;
+    colors.style.opacity = 1;
     document.body.style.transition = 'background 1s ease';
 })
 
-// colors.addEventListener("mouseenter", function() {
-//     menu.style.opacity = 1;
-//     colors.style.opacity = 1;
-//     document.body.style.transition = 'background 1s ease';
-// })
+colors.addEventListener("mouseenter", function() {
+    menu.style.opacity = 1;
+    colors.style.opacity = 1;
+    document.body.style.transition = 'background 1s ease';
+})
 
 btnH.addEventListener('click', () => {  
     menu.style.opacity = 0
-    // colors.style.opacity = 0
+    colors.style.opacity = 0
 })
 
 btnF.addEventListener('click', () => {
@@ -39,19 +39,20 @@ btnF.addEventListener('click', () => {
 });
 
 const monk = document.querySelector('.monk')
+const colorize = document.querySelector('.colorize')
 const whitegray = document.querySelector('.whitegray')
 const lightgray = document.querySelector('.lightgray')
 const gray = document.querySelector('.gray')
 const darkgray = document.querySelector('.darkgray')  
 const blackgray = document.querySelector('.blackgray')
 
-function standardWorld(){
-    whitegray.style.fill = 'white';
-    lightgray.style.fill = 'pink';
-    gray.style.fill = 'orange';
-    darkgray.style.fill = 'indigo';
-    blackgray.style.fill = 'black';
-};
+// function standardWorld(){
+//     whitegray.style.fill = '#FFB6C1';
+//     lightgray.style.fill = '#B6D0E2';
+//     gray.style.fill = 'orange';
+//     darkgray.style.fill = '#500000';
+//     blackgray.style.fill = '#023020';
+// };
 
 function brightenWorld(){
     whitegray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16);
@@ -61,13 +62,17 @@ function brightenWorld(){
     blackgray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16);
 };
 
-function darkenWorld(){
-    whitegray.style.fill = '#dddddd';
-    lightgray.style.fill = '#aaaaaa';
-    gray.style.fill = '#808080';
-    darkgray.style.fill = '#555555';
-    blackgray.style.fill = '#222222';
-};
+// function darkenWorld(){
+//     whitegray.style.fill = '#dddddd';
+//     lightgray.style.fill = '#aaaaaa';
+//     gray.style.fill = '#808080';
+//     darkgray.style.fill = '#555555';
+//     blackgray.style.fill = '#222222';
+// };
+
+function colorizeMonk(){
+    colorize.style.fill = "#ffc3aa";
+}
 
 function transitionSpeed(n){
     monk.style.transitionDuration = n + 's';
@@ -83,5 +88,5 @@ monk.addEventListener('click', function() {
     brightenWorld();
 });
 
-monk.addEventListener('mouseenter', function() {monk.classList.remove('paused'); transitionSpeed(3); standardWorld();});
-monk.addEventListener('mouseleave', function() {monk.classList.add('paused'); transitionSpeed(1); darkenWorld();});
+monk.addEventListener('mouseenter', function() {monk.classList.remove('paused'); colorizeMonk()});
+// monk.addEventListener('mouseleave', function() {monk.classList.add('paused'); transitionSpeed(1); darkenWorld();});
