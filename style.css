@@ -99,6 +99,15 @@ button {
 
 .color-item:hover {transform: translateY(-12px);}
 
+.newcolor-item {
+  width: 32px;
+  height: 60px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+}
+
+.newcolor-item:hover {transform: translateY(-12px);}
+
 .trio-section {
   background-color: #3c3c3c;
   padding-top: 100px; 
@@ -159,4 +168,44 @@ button {
 
 @keyframes glow {
   50% {color: #FFA500;}
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-200px); }
+    100% { transform: translateY(0); }
+}
+
+.monk {
+    cursor: pointer;
+    animation: float ease-in-out 7s infinite;
+}
+
+.paused {
+animation-play-state: paused;
+}
+
+.whitegray {
+    transition-duration: 1s;
+    fill: #dddddd;
+}
+
+.lightgray {
+    transition-duration: 1s;
+    fill: #aaaaaa;
+}
+
+.gray {
+    transition-duration: 1s;
+    fill: #808080;
+}
+
+.darkgray {
+    transition-duration: 1s;
+    fill: #555555;
+}
+
+.blackgray {
+    transition-duration: 1s;
+    fill: #222222;
 }
