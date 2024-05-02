@@ -41,52 +41,48 @@ btnF.addEventListener('click', () => {
 const monk = document.querySelector('.monk')
 const colorize = document.querySelector('.colorize')
 const whitegray = document.querySelector('.whitegray')
+const lightergray = document.querySelector('.lightergray')
 const lightgray = document.querySelector('.lightgray')
 const gray = document.querySelector('.gray')
 const darkgray = document.querySelector('.darkgray')  
+const darkergray = document.querySelector('.darkergray')  
 const blackgray = document.querySelector('.blackgray')
 
-// function standardWorld(){
-//     whitegray.style.fill = '#FFB6C1';
-//     lightgray.style.fill = '#B6D0E2';
-//     gray.style.fill = 'orange';
-//     darkgray.style.fill = '#500000';
-//     blackgray.style.fill = '#023020';
-// };
-
 function brightenWorld(){
-    whitegray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16);
-    lightgray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16);
-    gray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16);
-    darkgray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16);
-    blackgray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16);
+    whitegray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + 'ff';
+    lightergray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + 'ff';
+    lightgray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + 'ff';
+    gray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + 'ff';
+    darkgray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + 'ff';
+    darkergray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + 'ff';
+    blackgray.style.fill = "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + 'ff';
 };
-
-// function darkenWorld(){
-//     whitegray.style.fill = '#dddddd';
-//     lightgray.style.fill = '#aaaaaa';
-//     gray.style.fill = '#808080';
-//     darkgray.style.fill = '#555555';
-//     blackgray.style.fill = '#222222';
-// };
 
 function colorizeMonk(){
-    colorize.style.fill = "#ffc3aa";
+    colorize.style.fill = "#ffc3aaff";
+    gray.style.fill = "#ffa500ff";
+    
 }
 
-function transitionSpeed(n){
-    monk.style.transitionDuration = n + 's';
-    whitegray.style.transitionDuration = n + 's';
-    lightgray.style.transitionDuration = n + 's';
-    gray.style.transitionDuration = n + 's';
-    darkgray.style.transitionDuration = n + 's';
-    blackgray.style.transitionDuration = n + 's';
-};
+// function transitionSpeed(n){
+//     monk.style.transitionDuration = n + 's';
+//     colorize.style.transitionDuration = n + 's';
+//     whitegray.style.transitionDuration = n + 's';
+//     lightgray.style.transitionDuration = n + 's';
+//     gray.style.transitionDuration = n + 's';
+//     darkgray.style.transitionDuration = n + 's';
+//     blackgray.style.transitionDuration = n + 's';
+// };
 
 monk.addEventListener('click', function() {
-    transitionSpeed(3);
     brightenWorld();
 });
 
-monk.addEventListener('mouseenter', function() {monk.classList.remove('paused'); colorizeMonk()});
-// monk.addEventListener('mouseleave', function() {monk.classList.add('paused'); transitionSpeed(1); darkenWorld();});
+let executed = false;
+monk.addEventListener('mouseenter', function() {
+    if (!executed) {
+        monk.classList.remove('paused');
+        colorizeMonk();
+        executed = true;
+    }
+});

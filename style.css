@@ -190,7 +190,6 @@ button {
 .monk {
     cursor: pointer;
     animation: float ease-in-out 7s infinite;
-
 }
 
 .paused {
@@ -203,26 +202,36 @@ animation-play-state: paused;
 }
 
 .whitegray {
-    transition-duration: 1s;
-    fill: #dddddd;
+    transition-duration: 3s;
+    /* fill: #dddddd; */
+}
+
+.lightergray {
+    transition-duration: 3s;
+    /* fill: #cbcbcb; */
 }
 
 .lightgray {
-    transition-duration: 1s;
-    fill: #aaaaaa;
+    transition-duration: 3s;
+    /* fill: #aaaaaa; */
 }
 
 .gray {
-    transition-duration: 1s;
-    fill: #808080;
+    transition-duration: 2s;
+    /* fill: #808080; */
 }
 
 .darkgray {
-    transition-duration: 1s;
-    fill: #555555;
+    transition-duration: 3s;
+    /* fill: #555555; */
+}
+
+.darkergray {
+    transition-duration: 3s;
+    /* fill: #343434; */
 }
 
 .blackgray {
-    transition-duration: 1s;
-    fill: #222222;
+    transition-duration: 3s;
+    /* fill: #222222; */
 }
