@@ -2,17 +2,6 @@ btnR.addEventListener('click', () => {
     location.reload();
 })
 
-// let selectedColor = '#dddddd'
-  
-// function selectColor(color) {
-//     selectedColor = color;
-//     }
-
-// function colorPath(pathId) {
-//     const path = document.getElementById(pathId);
-//     path.style.fill = selectedColor;
-//     }
-
 menu.addEventListener("mouseenter", function() {
     menu.style.opacity = 1;
     colors.style.opacity = 1;
@@ -64,25 +53,26 @@ function colorizeMonk(){
     
 }
 
-// function transitionSpeed(n){
-//     monk.style.transitionDuration = n + 's';
-//     colorize.style.transitionDuration = n + 's';
-//     whitegray.style.transitionDuration = n + 's';
-//     lightgray.style.transitionDuration = n + 's';
-//     gray.style.transitionDuration = n + 's';
-//     darkgray.style.transitionDuration = n + 's';
-//     blackgray.style.transitionDuration = n + 's';
-// };
+let wakeUp = false;
+let svgActive = false;
+let clickNo = 0;
 
 monk.addEventListener('click', function() {
-    brightenWorld();
-});
-
-let executed = false;
-monk.addEventListener('mouseenter', function() {
-    if (!executed) {
+    if (!wakeUp){
         monk.classList.remove('paused');
         colorizeMonk();
-        executed = true;
+        clickNo++;
+        svg.style.cursor = "pointer";
+        wakeUp = true;
+    }
+});
+
+svg.addEventListener('click', function() {
+    if (wakeUp){
+        clickNo++;
+    }
+    
+    if (clickNo > 2){
+        brightenWorld();
     }
 });
