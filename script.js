@@ -2,15 +2,14 @@ btnR.addEventListener('click', () => {
     location.reload();
 })
 
-let selectedColor = '#dddddd'
+let selectedColor = '#dddddd';
   
 function selectColor(color) {
     selectedColor = color;
     }
 
 function colorPath(pathId) {
-    const path = document.getElementById(pathId);
-    path.style.fill = selectedColor;
+    document.getElementById(pathId).style.fill = selectedColor;
     }
 
 menu.addEventListener("mouseenter", function() {
@@ -36,4 +35,4 @@ btnF.addEventListener('click', () => {
   } else {
     document.documentElement.requestFullscreen();
   }
-});
+})

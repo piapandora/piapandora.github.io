@@ -126,20 +126,20 @@ button {
 }
 
 .trio-container {
-    display: grid;
-    grid-template-columns: 400px 400px 400px;
-    grid-gap: 20px;  
-    margin-left: auto;
-    margin-right: auto;
-    width: fit-content;
+  display: grid;
+  grid-template-columns: 400px 400px 400px;
+  grid-gap: 20px;  
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
 }
 
 .trio-item {
-    background-color: #222222;
-    border: 15px solid darkgreen;
-    padding: 40px;
-    margin: 10px;
-    text-align: center;
+  background-color: #222222;
+  border: 15px solid darkgreen;
+  padding: 40px;
+  margin: 10px;
+  text-align: center;
 }
 
 .gallery-container {
@@ -182,56 +182,24 @@ button {
 }
 
 @keyframes float {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-200px); }
-    100% { transform: translateY(0); }
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-200px); }
+  100% { transform: translateY(0); }
 }
 
 .monk {
-    cursor: pointer;
-    animation: float ease-in-out 7s infinite;
+  cursor: pointer;
+  animation: float ease-in-out 7s infinite;
 }
 
 .paused {
-animation-play-state: paused;
+  animation-play-state: paused;
 }
 
 .colorize {
+  transition-duration: 3s;
+}
+
+.colorizeFast {
   transition-duration: 2s;
-  fill: #dddddd;
-}
-
-.whitegray {
-    transition-duration: 3s;
-    /* fill: #dddddd; */
-}
-
-.lightergray {
-    transition-duration: 3s;
-    /* fill: #cbcbcb; */
-}
-
-.lightgray {
-    transition-duration: 3s;
-    /* fill: #aaaaaa; */
-}
-
-.gray {
-    transition-duration: 2s;
-    /* fill: #808080; */
-}
-
-.darkgray {
-    transition-duration: 3s;
-    /* fill: #555555; */
-}
-
-.darkergray {
-    transition-duration: 3s;
-    /* fill: #343434; */
-}
-
-.blackgray {
-    transition-duration: 3s;
-    /* fill: #222222; */
 }
