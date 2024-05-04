@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="3 Boyutlu Resim Boyama">
+  <meta name="keywords" content="Resim, Boyama, 3 Boyutlu">
+  <meta name="author" content="Pia Pandora">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sihirli Pencere - 9</title>
+  <link rel="icon" type="image/png" href="images/icons8-open-window-32.png">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body style="display: grid">
+
+<div class="menu-container" id="menu">
+  <a href="index.html"><img src="images/icons8-home-32.png" class="menu-btn"></a>
+  <img src="images/icons8-refresh-32.png" class="menu-btn" id="btnR">
+  <a href="8.html"><img src="images/icons8-left-32.png" class="menu-btn"></a>
+  <button style="width: 740px">Sihirli Pencere - Çoklu Sahne Testi</button>
+  <a href="9.html"><img src="images/icons8-right-32.png" class="menu-btn"></a>
+  <img src="images/icons8-hide-32.png" class="menu-btn" id="btnH">
+  <img src="images/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
+</div>
+
+<div class="svg-container" id="scenes"> 
+  <img src="images/test0.png" id="scene3" style="display:none">
+  <img src="images/wp1.jpg" id="scene4" height="600" width="1280" style="display:none">
+  <img src="images/test2.png" id="scene5" style="display:none">
+  <svg
+   width="1280"
+   height="600"
+   viewBox="0 0 1280 600"
+   version="1.1"
+   id="scene0"
+   xml:space="preserve"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><g
+     id="layer2"
+     style="display:inline"><rect
+       style="fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+       id="rect1"
+       class="colorize"
+       width="1280"
+       height="600"
+       x="0"
+       y="0" /></g></svg>
+  <svg
+   width="1280"
+   height="600"
+   viewBox="0 0 1280 600"
+   version="1.1"
+   id="scene1"
+   style="display:none"
+   xml:space="preserve"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><g
+     id="layer2"
+     style="display:inline"><rect
+       style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+       id="rect1"
+       class="colorize"
+       width="1280"
+       height="600"
+       x="0"
+       y="0" /></g></svg>
+  <svg
+   width="1280"
+   height="600"
+   viewBox="0 0 1280 600"
+   version="1.1"
+   id="scene2"
+   style="display:none"
+   xml:space="preserve"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><g
+     id="layer2"
+     style="display:inline"><rect
+       style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+       id="rect1"
+       class="colorize"
+       width="1280"
+       height="600"
+       x="0"
+       y="0" /></g></svg>
+
+</div>
+
+<div class="menu-container" id="colors">
+<button style="width: 180px" id="prev-btn" class="footer-message footer-btn-active" onclick="prevScene()">Geri</button>
+<button style="width: 920px" id="message" class="footer-message"></button>
+<button style="width: 180px" id="next-btn" class="footer-message footer-btn-active" onclick="nextScene()">İleri</button>
+</div>
+
+<script>
+const sceneMessages = ['Kırmızı', 'Yeşil', 'Mavi', 'Turuncu', 'Orman', 'Pembe'];
+</script>
+
+<script src="script.js"></script>
+<script src="scene.js"></script>
+
+</body>
+</html>
