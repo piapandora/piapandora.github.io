@@ -1,5 +1,5 @@
 let currentScene = 0;
-const totalScenes = document.getElementById("scenes").children.length;
+const totalScenes = document.getElementById("svg").children.length;
 refreshFooter();
 
 function nextScene() {

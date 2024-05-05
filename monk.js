@@ -14,6 +14,7 @@ monk.addEventListener('click', function() {
 function colorizeMonk(monkIds) {
     monkIds.forEach(([id, color]) => {
         document.getElementById(id).style.fill = color;
+        document.getElementById(id).style.fill = color;
     })
 }
 
