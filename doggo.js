@@ -37,5 +37,4 @@ function colorizeBall(pathId) {
     document.getElementById(pathId + "4").style.fill = thisColor;
     document.getElementById(pathId + "5").style.fill = thisColor;
     document.getElementById(pathId + "6").style.fill = thisColor;
-    document.getElementById(pathId + "7").style.fill = thisColor;
     }
