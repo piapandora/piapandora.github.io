@@ -5,7 +5,7 @@ refreshFooter();
 function nextScene() {
   if (currentScene < (totalScenes - 1)){
   document.getElementById(`scene${currentScene}`).style.display = "none";
-  currentScene = currentScene + 1;
+  currentScene++
   document.getElementById(`scene${currentScene}`).style.display = "block";
   refreshFooter();
   }
@@ -14,7 +14,7 @@ function nextScene() {
 function prevScene() {
   if (currentScene > 0){
   document.getElementById(`scene${currentScene}`).style.display = "none";
-  currentScene = currentScene - 1;
+  currentScene--
   document.getElementById(`scene${currentScene}`).style.display = "block";
   refreshFooter();
   }
@@ -25,15 +25,23 @@ function refreshFooter(){
   
   if (currentScene == 0){
     document.getElementById("prev-btn").classList.add('footer-btn-inactive');
+    document.getElementById("prev-btn").classList.remove('footer-btn-active');
+
   }
   else {
+    document.getElementById("prev-btn").classList.add('footer-btn-active');
     document.getElementById("prev-btn").classList.remove('footer-btn-inactive');
   }
   
   if (currentScene == (totalScenes - 1)){
     document.getElementById("next-btn").classList.add('footer-btn-inactive');
+    document.getElementById("next-btn").classList.remove('footer-btn-active');
+    document.getElementById("next-btn").classList.remove('footer-btn-focus');
+
   }
   else {
+    document.getElementById("next-btn").classList.add('footer-btn-active');
+    document.getElementById("next-btn").classList.add('footer-btn-focus');
     document.getElementById("next-btn").classList.remove('footer-btn-inactive');
   }
 }  

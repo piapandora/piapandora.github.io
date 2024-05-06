@@ -75,18 +75,24 @@ button {
 
 .footer-btn-active:hover {
   background-color: darkgreen;
-  color: #ffffff;
+  color: white;
 }
 
 .footer-btn-inactive {
+  background-color: #222222;
   color: #555555;
   text-shadow: none;
 }
 
-.footer-btn-inactive:hover {
+.footer-btn-focus {
+  background-color: darkorange;
+  color: #222222;
+}
+
+/* .footer-btn-inactive:hover {
   background-color: #222222;
   color: #555555;
-}
+} */
 
 .menu-btn {
   background-color: #222222;
