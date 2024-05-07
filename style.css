@@ -89,11 +89,6 @@ button {
   color: #222222;
 }
 
-/* .footer-btn-inactive:hover {
-  background-color: #222222;
-  color: #555555;
-} */
-
 .menu-btn {
   background-color: #222222;
   width: 32px;
@@ -113,17 +108,71 @@ button {
 }
 
 .menu-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+
+  display: flex;
+  justify-content: center;
+  transition-duration: 1s;
+
+}
+
+.message-container {
+  position: absolute;
+  top: 660px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+
   display: flex;
   justify-content: center;
   transition-duration: 1s;
 }
 
+.special-buttons {
+  display:flex;
+  position:absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index:4;
+}
+
 .svg-container {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  cursor: crosshair;
   display: flex;
   justify-content: center;
 }
 
+.svg-container-720 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  cursor: crosshair;
+  display: flex;
+  justify-content: center;
+}
+
+.slideshow-item {
+  height:720px; 
+  filter:grayscale(100%);
+}
+
 .color-container {
+  position: absolute;
+  top: 660px;
+  left: 50%;
+  transform: translateX(-50%);
+
   display: flex;
   justify-content: center;
   transition-duration: 1s;
@@ -184,6 +233,10 @@ button {
 
 .gallery-item {
   border-radius: 20px; filter: grayscale(100%); width:300px; height:300px; vertical-align:middle;
+}
+
+.grayscale {
+  filter: grayscale(100%)
 }
 
 .footer-container {

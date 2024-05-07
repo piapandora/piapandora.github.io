@@ -1,12 +1,15 @@
 const monk = document.querySelector('.monk');
 let wakeUp = false;
 let svgActive = false;
+svg.style.cursor = "default";
+
 
 monk.addEventListener('click', function() {
     if (!wakeUp){
         monk.classList.remove('paused');
         colorizeMonk(monkIds);
-        svg.style.cursor = "pointer";
+        svg.style.cursor = "crosshair";
+        monk.style.cursor = "crosshair";
         wakeUp = true;
     }
 })

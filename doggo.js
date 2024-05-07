@@ -1,5 +1,3 @@
-svg.style.cursor = "pointer";
-
 function randomColor(){
     return "#" + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + Math.floor(Math.random() * 256).toString(16) + "ff";
 }
