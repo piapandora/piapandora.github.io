@@ -307,14 +307,14 @@ button {
 }
 
 #fadeIn1, #fadeIn1B {
-  animation: fadeIn 3s 0s forwards;
+  animation: fadeIn 3s 0.5s forwards;
 }
 
 #fadeIn2 {
-  animation: fadeIn 3s 1s forwards;
+  animation: fadeIn 3s 1.5s forwards;
 }
 
 #fadeIn3 {
   opacity: 0;
-  animation: fadeInFor3 1.5s 2s forwards, scaleIn 1.25s 2s forwards;
+  animation: fadeInFor3 1.5s 2.5s forwards, scaleIn 1.25s 2.5s forwards;
 }
