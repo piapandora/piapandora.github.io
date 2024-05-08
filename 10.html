@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="3 Boyutlu Resim Boyama">
+  <meta name="keywords" content="Resim, Boyama, 3 Boyutlu">
+  <meta name="author" content="Pia Pandora">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sihirli Pencere - 10</title>
+  <link rel="icon" type="image/png" href="images/icons8-open-window-32.png">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body style="display: grid">
+
+<div class="menu-container" id="menu">
+  <a href="index.html"><img src="images/icons8-home-32.png" class="menu-btn"></a>
+  <img src="images/icons8-refresh-32.png" class="menu-btn" id="btnR">
+  <a href="9.html"><img src="images/icons8-left-32.png" class="menu-btn"></a>
+  <button style="width: 740px">Sihirli Pencere - Renkli Duvar Kağıtları</button>
+  <a href="11.html"><img src="images/icons8-right-32.png" class="menu-btn"></a>
+  <img src="images/icons8-hide-32.png" class="menu-btn" id="btnH">
+  <img src="images/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
+</div>
+
+<!-- changeHue() doesnt get triggered because the "special color button" covers it! -->
+
+<div class="svg-container-720" id="svg">
+<img src="images/wallpapers/01.jpg" id="scene0" class="slideshow-item" onclick="changeHue()">
+<img src="images/wallpapers/02.jpg" id="scene1" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/03.jpg" id="scene2" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/04.jpg" id="scene3" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/05.jpg" id="scene4" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/06.jpg" id="scene5" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/07.jpg" id="scene6" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/08.jpg" id="scene7" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/09.jpg" id="scene8" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/10.jpg" id="scene9" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/11.jpg" id="scene10" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/12.jpg" id="scene11" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/13.jpg" id="scene12" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/14.jpg" id="scene13" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/15.jpg" id="scene14" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/16.jpg" id="scene15" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/17.jpg" id="scene16" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/18.jpg" id="scene17" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/19.jpg" id="scene18" class="slideshow-item" onclick="changeHue()" style="display:none">
+<img src="images/wallpapers/20.jpg" id="scene19" class="slideshow-item" onclick="changeHue()" style="display:none">
+</div>
+
+<div class="special-buttons">
+  <div id="special-prev-btn" onclick="prevScene()" style= "height: 600px; width: 270px; background-color: #ff000000; cursor: default"></div>
+  <div id="special-color-btn" onclick="changeHue()" style= "height: 600px; width: 740px; background-color: #00ff0000; cursor: crosshair"></div>
+  <div id="special-next-btn" onclick="nextScene()" style= "height: 600px; width: 270px; background-color: #0000ff00; cursor: default"></div>
+</div>
+
+<div class="message-container" id="colors">
+  <button style="width: 270px" id="prev-btn" class="footer-message footer-btn-inactive" onclick="prevScene()">Geri</button>
+  <button style="width: 740px" id="message" class="footer-message"></button>
+  <button style="width: 270px" id="next-btn" class="footer-message footer-btn-active footer-btn-focus" onclick="nextScene()">İleri</button>
+  </div>
+
+<script>
+  const sceneMessages = ['1 / 20', '2 / 20', '3 / 20', '4 / 20', '5 / 20', '6 / 20', '7 / 20', '8 / 20', '9 / 20', '10 / 20', '11 / 20', '12 / 20', '13 / 20', '14 / 20', '15 / 20', '16 / 20', '17 / 20', '18 / 20', '19 / 20', '20 / 20'];
+</script>
+
+<script src="script.js"></script>
+<script src="scene.js"></script>
+
+</body>
+</html>
