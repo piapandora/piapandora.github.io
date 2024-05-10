@@ -85,7 +85,7 @@ button {
 }
 
 .footer-btn-focus {
-  background-color: darkorange;
+  background-color: #ff8c00;
   color: #222222;
 }
 
@@ -99,7 +99,6 @@ button {
   padding-right: 29px;
   cursor: pointer;
   transition-duration: 0.3s;
-  margin-bottom: -4px;
 }
 
 .menu-btn:hover {
@@ -329,3 +328,7 @@ button {
   animation: shadowFadeIn ease-in-out 7s infinite;
 }
 
+@keyframes targetAnim {
+  0% { opacity: 1 }
+  100% { opacity: 0 }
+}

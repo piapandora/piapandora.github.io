@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="3 Boyutlu Resim Boyama">
+  <meta name="keywords" content="Resim, Boyama, 3 Boyutlu">
+  <meta name="author" content="Pia Pandora">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sihirli Pencere - 13</title>
+  <link rel="icon" type="image/png" href="images/icons/icons8-open-window-32.png">
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body style="display: grid">
+
+<div class="menu-container" id="menu">
+  <a href="index.html"><img src="images/icons/icons8-home-32.png" class="menu-btn"></a>
+  <img src="images/icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
+  <a href="12.html"><img src="images/icons/icons8-left-32.png" class="menu-btn"></a>
+  <button style="width: 740px">Sihirli Pencere - Yüz Alan Kazanır</button>
+  <a href="13.html"><img src="images/icons/icons8-right-32.png" class="menu-btn"></a>
+  <img src="images/icons/icons8-hide-32.png" class="menu-btn" id="btnH">
+  <img src="images/icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
+</div>
+
+<div class="svg-container" id="svg">
+   <img src="images/polygon/01.png" id="startScreen" onclick="beginPlay()">
+   <img src="images/polygon/02.png" id="winScreen" onclick="beginPlay()" style="display:none">
+   <img src="images/polygon/03.png" id="loseScreen" onclick="beginPlay()" style="display:none">
+   <svg
+      width="1280"
+      height="600"
+      viewBox="0 0 1280 600"
+      version="1.1"
+      id="gameScreen"
+      style="display: none"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:svg="http://www.w3.org/2000/svg">
+   <defs
+      id="defs1">
+      <filter
+         style="color-interpolation-filters:sRGB"
+         id="filter160"
+         x="-0.075"
+         y="-0.075"
+         width="1.15"
+         height="1.15">
+         <feGaussianBlur
+            stdDeviation="6.25"
+            id="feGaussianBlur160" />
+      </filter>
+   </defs>
+   <g
+      id="layer2"
+      style="display:inline">
+      <rect
+         style="fill:#dda0dd;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+         id="rect23"
+         width="1280"
+         height="600"
+         x="0"
+         y="0" />
+      <g
+         class="target"
+         id="target1"    
+         onclick="score('target1')"
+         transform="translate(-853.33301)">
+         <circle
+            style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.5;filter:url(#filter160)"
+            id="circle156"
+            cx="1066.666"
+            cy="150"
+            r="100" />
+         <circle
+            style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle159"
+            cx="1066.666"
+            cy="150"
+            r="98.5" />
+         <circle
+            style="display:inline;fill:#ff8c00;fill-opacity:1;stroke:#000000;stroke-width:6.666;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle160"
+            cx="1066.666"
+            cy="150"
+            r="88.5" />
+      </g>
+      <g
+         class="target"
+         id="target2"    
+         onclick="score('target2')"
+         transform="translate(-426.66702)">
+         <circle
+            style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.5;filter:url(#filter160)"
+            id="circle161"
+            cx="1066.666"
+            cy="150"
+            r="100" />
+         <circle
+            style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle162"
+            cx="1066.666"
+            cy="150"
+            r="98.5" />
+         <circle
+            style="display:inline;fill:#ff8c00;fill-opacity:1;stroke:#000000;stroke-width:6.666;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle163"
+            cx="1066.666"
+            cy="150"
+            r="88.5" />
+      </g>
+      <g
+         class="target"
+         id="target3"
+         onclick="score('target3')">    
+         <circle
+            style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.5;filter:url(#filter160)"
+            id="circle164"
+            cx="1066.666"
+            cy="150"
+            r="100" />
+         <circle
+            style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle165"
+            cx="1066.666"
+            cy="150"
+            r="98.5" />
+         <circle
+            style="display:inline;fill:#ff8c00;fill-opacity:1;stroke:#000000;stroke-width:6.666;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle166"
+            cx="1066.666"
+            cy="150"
+            r="88.5" />
+      </g>
+      <g
+         class="target"
+         id="target4"    
+         onclick="score('target4')"
+         transform="translate(-853.33304,300)">
+         <circle
+            style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.5;filter:url(#filter160)"
+            id="circle188"
+            cx="1066.666"
+            cy="150"
+            r="100" />
+         <circle
+            style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle189"
+            cx="1066.666"
+            cy="150"
+            r="98.5" />
+         <circle
+            style="display:inline;fill:#ff8c00;fill-opacity:1;stroke:#000000;stroke-width:6.666;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle190"
+            cx="1066.666"
+            cy="150"
+            r="88.5" />
+      </g>
+      <g
+         class="target"
+         id="target5"    
+         onclick="score('target5')"
+         transform="translate(-426.66705,300)">
+         <circle
+            style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.5;filter:url(#filter160)"
+            id="circle191"
+            cx="1066.666"
+            cy="150"
+            r="100" />
+         <circle
+            style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle192"
+            cx="1066.666"
+            cy="150"
+            r="98.5" />
+         <circle
+            style="display:inline;fill:#ff8c00;fill-opacity:1;stroke:#000000;stroke-width:6.666;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle193"
+            cx="1066.666"
+            cy="150"
+            r="88.5" />
+      </g>
+      <g
+         class="target"
+         id="target6"
+         onclick="score('target6')"
+         transform="translate(0,300)">
+         <circle
+            style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.5;filter:url(#filter160)"
+            id="circle194"
+            cx="1066.666"
+            cy="150"
+            r="100" />
+         <circle
+            style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle195"
+            cx="1066.666"
+            cy="150"
+            r="98.5" />
+         <circle
+            style="display:inline;fill:#ff8c00;fill-opacity:1;stroke:#000000;stroke-width:6.666;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+            id="circle196"
+            cx="1066.666"
+            cy="150"
+            r="88.5" />
+      </g>
+   </g>
+   </svg>
+</div>
+
+<div class="message-container" id="colors">
+  <button style="width: 640px" id="scoreBox" class="footer-message"></button>
+  <button style="width: 640px" id="timerBox" class="footer-message"></button>
+</div>
+
+<script src="js/script.js"></script>
+<script src="js/polygon.js"></script>
+
+</body>
+</html>
