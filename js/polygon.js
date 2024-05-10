@@ -34,6 +34,9 @@ function beginPlay() {
     let intervalForTimer = setInterval(function() {
         timer++;
         timerBox.textContent = "Rakibinin Puanı: " + timer;
+        if (playerScore >= 100) {
+            clearInterval(intervalForTimer);
+            }
         if (timer >= 100) {
             loseGame()
             clearInterval(intervalForTimer);
@@ -49,7 +52,6 @@ function score(pathId) {
     scoreBox.textContent = "Senin Puanın: " + playerScore;
     if (playerScore >= 100) {
         winGame()
-        clearInterval(intervalForTimer);
         }
     
     setTimeout(function() {
