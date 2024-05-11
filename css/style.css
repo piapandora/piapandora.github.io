@@ -339,8 +339,18 @@ button {
   100% { opacity: 0 }
 }
 
+@keyframes komsuAnim {
+  0% { opacity: 1; fill:#ffffff; }
+  25% { opacity: 1; fill: #dddddd; }
+  100% { opacity: 0; fill: #000000; }
+}
+
 .fadeOut {
   animation: targetAnim 0.4s;
+}
+
+.fadeOutKomsu {
+  animation: komsuAnim 0.4s;
 }
 
 #play-btn {

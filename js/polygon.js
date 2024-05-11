@@ -1,9 +1,3 @@
-// let target1 = document.getElementById('target1');
-// let target2 = document.getElementById('target2');
-// let target3 = document.getElementById('target3');
-// let target4 = document.getElementById('target4');
-// let target5 = document.getElementById('target5');
-// let target6 = document.getElementById('target6');
 let scoreBox = document.getElementById('scoreBox');
 let timerBox = document.getElementById('timerBox');
 let startScreen = document.getElementById('startScreen');
@@ -67,6 +61,10 @@ function beginPlay() {
 function score(pathId) {
     if (!gameOver) {
         let path = document.getElementById(pathId);
+
+        let originalOnClick = path.getAttribute("onclick");
+        path.removeAttribute("onclick");
+
         path.classList.add('fadeOut');
         
         setTimeout(function() {
@@ -85,6 +83,7 @@ function score(pathId) {
         }
         
         setTimeout(function() {
+            path.setAttribute("onclick", originalOnClick);
             path.style.display = 'block';
         }, randomMilliseconds());
     }

@@ -61,14 +61,18 @@ function beginPlay() {
 function score(pathId) {
     if (!gameOver) {
         let path = document.getElementById(pathId);
-        path.classList.add('fadeOut');
         
+        let originalOnClick = path.getAttribute("onclick");
+        path.removeAttribute("onclick");
+        
+        path.classList.add('fadeOutKomsu');
+
         setTimeout(function() {
             path.style.display = "none";
         }, 300);
 
         setTimeout(function() {
-            path.classList.remove('fadeOut');
+            path.classList.remove('fadeOutKomsu');
         }, 500);
         
         playerScore++;
@@ -79,6 +83,7 @@ function score(pathId) {
         }
         
         setTimeout(function() {
+            path.setAttribute("onclick", originalOnClick);
             path.style.display = 'block';
         }, randomMilliseconds());
     }
