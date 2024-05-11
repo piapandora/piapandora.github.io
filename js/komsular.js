@@ -35,7 +35,7 @@ function beginPlay() {
     
     startScreen.style.display = "none";
     winScreen.style.display = "none";
-    loseScreen.style.display = "block";
+    loseScreen.style.display = "none";
     playButton.style.display = "none";
     bigPlayButton.style.display = "none";
 
