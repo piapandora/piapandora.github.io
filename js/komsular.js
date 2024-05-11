@@ -1,9 +1,3 @@
-// let target1 = document.getElementById('target1');
-// let target2 = document.getElementById('target2');
-// let target3 = document.getElementById('target3');
-// let target4 = document.getElementById('target4');
-// let target5 = document.getElementById('target5');
-// let target6 = document.getElementById('target6');
 let scoreBox = document.getElementById('scoreBox');
 let timerBox = document.getElementById('timerBox');
 let startScreen = document.getElementById('startScreen');
@@ -20,12 +14,12 @@ let limit = 100;
 construct();
 
 function randomMilliseconds() {
-    return Math.floor(Math.random() * (5000)) + 2500;
+    return Math.floor(Math.random() * (5000)) + 5000;
 }
 
 function construct() {
     scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value'>" + playerScore + "</span>";
-    timerBox.innerHTML = "<span class='message-label'>Rakibinin Puanı:</span> <span class='message-value'>" + timer + "</span>";
+    timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value'>" + timer + "</span>";
 
     setTimeout(function() {
         bigPlayButton.style.display = "block";
@@ -37,11 +31,11 @@ function beginPlay() {
     playerScore = 0;
     timer = 0;
     scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value'>" + playerScore + "</span>";
-    timerBox.innerHTML = "<span class='message-label'>Rakibinin Puanı:</span> <span class='message-value'>" + timer + "</span>";
+    timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value'>" + timer + "</span>";
     
     startScreen.style.display = "none";
     winScreen.style.display = "none";
-    loseScreen.style.display = "none";
+    loseScreen.style.display = "block";
     playButton.style.display = "none";
     bigPlayButton.style.display = "none";
 
@@ -50,7 +44,7 @@ function beginPlay() {
     let intervalForTimer = setInterval(function() {
         if (!gameOver) {
             timer++;
-            timerBox.innerHTML = "<span class='message-label'>Rakibinin Puanı:</span> <span class='message-value'>" + timer + "</span>";
+            timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value'>" + timer + "</span>";
         }
     
         if (playerScore >= limit) {
