@@ -71,11 +71,11 @@ function score(pathId) {
         
         setTimeout(function() {
             path.style.display = "none";
-        }, 500);
+        }, 300);
 
         setTimeout(function() {
             path.classList.remove('fadeOut');
-        }, 700);
+        }, 500);
         
         playerScore++;
         scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value'>" + playerScore + "</span>";
