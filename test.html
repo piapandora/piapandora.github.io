@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="3 Boyutlu Resim Boyama">
+  <meta name="keywords" content="Resim, Boyama, 3 Boyutlu">
+  <meta name="author" content="Pia Pandora">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sihirli Pencere - test</title>
+  <link rel="icon" type="image/png" href="images/icons/icons8-open-window-32.png">
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body style="display: grid">
+
+<div class="menu-container" id="menu">
+  <a href="index.html"><img src="images/icons/icons8-home-32.png" class="menu-btn"></a>
+  <img src="images/icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
+  <a href="13.html"><img src="images/icons/icons8-left-32.png" class="menu-btn"></a>
+  <button style="width: 740px">Sihirli Pencere - Meraklı Komşular</button>
+  <a href="14.html"><img src="images/icons/icons8-right-32.png" class="menu-btn"></a>
+  <img src="images/icons/icons8-hide-32.png" class="menu-btn" id="btnH">
+  <img src="images/icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
+</div>
+
+<div class="svg-container" id="svg">
+   <img src="images/komsular/01.png" id="startScreen" style="display:none">
+   <img src="images/komsular/02.png" id="winScreen" style="display:none">
+   <img src="images/komsular/03.png" id="loseScreen" style="display:none">
+
+   <button id="big-play-btn" onclick="beginPlay()">B A Ş L A</button>
+   <button id="play-btn" onclick="beginPlay()">T E K R A R</button>
+
+   <svg
+   width="1280"
+   height="600"
+   viewBox="0 0 1280 600"
+   version="1.1"
+   id="gameScreen"
+   style="display: none; position:absolute"
+   xml:space="preserve"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><g
+     id="layer2"
+     transform="translate(45.140121,849.7464)"><path
+       id="rect2"
+       style="fill:#ff6600;fill-opacity:1;stroke:#000000;stroke-width:1"
+       d="m -44.64012,-849.24641 v 599 H 1234.3599 v -599 z m 245.9545,126.35305 h 688.96127 v 318.21787 H 201.31438 Z" /></g></svg>
+
+</div>
+
+<div class="message-container" id="colors">
+  <button style="width: 640px" id="scoreBox" class="footer-message"></button>
+  <button style="width: 640px" id="timerBox" class="footer-message"></button>
+</div>
+
+<script src="js/script.js"></script>
+<script src="js/komsular.js"></script>
+
+</body>
+</html>

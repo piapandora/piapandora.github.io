@@ -341,7 +341,7 @@ button {
 
 @keyframes komsuAnim {
   0% { opacity: 1; fill:#ffffff; }
-  25% { opacity: 1; fill: #dddddd; }
+  /* 25% { opacity: 1; fill: #ffffff; } */
   100% { opacity: 0; fill: #000000; }
 }
 
@@ -353,17 +353,22 @@ button {
   animation: komsuAnim 0.4s;
 }
 
+#backScreen {
+  filter: grayscale(100%) blur(2.25px) sepia(100%) saturate(200%) brightness(66%) hue-rotate(250deg);
+}
+
 #play-btn {
   display: none;
+  opacity: 0;
   border: 4px solid black;
   border-radius: 4px;
   box-shadow: 0px 0px 16px black;
   width: 180px;
   height: 60px;
-  margin-top: 400px;
+  margin-top: 435px;
   cursor: pointer;
   position: absolute;
-  animation: fadeInFor3 2s forwards;
+  animation: fadeInFor3 2s 1.5s forwards;
 }
 
 #big-play-btn {
@@ -374,16 +379,85 @@ button {
   font-size: 36px;
   width: 270px;
   height: 90px;
-  margin-top: 410px;
+  margin-top: 425px;
   cursor: pointer;
   position: absolute;
   animation: fadeInFor3 2s forwards;
 }
 
+#winCurtain {
+  display: none;
+  opacity: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/park.png');
+  width: 1280px;
+  height: 600px;
+  animation: fadeInFor3 1.5s forwards;
+  position: absolute;
+}
+
+#loseCurtain {
+  display: none;
+  opacity: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/park.png');
+  filter: grayscale(100%);
+  width: 1280px;
+  height: 600px;
+  animation: fadeInFor3 1.5s forwards;
+  position: absolute;
+}
+
+.big-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  color: #ffffff;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0px 0px 30px #000000;
+  font-family: Arial, sans-serif;
+  font-size: 132px;
+  font-stretch: condensed;
+  width: 1280px;
+  height: 600px;
+  /* margin-top: 220px; */
+  position: absolute;
+  /* animation: fadeInFor3 2s forwards; */
+
+
+}
+
+.small-message {
+  display: none;
+  opacity: 0;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  color: #ffffff;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0px 0px 30px #000000;
+  font-family: Arial, sans-serif;
+  font-size: 108px;
+  font-stretch: condensed;
+  width: 1280px;
+  height: 600px;
+  /* margin-top: 240px; */
+  position: absolute;
+  animation: fadeInFor3 2s 1s forwards;
+}
+
 .message-label {
   color: orange;
+  font-size: 28px;
+  }
+
+.message-label-yellow {
+  color: yellow;
+  font-size: 28px;
 }
 
 .message-value {
   color: white;
+  font-size: 28px;
 }
