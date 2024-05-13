@@ -423,8 +423,6 @@ button {
   /* margin-top: 220px; */
   position: absolute;
   /* animation: fadeInFor3 2s forwards; */
-
-
 }
 
 .small-message {
@@ -454,10 +452,15 @@ button {
 
 .message-label-yellow {
   color: yellow;
-  font-size: 28px;
+  font-size: 30px;
 }
 
 .message-value {
+  color: white;
+  font-size: 40px;
+}
+
+.message-value-28 {
   color: white;
   font-size: 28px;
 }

@@ -31,7 +31,7 @@
    <div id="winCurtain"></div>
    <div id="loseCurtain"></div>
    <div id="winScreen" class="small-message">Sen Kazandın :)</div>
-   <div id="loseScreen" class="small-message">Yaramazlar Kazandı :(</div>
+   <div id="loseScreen" class="small-message">Zaman Kazandı :(</div>
 
    <button id="big-play-btn" onclick="beginPlay()">B A Ş L A</button>
    <button id="play-btn" onclick="beginPlay()">T E K R A R</button>
@@ -83,8 +83,14 @@
 </div>
 
 <div class="message-container" id="colors">
-  <button style="width: 640px" id="scoreBox" class="footer-message"></button>
-  <button style="width: 640px" id="timerBox" class="footer-message"></button>
+  <button style="width: 370px" class="footer-message"></button>
+  <button style="width: 180px" id="scoreLabel" class="footer-message"></button>
+  <button style="width: 60px" id="scoreBox" class="footer-message"></button>
+  <button style="width: 60px" id="tire" class="footer-message message-label-yellow"> - </button>
+  <button style="width: 60px" id="timerBox" class="footer-message"></button>
+  <button style="width: 180px" id="timerLabel" class="footer-message"></button>
+  <button style="width: 370px" class="footer-message"></button>
+
 </div>
 
 <audio id="myAudio" preload="auto">
@@ -115,8 +121,10 @@ let selectedAnim = 'fadeOut';
 const targets = ['path22', 'g27', 'g28', 'g29'];
 
 function refreshScores() {
-    scoreBox.innerHTML = "<span class='message-label-yellow'>Senin Puanın:</span> <span class='message-value'>" + playerScore + "</span>";
-    timerBox.innerHTML = "<span class='message-label-yellow'>Yaramazların Puanı:</span> <span class='message-value'>" + timer + "</span>";
+    scoreLabel.innerHTML = "<span class='message-label-yellow'>Puan</span>";
+    scoreBox.innerHTML = "<span class='message-value'>" + playerScore + "</span>";
+    timerBox.innerHTML = "<span class='message-value'>" + timer + "</span>";
+    timerLabel.innerHTML = "<span class='message-label-yellow'>Zaman</span>";
 }
 </script>
 

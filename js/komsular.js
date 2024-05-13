@@ -18,8 +18,8 @@ function randomMilliseconds() {
 }
 
 function construct() {
-    scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value'>" + playerScore + "</span>";
-    timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value'>" + timer + "</span>";
+    scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
+    timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
 
     setTimeout(function() {
         bigPlayButton.style.display = "block";
@@ -30,8 +30,8 @@ function beginPlay() {
     gameOver = false;
     playerScore = 0;
     timer = 0;
-    scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value'>" + playerScore + "</span>";
-    timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value'>" + timer + "</span>";
+    scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
+    timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-valuE-28'>" + timer + "</span>";
     
     startScreen.style.display = "none";
     winScreen.style.display = "none";
@@ -44,7 +44,7 @@ function beginPlay() {
     let intervalForTimer = setInterval(function() {
         if (!gameOver) {
             timer++;
-            timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value'>" + timer + "</span>";
+            timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
         }
     
         if (playerScore >= limit) {
@@ -76,7 +76,7 @@ function score(pathId) {
         }, 500);
         
         playerScore++;
-        scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value'>" + playerScore + "</span>";
+        scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
         
         if (playerScore >= limit) {
             winGame();
