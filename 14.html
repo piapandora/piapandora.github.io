@@ -178,7 +178,17 @@
 </div>
 
 <script src="js/script.js"></script>
-<script src="js/komsular.js"></script>
+
+<script>
+let baseTime = 5000;
+let selectedAnim = 'fadeOutKomsu';
+function refreshScores() {
+  scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
+  timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
+}
+</script>
+
+<script src="js/polygon.js"></script>
 
 </body>
 </html>

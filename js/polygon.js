@@ -14,12 +14,11 @@ let limit = 100;
 construct();
 
 function randomMilliseconds() {
-    return Math.floor(Math.random() * (5000)) + 2500;
+    return Math.floor(Math.random() * (5000)) + baseTime;
 }
 
 function construct() {
-    scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
-    timerBox.innerHTML = "<span class='message-label'>Rakibinin Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
+    refreshScores();
 
     setTimeout(function() {
         bigPlayButton.style.display = "block";
@@ -30,8 +29,7 @@ function beginPlay() {
     gameOver = false;
     playerScore = 0;
     timer = 0;
-    scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
-    timerBox.innerHTML = "<span class='message-label'>Rakibinin Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
+    refreshScores();
     
     startScreen.style.display = "none";
     winScreen.style.display = "none";
@@ -44,7 +42,7 @@ function beginPlay() {
     let intervalForTimer = setInterval(function() {
         if (!gameOver) {
             timer++;
-            timerBox.innerHTML = "<span class='message-label'>Rakibinin Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
+            refreshScores();
         }
     
         if (playerScore >= limit) {
@@ -65,18 +63,18 @@ function score(pathId) {
         let originalOnClick = path.getAttribute("onclick");
         path.removeAttribute("onclick");
 
-        path.classList.add('fadeOut');
+        path.classList.add(selectedAnim);
         
         setTimeout(function() {
             path.style.display = "none";
         }, 300);
 
         setTimeout(function() {
-            path.classList.remove('fadeOut');
+            path.classList.remove(selectedAnim);
         }, 500);
         
         playerScore++;
-        scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
+        refreshScores();
         
         if (playerScore >= limit) {
             winGame();

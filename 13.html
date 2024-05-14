@@ -217,6 +217,16 @@
 </div>
 
 <script src="js/script.js"></script>
+
+<script>
+let baseTime = 2500;
+let selectedAnim = 'fadeOut';
+function refreshScores() {
+    scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
+    timerBox.innerHTML = "<span class='message-label'>Rakibinin Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
+}
+</script>
+
 <script src="js/polygon.js"></script>
 
 </body>
