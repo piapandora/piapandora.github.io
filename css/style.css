@@ -389,9 +389,10 @@ button {
   display: none;
   opacity: 0;
   background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/park.png');
+  /* https://www.vecteezy.com/vector-art/2801711-blank-nature-park-landscape-at-night-scene */
   width: 1280px;
   height: 600px;
-  animation: fadeInFor3 1.5s forwards;
+  animation: fadeInFor3 2s forwards;
   position: absolute;
 }
 
@@ -399,10 +400,11 @@ button {
   display: none;
   opacity: 0;
   background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/park.png');
+  /* https://www.vecteezy.com/vector-art/2801711-blank-nature-park-landscape-at-night-scene */
   filter: grayscale(100%);
   width: 1280px;
   height: 600px;
-  animation: fadeInFor3 1.5s forwards;
+  animation: fadeInFor3 2s forwards;
   position: absolute;
 }
 

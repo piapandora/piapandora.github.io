@@ -1,5 +1,7 @@
 let scoreBox = document.getElementById('scoreBox');
 let timerBox = document.getElementById('timerBox');
+let scoreLabel = document.getElementById('scoreLabel');
+let timerLabel = document.getElementById('timerLabel');
 let backScreen = document.getElementById('backScreen');
 let startScreen = document.getElementById('startScreen');
 let gameScreen = document.getElementById('gameScreen');
@@ -12,8 +14,15 @@ let bigPlayButton = document.getElementById('big-play-btn');
 let ding = document.getElementById('myAudio');
 let gameOver = false;
 let playerScore = 0;
+// let yaramazScore = 0;
 let timer = 0;
-let limit = 50;
+let limit = 5;
+let baseTime = 1000;
+let randomTime = 1000;
+let timerSpeed = 2600;
+let selectedAnim = 'fadeOut';
+const targets = ['path22', 'g27', 'g28', 'g29'];
+let forbiddenFruit;
 
 construct();
 
@@ -35,10 +44,8 @@ function beginPlay() {
     timer = 0;
     backScreen.style.filter = "grayscale(100%) sepia(100%) saturate(200%) brightness(66%) hue-rotate(250deg)";
     refreshScores();
-    hideAll();
+    hideAllButGame();
 
-    gameScreen.style.display = "block";
-    
     let intervalForTimer = setInterval(function() {
         if (!gameOver) {
             timer++;
@@ -47,13 +54,28 @@ function beginPlay() {
     
         if (playerScore >= limit) {
             clearInterval(intervalForTimer);
+            clearInterval(intervalForChooser);
         }
         
         if (timer >= limit) {
-            loseGame();
             clearInterval(intervalForTimer);
+            clearInterval(intervalForChooser);
+            loseGame();
         }
     }, timerSpeed);
+
+    let intervalForChooser = setInterval(function() {
+        let randomTarget = Math.floor(Math.random() * 4);
+
+        for (let i = 0; i < targets.length; i++) {
+            if (i == randomTarget && targets[i] != forbiddenFruit){
+                document.getElementById(targets[i]).style.display = "block";
+            }
+            else {
+                document.getElementById(targets[i]).style.display = "none";
+            }
+        }
+    }, randomMilliseconds());
 }
 
 function score(pathId) {
@@ -66,13 +88,14 @@ function score(pathId) {
         path.classList.add(selectedAnim);
 
         setTimeout(function() {
-            path.style.display = "none";
+            path.style.transform = "translateY(-2000px)";
+            forbiddenFruit = pathId;
         }, 300);
 
         setTimeout(function() {
             path.classList.remove(selectedAnim);
         }, 500);
-        
+
         playerScore++;
         
         playerScore % 5 == 0 ? ding.play() : null;
@@ -85,8 +108,8 @@ function score(pathId) {
         
         setTimeout(function() {
             path.setAttribute("onclick", originalOnClick);
-            path.style.display = 'block';
-        }, randomMilliseconds());
+            path.style.transform = "translateY(0)";
+        }, 2500);
     }
 }
 
@@ -110,7 +133,7 @@ function loseGame() {
     }, 1000);
 }
 
-function hideAll() {
+function hideAllButGame() {
     winCurtain.style.display = "none";
     loseCurtain.style.display = "none";
     startScreen.style.display = "none";
@@ -118,12 +141,28 @@ function hideAll() {
     loseScreen.style.display = "none";
     playButton.style.display = "none";
     bigPlayButton.style.display = "none";
+
+    document.getElementById(targets[0]).style.display = "none";
+    document.getElementById(targets[1]).style.display = "none";
+    document.getElementById(targets[2]).style.display = "none";
+    document.getElementById(targets[3]).style.display = "none";
+
+    gameScreen.style.display = "block";
+}
+
+function refreshScores() {
+    scoreLabel.innerHTML = "<span class='message-label-yellow'>Puan</span>";
+    scoreBox.innerHTML = "<span class='message-value'>" + playerScore + "</span>";
+    timerBox.innerHTML = "<span class='message-value'>" + timer + "</span>";
+    timerLabel.innerHTML = "<span class='message-label-yellow'>Zaman</span>";
 }
 
 // function hideAllTargets() {
+//     let randomTarget = Math.floor(Math.random() * 4);
 //     for (let i = 0; i < targets.length; i++) {
-//         document.getElementById(targets[i]).display = "none";
+//         document.getElementById(targets[i]).style.display = "none";
 //     }
+//     document.getElementById(targets[randomTarget]).style.display = "block";
 // }
 
 // document.getElementById('winCurtain') !== null ? winCurtain.style.display = "none" : null;
