@@ -2,7 +2,7 @@ body {
   text-align: center;
   background-color: #222222;
   margin: 0;
-
+/* code below disables mouse-select behaviour */
   user-select: none;
   -moz-user-select: none;
   -webkit-user-drag: none;
@@ -357,6 +357,10 @@ button {
   filter: grayscale(100%) blur(2.25px) sepia(100%) saturate(200%) brightness(66%) hue-rotate(250deg);
 }
 
+#backScreenSea {
+  filter: grayscale(100%) blur(2.25px) sepia(100%) saturate(200%) brightness(66%) hue-rotate(100deg);
+}
+
 #play-btn {
   display: none;
   opacity: 0;
@@ -401,6 +405,27 @@ button {
   opacity: 0;
   background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/park.png');
   /* https://www.vecteezy.com/vector-art/2801711-blank-nature-park-landscape-at-night-scene */
+  filter: grayscale(100%);
+  width: 1280px;
+  height: 600px;
+  animation: fadeInFor3 2s forwards;
+  position: absolute;
+}
+
+#winCurtainSea {
+  display: none;
+  opacity: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/mermaidsea.png');
+  width: 1280px;
+  height: 600px;
+  animation: fadeInFor3 2s forwards;
+  position: absolute;
+}
+
+#loseCurtainSea {
+  display: none;
+  opacity: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/sea.png');
   filter: grayscale(100%);
   width: 1280px;
   height: 600px;

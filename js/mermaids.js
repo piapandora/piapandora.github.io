@@ -2,13 +2,13 @@ let scoreBox = document.getElementById('scoreBox');
 let timerBox = document.getElementById('timerBox');
 let scoreLabel = document.getElementById('scoreLabel');
 let timerLabel = document.getElementById('timerLabel');
-let backScreen = document.getElementById('backScreen');
+let backScreen = document.getElementById('backScreenSea');
 let startScreen = document.getElementById('startScreen');
 let gameScreen = document.getElementById('gameScreen');
 let winScreen = document.getElementById('winScreen');
 let loseScreen = document.getElementById('loseScreen');
-let winCurtain = document.getElementById('winCurtain');
-let loseCurtain = document.getElementById('loseCurtain');
+let winCurtain = document.getElementById('winCurtainSea');
+let loseCurtain = document.getElementById('loseCurtainSea');
 let playButton = document.getElementById('play-btn');
 let bigPlayButton = document.getElementById('big-play-btn');
 let ding = document.getElementById('myAudio');
@@ -19,9 +19,10 @@ let timer = 0;
 let limit = 50;
 let baseTime = 1000;
 let randomTime = 1000;
-let timerSpeed = 2600;
+let timerSpeed = 2200;
 let selectedAnim = 'fadeOut';
-const targets = ['path22', 'g27', 'g28', 'g29'];
+// const targets = ['image1-15', 'image1-88', 'image1-39' ,'image1-433', 'image1-9'];
+const targets = ['img1', 'img2', 'img3' ,'img4', 'img5'];
 let forbiddenFruit;
 
 construct();
@@ -42,7 +43,7 @@ function beginPlay() {
     gameOver = false;
     playerScore = 0;
     timer = 0;
-    backScreen.style.filter = "grayscale(100%) sepia(100%) saturate(200%) brightness(66%) hue-rotate(250deg)";
+    backScreen.style.filter = "grayscale(100%) sepia(100%) saturate(200%) brightness(66%) hue-rotate(100deg)";
     refreshScores();
     hideAllButGame();
 
