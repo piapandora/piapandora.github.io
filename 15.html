@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 
 <head>
   <meta charset="UTF-8">
@@ -14,7 +14,7 @@
 
 <body style="display: grid">
 
-<div class="menu-container" id="menu">
+<header class="menu-container" id="menu">
   <a href="index.html"><img src="images/icons/icons8-home-32.png" class="menu-btn"></a>
   <img src="images/icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
   <a href="14.html"><img src="images/icons/icons8-left-32.png" class="menu-btn"></a>
@@ -22,9 +22,9 @@
   <a href="16.html"><img src="images/icons/icons8-right-32.png" class="menu-btn"></a>
   <img src="images/icons/icons8-hide-32.png" class="menu-btn" id="btnH">
   <img src="images/icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
-</div>
+</header>
 
-<div class="svg-container" id="svg">
+<main class="svg-container" id="svg">
    <img src="images/park/park.png" id="backScreen">
    <!-- https://www.vecteezy.com/vector-art/2801711-blank-nature-park-landscape-at-night-scene -->
    <div id="startScreen" class="big-message">Park Yaramazları</div>
@@ -79,10 +79,9 @@
          id="path27"
          style="color:#000000;fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.5;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none"
          d="m 103.00781,349.63867 c -0.80361,-0.0383 -1.60836,-0.0521 -2.41211,-0.041 -0.803739,0.0111 -1.606472,0.047 -2.4082,0.10742 -22.204765,2.31091 -38.274275,22.74123 -35.892578,45.63281 l 3.83789,36.98632" /></g></g></svg>
+</main>
 
-</div>
-
-<div class="message-container" id="colors">
+<footer class="message-container" id="colors">
   <button style="width: 370px" class="footer-message"></button>
   <button style="width: 180px" id="scoreLabel" class="footer-message"></button>
   <button style="width: 60px" id="scoreBox" class="footer-message"></button>
@@ -90,8 +89,7 @@
   <button style="width: 60px" id="timerBox" class="footer-message"></button>
   <button style="width: 180px" id="timerLabel" class="footer-message"></button>
   <button style="width: 370px" class="footer-message"></button>
-
-</div>
+</footer>
 
 <audio id="myAudio" preload="auto">
   <source src="audio/myding.mp3" type="audio/mpeg">

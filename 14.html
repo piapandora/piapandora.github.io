@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 
 <head>
   <meta charset="UTF-8">
@@ -14,7 +14,7 @@
 
 <body style="display: grid">
 
-<div class="menu-container" id="menu">
+<header class="menu-container" id="menu">
   <a href="index.html"><img src="images/icons/icons8-home-32.png" class="menu-btn"></a>
   <img src="images/icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
   <a href="13.html"><img src="images/icons/icons8-left-32.png" class="menu-btn"></a>
@@ -22,9 +22,9 @@
   <a href="15.html"><img src="images/icons/icons8-right-32.png" class="menu-btn"></a>
   <img src="images/icons/icons8-hide-32.png" class="menu-btn" id="btnH">
   <img src="images/icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
-</div>
+</header>
 
-<div class="svg-container" id="svg">
+<main class="svg-container" id="svg">
    <img src="images/komsular/01.png" id="startScreen">
    <img src="images/komsular/02.png" id="winScreen" style="display:none">
    <img src="images/komsular/03.png" id="loseScreen" style="display:none">
@@ -168,23 +168,22 @@
            id="path19" /><path
            id="path61" onclick="score('path61')" class="target" style="display:inline;opacity:1;fill:#ff6600;fill-opacity:1;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
            d="m 235.14062,121.75391 c -19.01218,1.71956 -29.03927,18.62448 -27.33007,37.75781 l 3.49714,37.76672 40.82903,3.17859 6.96094,-71.64062 c -6.83251,-5.27562 -15.37594,-7.79422 -23.95704,-7.0625 z" /></g></svg>
-    
+</main>
 
-</div>
-
-<div class="message-container" id="colors">
+<footer class="message-container" id="colors">
   <button style="width: 640px" id="scoreBox" class="footer-message"></button>
   <button style="width: 640px" id="timerBox" class="footer-message"></button>
-</div>
+</footer>
 
 <script src="js/script.js"></script>
 
 <script>
 let baseTime = 5000;
 let selectedAnim = 'fadeOutKomsu';
+
 function refreshScores() {
-  scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
-  timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
+    scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
+    timerBox.innerHTML = "<span class='message-label'>Komşuların Puanı:</span> <span class='message-value-28'>" + timer + "</span>";
 }
 </script>
 

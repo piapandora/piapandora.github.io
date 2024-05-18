@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 
 <head>
   <meta charset="UTF-8">
@@ -14,7 +14,7 @@
 
 <body style="display: grid">
 
-<div class="menu-container" id="menu">
+<header class="menu-container" id="menu">
   <a href="index.html"><img src="images/icons/icons8-home-32.png" class="menu-btn"></a>
   <img src="images/icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
   <a href="12.html"><img src="images/icons/icons8-left-32.png" class="menu-btn"></a>
@@ -22,9 +22,9 @@
   <a href="14.html"><img src="images/icons/icons8-right-32.png" class="menu-btn"></a>
   <img src="images/icons/icons8-hide-32.png" class="menu-btn" id="btnH">
   <img src="images/icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
-</div>
+</header>
 
-<div class="svg-container" id="svg">
+<main class="svg-container" id="svg">
    <img src="images/polygon/01.png" id="startScreen">
    <img src="images/polygon/02.png" id="winScreen" style="display:none">
    <img src="images/polygon/03.png" id="loseScreen" style="display:none">
@@ -209,18 +209,19 @@
       </g>
    </g>
    </svg>
-</div>
+</main>
 
-<div class="message-container" id="colors">
+<footer class="message-container" id="colors">
   <button style="width: 640px" id="scoreBox" class="footer-message"></button>
   <button style="width: 640px" id="timerBox" class="footer-message"></button>
-</div>
+</footer>
 
 <script src="js/script.js"></script>
 
 <script>
 let baseTime = 2500;
 let selectedAnim = 'fadeOut';
+
 function refreshScores() {
     scoreBox.innerHTML = "<span class='message-label'>Senin Puanın:</span> <span class='message-value-28'>" + playerScore + "</span>";
     timerBox.innerHTML = "<span class='message-label'>Rakibinin Puanı:</span> <span class='message-value-28'>" + timer + "</span>";

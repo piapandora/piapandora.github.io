@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
  
 <head>
   <meta charset="UTF-8">
@@ -14,7 +14,7 @@
  
 <body style="display: grid">
   
-  <div class="menu-container" id="menu">
+  <header class="menu-container" id="menu">
     <a href="index.html"><img src="images/icons/icons8-home-32.png" class="menu-btn"></a>
     <img src="images/icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
     <a href="1.html"><img src="images/icons/icons8-left-32.png" class="menu-btn"></a>
@@ -22,13 +22,11 @@
     <a href="2.html"><img src="images/icons/icons8-right-32.png" class="menu-btn"></a>
     <img src="images/icons/icons8-hide-32.png" class="menu-btn" id="btnH">
     <img src="images/icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
-  </div>
+  </header>
 
-<div class="svg-container" id="svg">
-
+<main class="svg-container" id="svg">
 <!-- I added "preserveAspectRatio="none" and increased the width by 80 -->
-  
-  <svg
+   <svg
    width="1280"
    height="600"
    preserveAspectRatio="none"
@@ -81,9 +79,9 @@
        onclick="colorPath('path10')"
        style="fill:#dddddd;fill-opacity:1;stroke:#000000;stroke-width:2.64584;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
        d="m 37.041666,160.07291 a 11.906251,11.906246 0 0 0 -11.90625,11.90625 11.906251,11.906246 0 0 0 11.90625,11.90625 11.906251,11.906246 0 0 0 11.906249,-11.90625 11.906251,11.906246 0 0 0 -11.906249,-11.90625 z m 246.062494,0 a 11.906251,11.906246 0 0 0 -11.90625,11.90625 11.906251,11.906246 0 0 0 11.90625,11.90625 11.906251,11.906246 0 0 0 11.90625,-11.90625 11.906251,11.906246 0 0 0 -11.90625,-11.90625 z" /></g></svg>
-</div>
+</main>
 
-<div class="color-container" id="colors">
+<footer class="color-container" id="colors">
   <div class="color-item" onclick="selectColor('#dddddd')" style="background-color: #dddddd;"></div>
   <div class="color-item" onclick="selectColor('#ffff6a')" style="background-color: #ffff6a;"></div>
   <div class="color-item" onclick="selectColor('#ffc12a')" style="background-color: #ffc12a;"></div>
@@ -109,7 +107,7 @@
   <div class="color-item" onclick="selectColor('#6f2436')" style="background-color: #6f2436;"></div>
   <div class="color-item" onclick="selectColor('#431f16')" style="background-color: #431f16;"></div>
   <div class="color-item" onclick="selectColor('#555555')" style="background-color: #555555;"></div>
-</div>
+</footer>
   
 <script src="js/script.js"></script>
 

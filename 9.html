@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 
 <head>
   <meta charset="UTF-8">
@@ -14,7 +14,7 @@
 
 <body style="display: grid">
 
-<div class="menu-container" id="menu">
+<header class="menu-container" id="menu">
   <a href="index.html"><img src="images/icons/icons8-home-32.png" class="menu-btn"></a>
   <img src="images/icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
   <a href="8.html"><img src="images/icons/icons8-left-32.png" class="menu-btn"></a>
@@ -22,11 +22,9 @@
   <a href="10.html"><img src="images/icons/icons8-right-32.png" class="menu-btn"></a>
   <img src="images/icons/icons8-hide-32.png" class="menu-btn" id="btnH">
   <img src="images/icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
-</div>
+</header>
 
-
-
-<div class="svg-container" id="svg">
+<main class="svg-container" id="svg">
   <svg
    width="1280"
    height="600"
@@ -1146,15 +1144,13 @@
        style="display:inline;fill:none;fill-opacity:1;stroke:#000000;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
        d="m 700.16861,544.99095 c 5.63839,17.93993 22.45987,14.55401 26.56863,0.0216 31.52374,23.14386 23.04702,-37.73835 -14.88367,-36.54353 -38.38029,1.20898 -43.62092,66.85047 -11.68496,36.52197 z"
        id="path155" /></g></svg>
+</main>
 
-
-</div>
-
-<div class="message-container" id="colors">
+<footer class="message-container" id="colors">
   <button style="width: 270px" id="prev-btn" class="footer-message footer-btn-inactive" onclick="prevScene()">Geri</button>
   <button style="width: 740px" id="message" class="footer-message"></button>
   <button style="width: 270px" id="next-btn" class="footer-message footer-btn-active footer-btn-focus" onclick="nextScene()">İleri</button>
-  </div>
+</footer>
 
 <script>
 const sceneMessages = ['Gölge topun peşinde koşturuyordu.', 'Tam topu yakalamak üzereyken...', '...birşeyler farketti.', 'Araştırdı, ortalığı kokladı...', '...ve kazmaya başladı.', 'Derine kazdı...', '...daha da derine...', '...ve Gölge sonunda kocaman bir kemik buldu!'];

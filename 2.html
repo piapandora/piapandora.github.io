@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
  
 <head>
   <meta charset="UTF-8">
@@ -14,7 +14,7 @@
  
 <body style="display: grid">
 
-  <div class="menu-container" id="menu">
+  <header class="menu-container" id="menu">
     <a href="index.html"><img src="images/icons/icons8-home-32.png" class="menu-btn"></a>
     <img src="images/icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
     <a href="1.html"><img src="images/icons/icons8-left-32.png" class="menu-btn"></a>
@@ -22,12 +22,10 @@
     <a href="3.html"><img src="images/icons/icons8-right-32.png" class="menu-btn"></a>
     <img src="images/icons/icons8-hide-32.png" class="menu-btn" id="btnH">
     <img src="images/icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
-  </div>
+  </header>
 
-<div class="svg-container" id="svg">
-
+<main class="svg-container" id="svg">
 <!-- I added "preserveAspectRatio="none" and increased the width by 80 -->
-
   <svg
    width="1280"
    height="600"
@@ -152,10 +150,9 @@
        d="m 238.71872,128.68892 c 4.17691,3.99531 8.2794,4.10325 12.29278,-0.44213"
        id="path4363"
        onclick="colorPath('path4363')" /></g></svg>
+</main>
 
-</div>
-
-<div class="color-container" id="colors">
+<footer class="color-container" id="colors">
   <div class="color-item" onclick="selectColor('#dddddd')" style="background-color: #dddddd;"></div>
   <div class="color-item" onclick="selectColor('#ffff6a')" style="background-color: #ffff6a;"></div>
   <div class="color-item" onclick="selectColor('#ffc12a')" style="background-color: #ffc12a;"></div>
@@ -181,7 +178,7 @@
   <div class="color-item" onclick="selectColor('#6f2436')" style="background-color: #6f2436;"></div>
   <div class="color-item" onclick="selectColor('#431f16')" style="background-color: #431f16;"></div>
   <div class="color-item" onclick="selectColor('#555555')" style="background-color: #555555;"></div>
-</div>
+</footer>
 
 <script src="js/script.js"></script>
 
