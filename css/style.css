@@ -46,7 +46,6 @@ p {
 
 .header-container {
   display: grid;
-  /* flex-direction: column; */
   background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.25)),
   url('../images/gallery/hero.jpg');
   background-repeat: no-repeat;
@@ -157,6 +156,14 @@ button {
   cursor: crosshair;
   display: flex;
   justify-content: center;
+
+  overflow: hidden;
+}
+
+.pia-container {
+  margin-bottom: -4px;
+  /* cursor: pointer; */
+  overflow: hidden;
 }
 
 .svg-container-720 {
@@ -168,6 +175,8 @@ button {
   display: flex;
   justify-content: center;
 }
+
+.cursor-default {cursor: default}
 
 .slideshow-item {
   height:720px; 
@@ -288,10 +297,6 @@ button {
   100% { opacity: 1 }
 }
 
-.paused {
-  animation-play-state: paused;
-}
-
 .colorize {
   transition-duration: 3s;
 }
@@ -346,6 +351,30 @@ button {
 @keyframes komsuAnim {
   0% { opacity: 1; fill:#ffffff; }
   100% { opacity: 0; fill: #000000; }
+}
+
+@keyframes upDown {
+  0% { transform: translateY(23px) scale(0.92) }
+  5% { transform: translateY(23px) scale(0.92) }
+  75% { transform: translateY(100px) scale(1) }
+  100% { transform: translateY(23px) scale(0.92)}
+}
+
+@keyframes upDown2 {
+  0% { transform: translateY(0); }
+  30% { transform: translateY(60px); }
+  90% { transform: translateY(0); }
+  100% { transform: translateY(0); }
+}
+
+.up-down {
+  animation: upDown 0.9s infinite;
+  cursor: pointer;
+}
+
+.up-down-two {
+  animation: upDown2 1s infinite;
+  cursor: pointer;
 }
 
 .fadeOut {
@@ -490,4 +519,8 @@ button {
 .message-value-28 {
   color: white;
   font-size: 28px;
+}
+
+.paused {
+  animation-play-state: paused;
 }

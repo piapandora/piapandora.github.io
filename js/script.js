@@ -15,13 +15,13 @@ function colorPath(pathId) {
 menu.addEventListener("mouseenter", function() {
     menu.style.opacity = 1;
     colors.style.opacity = 1;
-    document.body.style.transition = 'background 1s ease';
+    // document.body.style.transition = 'background 1s ease';
 })
 
 colors.addEventListener("mouseenter", function() {
     menu.style.opacity = 1;
     colors.style.opacity = 1;
-    document.body.style.transition = 'background 1s ease';
+    // document.body.style.transition = 'background 1s ease';
 })
 
 btnH.addEventListener('click', () => {  
