@@ -524,3 +524,7 @@ button {
 .paused {
   animation-play-state: paused;
 }
+
+.midbar {
+  cursor: none
+}
