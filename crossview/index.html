@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="CrossView 3D Stories">
+  <meta name="keywords" content="CrossView, Stories, 3 Dimensional">
+  <meta name="author" content="Pia Pandora">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrossView 3D Portraits</title>
+  <link rel="icon" type="image/png" href="icons/icons8-portrait-32.png">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body style="display: grid">
+
+<header class="menu-container" id="menu">
+  <img src="icons/icons8-home-32.png" class="menu-btn" id="btnQ">
+  <img src="icons/icons8-refresh-32.png" class="menu-btn" id="btnR">
+  <img src="icons/icons8-left-32.png" onclick="prevScene()" class="menu-btn">
+  <button id="title-message" style="width: 920px"></button>
+  <img src="icons/icons8-right-32.png" onclick="nextScene()" class="menu-btn">
+  <img src="icons/icons8-hide-32.png" class="menu-btn" id="btnE">
+  <img src="icons/icons8-fullscreen-32.png" class="menu-btn" id="btnF">
+</header>
+
+<main class="svg-container" id="svg">
+  <div id="scene0" class="header-container">
+    <h1 id="welcome" style="padding: 180px 0 0 0"><span id="fadeIn1">Welcome to</span> <span id="fadeIn2" style="color: #FFA500; text-shadow: 0px 0px 5px #FF7F00">CrossView</span></h1>
+    <h2 id="fadeIn3" style="padding: 0 0 200px 0"><span style="color: #FFA500; text-shadow: 0px 0px 4px #FF7F00">-</span> 3 Dimensional Portraits <span style="color: #FFA500; text-shadow: 0px 0px 4px #FF7F00">-</span></h2>
+  </div>
+
+  <div id="scene1" class="pia-container" style="display:none">
+    <img src="images/13bg.png" class="grayscale" style="height: 640px">
+    <img src="images/13pia.png" class="pia" style="height: 640px; position: absolute; left: 0">
+  </div>
+
+  <!-- <div id="scene2" class="pia-container" style="display:none">
+    <img src="images/01.png" style="height: 640px">
+  </div>
+
+  <div id="scene3" class="pia-container" style="display:none">
+    <img src="images/02.png" style="height: 640px">
+  </div>
+
+  <div id="scene4" class="pia-container" style="display:none">
+    <img src="images/03.png" style="height: 640px">
+  </div>
+  
+  <div id="scene5" class="pia-container" style="display:none">
+    <img src="images/04.png" style="height: 640px">
+  </div>
+
+  <div id="scene6" class="pia-container" style="display:none">
+    <img src="images/05.png" style="height: 640px">
+  </div>
+
+  <div id="scene7" class="pia-container" style="display:none">
+    <img src="images/06.png" style="height: 640px">
+  </div>
+
+  <div id="scene8" class="pia-container" style="display:none">
+    <img src="images/07.png" style="height: 640px">
+  </div>
+
+  <div id="scene9" class="pia-container" style="display:none">
+    <img src="images/08.png" style="height: 640px">
+  </div>
+
+  <div id="scene10" class="pia-container" style="display:none">
+    <img src="images/09.png" style="height: 640px">
+  </div>
+
+  <div id="scene11" class="pia-container" style="display:none">
+    <img src="images/10.png" style="height: 640px">
+  </div>
+
+  <div id="scene12" class="pia-container" style="display:none">
+    <img src="images/11.png" style="height: 640px">
+  </div>
+
+  <div id="scene13" class="pia-container" style="display:none">
+    <img src="images/12.png" style="height: 640px">
+  </div> -->
+
+  <div id="scene2" class="pia-container" style="display:none">
+    <img src="images/14bg.png" class="" style="height: 640px">
+    <img src="images/14pia.png" class="pia" style="height: 640px; position: absolute; left: 0">
+  </div>
+
+  <div id="scene3" class="pia-container" style="display:none">
+    <img src="images/15bg.png" class="" style="height: 640px">
+    <img src="images/15pia.png" class="pia" style="height: 640px; position: absolute; left: 0">
+  </div>
+
+  <div id="scene4" class="pia-container" style="display:none">
+    <img src="images/191_SBS_cross_eyed.jpg" class="" style="height: 640px">
+  </div>
+
+  <div id="scene5" class="pia-container" style="display:none">
+    <img src="images/127_SBS_cross_eyed.jpg" class="" style="height: 640px">
+  </div>
+
+  <div id="scene6" class="pia-container" style="display:none">
+    <img src="images/105_SBS_cross_eyed.jpg" class="" style="height: 640px">
+  </div>
+
+  <div id="scene7" class="pia-container" style="display:none">
+    <img src="images/108_SBS_cross_eyed.jpg" class="" style="height: 640px">
+  </div>
+
+  <div id="scene8" class="pia-container" style="display:none">
+    <img src="images/41_SBS_cross_eyed.jpg" class="" style="height: 640px">
+  </div>
+
+  <div id="scene9" class="pia-container" style="display:none">
+    <img src="images/pias3dtest.png" class="" style="height: 640px">
+  </div>
+</main>
+
+<footer class="message-container" id="colors">
+  <button style="width: 1280px" id="message-center" class="footer-message"></button>
+  <button style="width: 640px" id="message-left" class="footer-message"></button>
+  <button style="width: 80px" id="message-midbar" class="footer-message"></button>
+  <button style="width: 640px" id="message-right" class="footer-message"></button>
+</footer>
+
+<script src="script.js"></script>
+
+</body>
+</html>
