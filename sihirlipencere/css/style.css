@@ -1,0 +1,530 @@
+body {
+  text-align: center;
+  background-color: #222222;
+  margin: 0;
+/* code below disables mouse-select behaviour */
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 72px;
+  color: #ffffff;
+  font-style: normal;
+  text-shadow: 0px 0px 4px #bbbbbb;
+}
+
+#welcome {text-shadow: 0px 0px 5px #dddddd;}
+
+h2 {
+  font-family: Arial, sans-serif;
+  font-size: 42px;
+  color: #dddddd;
+  font-style: normal;
+  text-shadow: 0px 0px 4px #bbbbbb;
+}
+
+h3 {
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  color: #FFA500;
+  font-style: italic;
+  text-shadow: 0px 0px 2px #FF7F00;
+}
+
+p {
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  color: #dddddd;
+  font-style: normal;
+  text-shadow: 0px 0px 2px #bbbbbb;
+}
+
+.header-container {
+  display: grid;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.25)),
+  url('../images/gallery/hero.jpg');
+  background-repeat: no-repeat;
+  background-size: 1280px;
+  background-position: center;
+}
+
+button {
+  background-color: darkgreen;
+  border: none;
+  color: #ffffff;
+  height: 60px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 0px 0px 2px #bbbbbb;
+}
+
+.footer-message {
+  background-color: #222222;
+  border: none;
+  color: #FFA500;
+  height: 60px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 0px 0px 2px #808080;
+}
+
+.footer-btn-active {
+  color: #dddddd;
+  cursor: pointer;
+  text-shadow: none;
+  transition-duration: 0.3s;
+}
+
+.footer-btn-active:hover {
+  background-color: darkgreen;
+  color: white;
+}
+
+.footer-btn-inactive {
+  background-color: #222222;
+  color: #555555;
+  text-shadow: none;
+}
+
+.footer-btn-focus {
+  background-color: #ff8c00;
+  color: #222222;
+}
+
+.menu-btn {
+  background-color: #222222;
+  width: 32px;
+  height: 32px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  padding-left: 29px;
+  padding-right: 29px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+}
+
+.menu-btn:hover {
+  background-color: darkgreen;
+  color: #ffffff;
+}
+
+.menu-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  transition-duration: 1s;
+
+}
+
+.message-container {
+  position: absolute;
+  top: 660px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  transition-duration: 1s;
+}
+
+.special-buttons {
+  display:flex;
+  position:absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index:4;
+}
+
+.svg-container {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  cursor: crosshair;
+  display: flex;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.pia-container {
+  margin-bottom: -4px;
+  /* cursor: pointer; */
+  overflow: hidden;
+}
+
+.svg-container-720 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  cursor: crosshair;
+  display: flex;
+  justify-content: center;
+}
+
+.cursor-default {cursor: default}
+
+.slideshow-item {
+  height:720px; 
+  filter:grayscale(100%);
+}
+
+.color-container {
+  position: absolute;
+  top: 660px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  justify-content: center;
+  transition-duration: 1s;
+}
+
+.color-item {
+  width: 51.2px;
+  height: 60px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+}
+
+.color-item:hover {transform: translateY(-12px);}
+
+.newcolor-item {
+  width: 32px;
+  height: 60px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+}
+
+.newcolor-item:hover {transform: translateY(-12px);}
+
+.trio-section {
+  background-color: #3c3c3c;
+  padding-top: 60px; 
+  padding-bottom: 60px;
+}
+
+.trio-container {
+  display: grid;
+  grid-template-columns: 380px 380px 380px;
+  grid-gap: 40px;  
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+}
+
+.trio-item {
+  background-color: #222222;
+  border: 15px solid darkgreen;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-left: 40px;
+  padding-right: 40px;
+  text-align: center;
+}
+
+.gallery-container {
+  background-color: #222222;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 10px;
+  margin-top: 60px;
+  margin-bottom: 60px;
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+}
+
+.gallery-item {
+  border-radius: 20px; filter: grayscale(100%); width:300px; height:300px; vertical-align:middle;
+}
+
+.grayscale {
+  filter: grayscale(100%)
+}
+
+.footer-container {
+  background-color: darkgreen;
+  display: flex;
+  justify-content: center;
+}
+
+.footer-item {
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  color: #dddddd;
+  font-style: normal;
+  text-shadow: 0px 0px 2px #FF7F00;
+  text-decoration: none;
+  animation-name: glow;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes glow {
+  50% {color: #FFA500;}
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-200px); }
+  100% { transform: translateY(0); }
+}
+
+.monk {
+  cursor: pointer;
+  animation: float ease-in-out 7s infinite;
+}
+
+@keyframes shadowFadeIn {
+  0% { opacity: 1 }
+  50% { opacity: 0.3 }
+  100% { opacity: 1 }
+}
+
+.colorize {
+  transition-duration: 3s;
+}
+
+.colorizeFast {
+  transition-duration: 2s;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0 }
+  50% { opacity: .7 }
+  100% { opacity: 1 }
+}
+
+@keyframes fadeInFor3 {
+  0% { opacity: 0 }
+  100% { opacity: 1 }
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0.8) }
+  100% { transform: scale(1) }
+}
+
+#fadeIn1, #fadeIn1B, #fadeIn2 {
+  opacity: 0;
+  transition: opacity ease-in-out;
+}
+
+#fadeIn1, #fadeIn1B {
+  animation: fadeIn 3s 0.5s forwards;
+}
+
+#fadeIn2 {
+  animation: fadeIn 3s 1.5s forwards;
+}
+
+#fadeIn3 {
+  opacity: 0;
+  animation: fadeInFor3 1.5s 2.5s forwards, scaleIn 1.25s 2.5s forwards;
+}
+
+.shadowAnim {
+  animation: shadowFadeIn ease-in-out 7s infinite;
+}
+
+@keyframes targetAnim {
+  0% { opacity: 1 }
+  100% { opacity: 0 }
+}
+
+@keyframes komsuAnim {
+  0% { opacity: 1; fill:#ffffff; }
+  100% { opacity: 0; fill: #000000; }
+}
+
+@keyframes upDown {
+  0% { transform: translateY(23px) scale(0.92) }
+  5% { transform: translateY(23px) scale(0.92) }
+  75% { transform: translateY(100px) scale(1) }
+  100% { transform: translateY(23px) scale(0.92)}
+}
+
+@keyframes upDown2 {
+  0% { transform: translateY(0); }
+  30% { transform: translateY(60px); }
+  90% { transform: translateY(0); }
+  100% { transform: translateY(0); }
+}
+
+.up-down {
+  animation: upDown 0.9s infinite;
+  cursor: pointer;
+}
+
+.up-down-two {
+  animation: upDown2 1s infinite;
+  cursor: pointer;
+}
+
+.fadeOut {
+  animation: targetAnim 0.4s;
+}
+
+.fadeOutKomsu {
+  animation: komsuAnim 0.4s;
+}
+
+#backScreen {
+  filter: grayscale(100%) blur(2.25px) sepia(100%) saturate(200%) brightness(66%) hue-rotate(250deg);
+}
+
+#backScreenSea {
+  filter: grayscale(100%) blur(2.25px) sepia(100%) saturate(200%) brightness(66%) hue-rotate(100deg);
+}
+
+#play-btn {
+  display: none;
+  opacity: 0;
+  border: 4px solid black;
+  border-radius: 4px;
+  box-shadow: 0px 0px 16px black;
+  width: 180px;
+  height: 60px;
+  margin-top: 435px;
+  cursor: pointer;
+  position: absolute;
+  animation: fadeInFor3 2s 1.5s forwards;
+}
+
+#big-play-btn {
+  display: none;
+  border: 6px solid black;
+  border-radius: 6px;
+  box-shadow: 0px 0px 24px black;
+  font-size: 36px;
+  width: 270px;
+  height: 90px;
+  margin-top: 425px;
+  cursor: pointer;
+  position: absolute;
+  animation: fadeInFor3 2s forwards;
+}
+
+#winCurtain {
+  display: none;
+  opacity: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/park.png');
+  /* https://www.vecteezy.com/vector-art/2801711-blank-nature-park-landscape-at-night-scene */
+  width: 1280px;
+  height: 600px;
+  animation: fadeInFor3 2s forwards;
+  position: absolute;
+}
+
+#loseCurtain {
+  display: none;
+  opacity: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/park.png');
+  /* https://www.vecteezy.com/vector-art/2801711-blank-nature-park-landscape-at-night-scene */
+  filter: grayscale(100%);
+  width: 1280px;
+  height: 600px;
+  animation: fadeInFor3 2s forwards;
+  position: absolute;
+}
+
+#winCurtainSea {
+  display: none;
+  opacity: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/mermaidsea.png');
+  width: 1280px;
+  height: 600px;
+  animation: fadeInFor3 2s forwards;
+  position: absolute;
+}
+
+#loseCurtainSea {
+  display: none;
+  opacity: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('../images/park/sea.png');
+  filter: grayscale(100%);
+  width: 1280px;
+  height: 600px;
+  animation: fadeInFor3 2s forwards;
+  position: absolute;
+}
+
+.big-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  color: #ffffff;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0px 0px 30px #000000;
+  font-family: Arial, sans-serif;
+  font-size: 132px;
+  font-stretch: condensed;
+  width: 1280px;
+  height: 600px;
+  position: absolute;
+}
+
+.small-message {
+  display: none;
+  opacity: 0;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  color: #ffffff;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0px 0px 30px #000000;
+  font-family: Arial, sans-serif;
+  font-size: 108px;
+  font-stretch: condensed;
+  width: 1280px;
+  height: 600px;
+  position: absolute;
+  animation: fadeInFor3 2s 1s forwards;
+}
+
+.message-label {
+  color: orange;
+  font-size: 28px;
+  }
+
+.message-label-yellow {
+  color: yellow;
+  font-size: 30px;
+}
+
+.message-value {
+  color: white;
+  font-size: 40px;
+}
+
+.message-value-28 {
+  color: white;
+  font-size: 28px;
+}
+
+.paused {
+  animation-play-state: paused;
+}
+
+.midbar {
+  cursor: none
+}
