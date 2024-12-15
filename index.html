@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pia Pandora | Games & Apps</title>
 	<link rel="icon" type="image/png" href="micro-logo.png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 	
@@ -118,28 +120,66 @@
 				width: 70%;
 			}
 		}
+
+		@keyframes fadeIn {
+			0% { opacity: 0 }
+			100% { opacity: 1 }
+		}
+
+		#fadeIn1, #fadeIn2, #fadeIn2b, #fadeIn2c, #fadeIn2d, #fadeIn2z, #fadeIn3 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+		}
+
+		#fadeIn1 {
+			animation: fadeIn 3s 0.3s forwards;
+		}
+		
+		#fadeIn2 {
+			animation: fadeIn 3s 1.3s forwards;
+		}
+		
+		#fadeIn2b {
+			animation: fadeIn 3s 1.6s forwards;
+		}
+		
+		#fadeIn2c {
+			animation: fadeIn 3s 1.9s forwards;
+		}
+		
+		#fadeIn2d {
+			animation: fadeIn 3s 2.2s forwards;
+		}
+		
+		#fadeIn2z {
+			animation: fadeIn 3s 2.5s forwards;
+		}
+		
+		#fadeIn3 {
+			animation: fadeIn 3s 3s forwards;
+		}
 		
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="profile">
+        <div class="profile" id="fadeIn1">
             <img src="mini-logo.jpg" alt="Profile Picture">
             <h1>Pia Pandora</h1>
             <h3><i>Games & Apps</i></h3>
 			
         </div>
         <div class="links">
-            <a href="https://piapandora.itch.io" target="_blank">Pia Pandora Games</a>
-            <a href="https://piapandora.com/sihirlipencere" target="_blank">Sihirli Pencere: 3 Boyutlu Boyama</a>
-            <a href="https://piapandora.com/crossview" target="_blank">CrossView 3D Portraits</a>
-            <a href="https://app.piapandora.com" target="_blank">Teen Beauty AI</a>
+            <a href="https://piapandora.itch.io" target="_blank" id="fadeIn2">Pia Pandora Games</a>
+            <a href="https://piapandora.com/sihirlipencere" target="_blank" id="fadeIn2b">Sihirli Pencere: 3 Boyutlu Boyama</a>
+            <a href="https://piapandora.com/crossview" target="_blank" id="fadeIn2c">CrossView 3D Portraits</a>
+            <a href="https://app.piapandora.com" target="_blank" id="fadeIn2d">Teen Beauty AI</a>
         </div>
-        <div class="social-icons">
+        <div class="social-icons" id="fadeIn3">
             <a href="https://www.instagram.com/pia.pandora" target="_blank" aria-label="Instagram"><img src="icons8-instagram-50.png" height="25px" width="25px" alt="Instagram Logo"></a>
             <a href="mailto:info@piapandora.com" target="_blank" aria-label="Mail"><img src="icons8-mail-64.png" height="25px" width="25px" alt="Mail Logo"></a>
         </div>
-        <footer>
+        <footer id="fadeIn3">
             <a href="http://www.canaksahin.com" target="_blank" aria-label="Author" style="text-decoration: none; color: #1E2330"><b>Can Akşahin</b></a><b> &copy; 2024</b>
         </footer>
     </div>
