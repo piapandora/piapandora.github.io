@@ -3,137 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pia Pandora | Games & Apps</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-			background-color: #650000;
-            color: #1E2330;
-        }
-
-        .container {
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
-        }
-
-        .profile {
-            margin-bottom: 20px;
-        }
-
-        .profile img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-
-        .profile h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #1E2330;
-        }
-		
-		.profile h3 {
-            margin: 5px 0 10px 0;
-            font-size: 18px;
-            font-style: italic;
-            color: #555;
-        }
-
-        .links a {
-            display: block;
-            text-decoration: none;
-			background-color: #EECBBF;
-            color: #1E2330;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-size: 18px;
-			font-style: bold;
-            transition: background-color 0.3s;
-        }
-
-        .links a:hover {
-            background-color: #800000;
-			color: #ffffff;
-        }
-
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .social-icons a {
-            text-decoration: none;
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            background-color: #eee;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #555;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .social-icons a:hover {
-            background-color: #EECBBF;
-            color: white;
-        }
-
-        footer {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #555;
-        }
-		
-		@media (max-width: 768px) {
-			body {
-				flex-basis: 100%;
-			}
-			.container {
-				width: 70%;
-			}
-		}
-		
-    </style>
+    <title>Muharrem Şimşek - Fotoğraf Sanatçısı</title>
+	<link rel="icon" type="image/png" href="icons8-portrait-48.png">
+	<link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div class="profile">
-            <img src="mini-logo.jpg" alt="Profile Picture">
-            <h1>Pia Pandora</h1>
-            <h3><i>Games & Apps</i></h3>
-			
+        <div class="flexbox">
+            <div class="half">
+                <img src="hero.png" style="height: 400px; width: 400px" alt="Artist Picture" class="artist-picture">
+                <div class="links">
+                    <a href="https://flickr.com" class="btn">Fotoğraf Portföyüm</a>
+                </div>
+            </div>
+            <div class="half cv">
+                <h1>Muharrem Şimşek</h1>
+                <h2>Fotoğraf Sanatçısı</h2>
+                <br>
+                <p>1951 yılında Tokat’ın Niksar ilçesinde doğdu. İlk öğrenimini burada tamamladıktan sonra, ortaöğrenimini Van’da tamamladı. Erzurum Yapı-Sanat Okulu'ndan İnşaat bölümünde mezun olduktan sonra, Ankara’ya taşındı. Film-Radyo-Televizyon Eğitim Merkezi’nde fotoğrafçı olarak uzun yıllar çalıştı.</p>
+                <p>Çalışma hayatı boyunca karanlık odadan baskıya, iç ve dış çekimlerden belgesel ve tanıtım çekimlerine kadar fotoğrafçılığın her alanında profesyonel olarak görev yaptı. Emekli olduktan sonra, profesyonel fotoğrafçılığa devam ederek birçok firma ve holdingin tanıtım ve katalog fotoğraflarını çekti.</p>
+                <p>Profesyonel fotoğrafçılığın yanı sıra, amatör olarak Türkiye’nin birçok şehrinde tarihi, kültürel ve doğa güzelliklerini fotoğrafladı. Kültür Bakanlığı başta olmak üzere birçok kurum tarafından düzenlenen fotoğraf yarışmalarında, fotoğrafları ödül kazanmış veya sergilenmeye değer bulunmuştur.</p>
+                <p>Evli ve iki çocuk babası olan Muharrem Şimşek, halen fotoğraf sanatına amatör olarak devam etmektedir.</p>
+            </div>
         </div>
-        <div class="links">
-            <a href="https://piapandora.itch.io" target="_blank">Pia Pandora Games</a>
-            <a href="https://piapandora.com/sihirlipencere" target="_blank">Sihirli Pencere: 3 Boyutlu Boyama</a>
-            <a href="https://piapandora.com/crossview" target="_blank">CrossView 3D Portraits</a>
-            <a href="https://app.piapandora.com" target="_blank">Teen Beauty AI</a>
-        </div>
-        <div class="social-icons">
-            <a href="https://www.instagram.com/pia.pandora" target="_blank" aria-label="Instagram"><img src="icons8-instagram-50.png" height="25px" width="25px" alt="Instagram Logo"></a>
-            <a href="mailto:info@piapandora.com" target="_blank" aria-label="Mail"><img src="icons8-mail-64.png" height="25px" width="25px" alt="Mail Logo"></a>
-        </div>
-        <footer>
-            <a href="http://www.canaksahin.com" target="_blank" aria-label="Author" style="text-decoration: none; color: #1E2330"><b>Can Akşahin</b></a><b> &copy; 2024</b>
-        </footer>
     </div>
+    <footer>
+        <div class="social-media">
+            <a href="https://instagram.com" class="social-btn">i</a>
+            <a href="https://pinterest.com" class="social-btn">p</a>
+            <a href="https://facebook.com" class="social-btn">f</a>
+            <a href="https://x.com" class="social-btn">x</a>
+            <a href="https://500px.com" class="social-btn">5</a>
+            <a href="https://adobestock.com" class="social-btn">a</a>
+        </div>
+    </footer>
 </body>
 </html>
