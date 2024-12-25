@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandora's Tarot - Three Card Spread</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+			/* code below disables mouse-select behaviour */
+			user-select: none;
+			-moz-user-select: none;
+			-webkit-user-drag: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+        }
+		
+		.container {
+		}
+		
+        img {
+			height: 400px;
+			margin: 0;
+			padding-top: 10px;
+        }
+		
+		#cards {
+			height: 640px;
+			display: flex;
+			justify-content: space-evenly;
+            background-color: #002000;
+		}
+		
+		#card1, #card2, #card3 {
+			color: #ffffff;
+			font-size: 1.25rem;
+			font-style: italic;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+
+		#title, #quote {
+			color: #ffffff;
+			font-size: 1rem;
+			font-weight: bold;
+			background-color: #004000;
+			text-align: center;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 40px;
+		}
+
+		@keyframes fadeIn {
+			0% { opacity: 0 }
+			100% { opacity: 1 }
+		}
+
+		.fadeIn1 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s .3s forwards;
+		}
+		
+		.fadeIn2 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s 1.3s forwards;
+		}
+		
+		.fadeIn3 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s 2.3s forwards;
+		}
+		
+		.fadeIn1f {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 1s .3s forwards;
+		}
+		
+		.fadeIn2f {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 1s 1s forwards;
+		}
+		
+		.fadeIn3f {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 1s 1.7s forwards;
+		}
+    </style>
+</head>
+<body>
+    <div class="container">
+		<div id="title">Pandora's Tarot - Three Card Spread</div>
+		<div id="cards">
+			<div id="card1" class="fadeIn1f">
+				PAST
+				<img id="one" src="tarot/CardBacks.png" alt="one">
+			</div>
+			<div id="card2" class="fadeIn2f">
+				PRESENT
+				<img id="two" src="tarot/CardBacks.png" alt="two">
+			</div>
+			<div id="card3" class="fadeIn3f">
+				FUTURE
+				<img id="three" src="tarot/CardBacks.png" alt="three">
+			</div>
+		</div>
+		<div id="quote">Press Spacebar to begin!</div>
+    </div>
+
+    <script>
+	    const titles = [
+			"Pandora's Tarot - Three Card Spread",
+        ];
+
+		const tarotUrls = [
+			'tarot/00-TheFool.png',
+			'tarot/01-TheMagician.png',
+			'tarot/02-TheHighPriestess.png',
+			'tarot/03-TheEmpress.png',
+			'tarot/04-TheEmperor.png',
+			'tarot/05-TheHierophant.png',
+			'tarot/06-TheLovers.png',
+			'tarot/07-TheChariot.png',
+			'tarot/08-Strength.png',
+			'tarot/09-TheHermit.png',
+			'tarot/10-WheelOfFortune.png',
+			'tarot/11-Justice.png',
+			'tarot/12-TheHangedMan.png',
+			'tarot/13-Death.png',
+			'tarot/14-Temperance.png',
+			'tarot/15-TheDevil.png',
+			'tarot/16-TheTower.png',
+			'tarot/17-TheStar.png',
+			'tarot/18-TheMoon.png',
+			'tarot/19-TheSun.png',
+			'tarot/20-Judgement.png',
+			'tarot/21-TheWorld.png',
+		];
+		
+		const quotes = [
+			'Press Spacebar to begin!',
+			'Press Spacebar to reset...'
+        ];
+
+        function generateSpread() {
+            const titleElement = document.getElementById('title');
+			
+			const card1Element = document.getElementById('card1');
+			const card2Element = document.getElementById('card2');
+			const card3Element = document.getElementById('card3');
+			
+			const oneElement = document.getElementById('one');
+            const twoElement = document.getElementById('two');
+            const threeElement = document.getElementById('three');
+			
+            const quoteElement = document.getElementById('quote');
+
+			const cardIndexes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+
+			const randomCard1 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
+			const randomCard2 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
+			const randomCard3 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
+			
+            titleElement.textContent = titles[0];
+            oneElement.src = tarotUrls[randomCard1];
+			twoElement.src = tarotUrls[randomCard2];
+			threeElement.src = tarotUrls[randomCard3];
+            quoteElement.textContent = quotes[1];
+			/*
+			oneElement.classList.remove('fadeIn1');
+			twoElement.classList.remove('fadeIn2');
+			threeElement.classList.remove('fadeIn3');
+			*/
+			card1Element.classList.remove('fadeIn1f');
+			card2Element.classList.remove('fadeIn2f');
+			card3Element.classList.remove('fadeIn3f');
+			
+			void quoteElement.offsetWidth;
+			/*
+			oneElement.classList.add('fadeIn1');
+			twoElement.classList.add('fadeIn2');
+			threeElement.classList.add('fadeIn3');
+			*/
+			card1Element.classList.add('fadeIn1');
+			card2Element.classList.add('fadeIn2');
+			card3Element.classList.add('fadeIn3');
+		}
+		
+		function closeSpread() {
+		    const titleElement = document.getElementById('title');
+			
+			const card1Element = document.getElementById('card1');
+			const card2Element = document.getElementById('card2');
+			const card3Element = document.getElementById('card3');
+						
+			const oneElement = document.getElementById('one');
+            const twoElement = document.getElementById('two');
+            const threeElement = document.getElementById('three');
+			
+            const quoteElement = document.getElementById('quote');
+			
+            titleElement.textContent = titles[0];
+            oneElement.src = "tarot/CardBacks.png";
+			twoElement.src = "tarot/CardBacks.png";
+			threeElement.src = "tarot/CardBacks.png";
+            quoteElement.textContent = quotes[0];
+/*
+			oneElement.classList.remove('fadeIn1');
+			twoElement.classList.remove('fadeIn2');
+			threeElement.classList.remove('fadeIn3');
+			*/
+			card1Element.classList.remove('fadeIn1');
+			card2Element.classList.remove('fadeIn2');
+			card3Element.classList.remove('fadeIn3');
+			
+			void quoteElement.offsetWidth;
+			/*
+			oneElement.classList.add('fadeIn1');
+			twoElement.classList.add('fadeIn2');
+			threeElement.classList.add('fadeIn3');
+			*/
+			card1Element.classList.add('fadeIn1f');
+			card2Element.classList.add('fadeIn2f');
+			card3Element.classList.add('fadeIn3f');
+		}
+
+		let spreadOpen = false;
+
+	document.addEventListener('keydown', (event) => {
+		if (event.code === 'Space') {
+			if (spreadOpen) {
+				closeSpread();
+				spreadOpen = false;
+			} else {
+				generateSpread();
+				spreadOpen = true;
+			}
+		}
+	});
+    </script>
+</body>
+</html>
