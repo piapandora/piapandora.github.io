@@ -3,187 +3,406 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pia Pandora | Games & Apps</title>
-	<link rel="icon" type="image/png" href="micro-logo.png">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-	
-    <style>
+    <title>Pandora's Tarot - Three Card Spread</title>
+	<link rel="icon" type="image/png" href="icons8-clover-60.png">
+	<style>
         body {
-			font-family: Arial, sans-serif;
+            font-family: Arial, sans-serif;
+            text-align: center;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            //justify-content: center;//
-            height: 100vh;
-			background-color: #650000;
-            color: #1E2330;
-        }
-
-        .container {
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-			margin-top: 40px;
-			margin-bottom: 30px;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
-        }
-
-        .profile {
-            margin-bottom: 20px;
-        }
-
-        .profile img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-
-        .profile h1 {
-			font-family: "Libre Baskerville", serif;
-            margin: 0;
-            font-size: 24px;
-            color: #1E2330;
+            background-color: #002000;
+			/* code below disables mouse-select behaviour */
+			user-select: none;
+			-moz-user-select: none;
+			-webkit-user-drag: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
         }
 		
-		.profile h3 {
-			font-family: 'Poppins', sans-serif;
-            margin: -3px 0 10px 0;
-            font-size: 18px;
-            font-style: italic;
-            color: #555;
-        }
-
-        .links a {
-		    display: block;
-            text-decoration: none;
-			background-color: #EECBBF;
-            color: #1E2330;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-size: 18px;
-			font-style: bold;
-            transition: background-color 0.3s;
-        }
-
-        .links a:hover {
-		    background-color: #800000;
-			color: #ffffff;
-        }
-
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .social-icons a {
-            text-decoration: none;
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            background-color: #eee;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #555;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .social-icons a:hover {
-            background-color: #EECBBF;
-            color: white;
-        }
-
-        footer {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #555;
+		.container {
+		}
+		
+        img {
+			height: 400px;
+			border: 10px solid rgba(10, 8, 26, 1);
+			box-shadow: inset 0 0 10px rgba(10, 8, 26, 1);
         }
 		
-		@media (max-width: 768px) {
-			body {
-				flex-basis: 100%;
-			}
-			.container {
-				width: 70%;
-			}
+		#cards {
+			height: 550px;
+			display: flex;
+			justify-content: space-evenly;
+            background-color: #002000;
+		}
+		
+		#card1, #card2, #card3 {
+			color: #dddddd;
+			font-size: 1.25rem;
+			font-style: italic;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
 		}
 
+		#title, #quote, #reading {
+			color: #ffffff;
+			font-size: 1rem;
+			font-weight: bold;
+			background-color: #004000;
+			text-align: center;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 40px;
+		}
+		
+		#card1-text, #card2-text, #card3-text {
+			padding-bottom: 15px;
+		}
+
+		#reading {
+			color: #dddddd;
+			font-size: 1.25rem;
+			font-weight: normal;
+			font-style: italic;
+		    background-color: #002000;
+			padding-top: 10px;
+			padding-bottom: 40px;
+		}
+		
 		@keyframes fadeIn {
 			0% { opacity: 0 }
 			100% { opacity: 1 }
 		}
 
-		#fadeIn1, #fadeIn2, #fadeIn2b, #fadeIn2c, #fadeIn2d, #fadeIn2e, #fadeIn3 {
+		.fadeIn1 {
 			opacity: 0;
 			transition: opacity ease-in-out;
-		}
-
-		#fadeIn1 {
-			animation: fadeIn 3s 0.3s forwards;
+			animation: fadeIn 2s .3s forwards;
 		}
 		
-		#fadeIn2 {
-			animation: fadeIn 3s 1.3s forwards;
+		.fadeIn2 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s 1.3s forwards;
 		}
 		
-		#fadeIn2b {
-			animation: fadeIn 3s 1.6s forwards;
+		.fadeIn3 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s 2.3s forwards;
 		}
 		
-		#fadeIn2c {
-			animation: fadeIn 3s 1.9s forwards;
+		.fadeIn4 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 5s .3s forwards;
 		}
 		
-		#fadeIn2d {
-			animation: fadeIn 3s 2.2s forwards;
+		.fadeIn1f {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 1s .3s forwards;
 		}
 		
-		#fadeIn2e {
-			animation: fadeIn 3s 2.5s forwards;
+		.fadeIn2f {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 1s 1s forwards;
 		}
 		
-		#fadeIn3 {
-			animation: fadeIn 3s 3.3s forwards;
+		.fadeIn3f {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 1s 1.7s forwards;
 		}
 		
+		.bottom-button {
+			display: inline-block;
+			background-color: #004000;
+			color: #ffffff;
+			font-size: 1rem;
+			font-weight: bold;
+			text-align: center;
+			cursor: pointer;
+			text-decoration: none;
+			transition: background-color 0.3s;
+		}
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="profile" id="fadeIn1">
-            <img src="mini-logo.jpg" alt="Profile Picture">
-            <h1>Pia Pandora</h1>
-            <h3><i>Games & Apps</i></h3>
-			
-        </div>
-        <div class="links">
-            <a href="https://piapandora.itch.io" target="_blank" id="fadeIn2">Pia Pandora Games</a>
-            <a href="https://piapandora.com/sihirlipencere" target="_blank" id="fadeIn2b">Sihirli Pencere: 3 Boyutlu Boyama</a>
-            <a href="https://piapandora.com/crossview" target="_blank" id="fadeIn2c">CrossView 3D Portraits</a>
-            <a href="https://app.piapandora.com" target="_blank" id="fadeIn2d">Teen Beauty AI</a>
-            <a href="https://piapandora.com/tarot" target="_blank" id="fadeIn2e">Pandora's Tarot</a>
-			
-        </div>
-        <div class="social-icons" id="fadeIn3">
-            <a href="https://www.instagram.com/pia.pandora" target="_blank" aria-label="Instagram"><img src="icons8-instagram-50.png" height="25px" width="25px" alt="Instagram Logo"></a>
-            <a href="mailto:canaksahin@hotmail.com" target="_blank" aria-label="Mail"><img src="icons8-mail-64.png" height="25px" width="25px" alt="Mail Logo"></a>
-        </div>
-        <footer id="fadeIn3">
-            <a href="http://www.canaksahin.com" target="_blank" aria-label="Author" style="text-decoration: none; color: #1E2330"><b>Can Akşahin</b></a><b> &copy; 2024</b>
-        </footer>
+		<div id="title"></div>
+		<div id="cards">
+			<div id="card1" class="fadeIn1f">
+				<div id="card1-text"></div>
+				<img id="one" src="" alt="one">
+			</div>
+			<div id="card2" class="fadeIn2f">
+				<div id="card2-text"></div>
+				<img id="two" src="" alt="two">
+			</div>
+			<div id="card3" class="fadeIn3f">
+				<div id="card3-text"></div>
+				<img id="three" src="" alt="three">
+			</div>
+		</div>
+		<div id="reading"></div>
+		<div id="quote" class="bottom-button"></div>
     </div>
+
+    <script>
+	    const titles = [
+			"Pandora's Tarot - Three Card Spread"
+        ];
+
+		const tarotUrls = [
+			'cards/00-TheFool.png',
+			'cards/01-TheMagician.png',
+			'cards/02-TheHighPriestess.png',
+			'cards/03-TheEmpress.png',
+			'cards/04-TheEmperor.png',
+			'cards/05-TheHierophant.png',
+			'cards/06-TheLovers.png',
+			'cards/07-TheChariot.png',
+			'cards/08-Strength.png',
+			'cards/09-TheHermit.png',
+			'cards/10-WheelOfFortune.png',
+			'cards/11-Justice.png',
+			'cards/12-TheHangedMan.png',
+			'cards/13-Death.png',
+			'cards/14-Temperance.png',
+			'cards/15-TheDevil.png',
+			'cards/16-TheTower.png',
+			'cards/17-TheStar.png',
+			'cards/18-TheMoon.png',
+			'cards/19-TheSun.png',
+			'cards/20-Judgement.png',
+			'cards/21-TheWorld.png',
+			'cards/CardBacks.png'
+		];
+		
+		const tarotSums = [ 
+			'The Fool - Embrace new beginnings with trust and an open heart, even if the path ahead seems uncertain.', // The Fool
+			'The Magician - Harness your skills and resources to manifest your desires and take inspired action.', // The Magician
+			'The High Priestess - Trust your intuition and explore the mysteries within to uncover hidden truths.', // The High Priestess
+			'The Empress - Nurture creativity, abundance, and the natural flow of life’s cycles.', // The Empress
+			'The Emperor - Build a solid foundation through discipline, order, and strategic leadership.', // The Emperor
+			'The Hierophant - Seek guidance through tradition, spiritual learning, and shared values.', // The Hierophant
+			'The Lovers - Make choices aligned with your values and embrace connections rooted in mutual respect.', // The Lovers
+			'The Chariot - Use focus and determination to steer your life toward victory and control.', // The Chariot
+			'Strength - Cultivate inner courage and patience to overcome challenges with compassion.', // Strength
+			'The Hermit - Withdraw for reflection and seek wisdom through introspection and solitude.', // The Hermit
+			'Wheel of Fortune - Accept the cycles of change and trust in the ever-turning wheel of fate.', // Wheel of Fortune
+			'Justice - Seek truth and balance as you make decisions based on fairness and accountability.', // Justice
+			'The Hanged Man - Surrender to a new perspective and embrace stillness for growth.', // The Hanged Man
+			'Death - Let go of what no longer serves you to welcome transformation and rebirth.', // Death
+			'Temperance - Find harmony through moderation, patience, and blending opposites.', // Temperance
+			'The Devil - Acknowledge unhealthy attachments or fears and reclaim your power to break free.', // The Devil
+			'The Tower - Prepare for sudden upheaval that clears the way for a fresh start.', // The Tower
+			'The Star - Have faith in the future and let hope and inspiration guide you.', // The Star
+			'The Moon - Embrace the uncertainty of your emotions and uncover illusions or hidden truths.', // The Moon
+			'The Sun - Bask in joy, clarity, and the warmth of success and self-expression.', // The Sun
+			'Judgement - Reflect on past actions and answer the call for renewal and higher purpose.', // Judgement
+			'The World - Celebrate completion and wholeness as you step into the next cycle of your journey.', // The World
+			'' // Card Back
+		];
+
+
+		
+		const quotes = [
+			'Read My Cards...',
+			'Reset Cards?'
+        ];
+
+        function generateSpread() {
+            const titleElement = document.getElementById('title');
+			
+			const cardsElement = document.getElementById('cards');
+			const card1Element = document.getElementById('card1');
+			const card2Element = document.getElementById('card2');
+			const card3Element = document.getElementById('card3');
+			
+			const card1textElement = document.getElementById('card1-text');
+			const card2textElement = document.getElementById('card2-text');
+			const card3textElement = document.getElementById('card3-text');
+			
+			const oneElement = document.getElementById('one');
+            const twoElement = document.getElementById('two');
+            const threeElement = document.getElementById('three');
+			
+            const readingElement = document.getElementById('reading');
+            const quoteElement = document.getElementById('quote');
+
+			const cardIndexes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+			
+			const randomCard1 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
+			const randomCard2 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
+			const randomCard3 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
+			
+			cardsElement.style.height = "550px";
+			readingElement.style.display = 'block';
+            card1textElement.style.display = 'block';
+            card2textElement.style.display = 'block';
+            card3textElement.style.display = 'block';
+			
+            titleElement.textContent = titles[0];
+            oneElement.src = tarotUrls[randomCard1];
+			twoElement.src = tarotUrls[randomCard2];
+			threeElement.src = tarotUrls[randomCard3];
+			quoteElement.textContent = quotes[1];
+			
+			readingElement.textContent = "Click on a card.";
+			
+			
+			card1textElement.textContent = 'PAST';
+			card2textElement.textContent = 'PRESENT';
+			card3textElement.textContent = 'FUTURE';
+			
+			card1Element.classList.remove('fadeIn1f');
+			card2Element.classList.remove('fadeIn2f');
+			card3Element.classList.remove('fadeIn3f');
+			
+			void quoteElement.offsetWidth;
+
+			card1Element.classList.add('fadeIn1');
+			card2Element.classList.add('fadeIn2');
+			card3Element.classList.add('fadeIn3');
+			readingElement.classList.add('fadeIn4');
+			
+			card1Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[randomCard1];
+				readingElement.style.color = "#dddddd";
+				oneElement.style.border = "10px solid rgba(193, 162, 197, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			});
+		
+			card2Element.addEventListener('click', function() {
+				readingElement.style.color = "#dddddd";
+				readingElement.textContent = tarotSums[randomCard2];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(193, 162, 197, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			});
+		
+			card3Element.addEventListener('click', function() {
+				readingElement.style.color = "#dddddd";
+				readingElement.textContent = tarotSums[randomCard3];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(193, 162, 197, 1)";
+			});
+			
+		}
+		
+		function closeSpread() {
+		    const titleElement = document.getElementById('title');
+			
+			const cardsElement = document.getElementById('cards');
+			const card1Element = document.getElementById('card1');
+			const card2Element = document.getElementById('card2');
+			const card3Element = document.getElementById('card3');
+						
+			const card1textElement = document.getElementById('card1-text');
+			const card2textElement = document.getElementById('card2-text');
+			const card3textElement = document.getElementById('card3-text');
+						
+			const oneElement = document.getElementById('one');
+            const twoElement = document.getElementById('two');
+            const threeElement = document.getElementById('three');
+			
+            const readingElement = document.getElementById('reading');
+			const quoteElement = document.getElementById('quote');
+			
+			cardsElement.style.height = "640px";
+			readingElement.style.display = 'none';
+			readingElement.style.color = "#dddddd";
+            card1textElement.style.display = 'none';
+            card2textElement.style.display = 'none';
+            card3textElement.style.display = 'none';
+			
+            titleElement.textContent = titles[0];
+            oneElement.src = tarotUrls[22];
+			twoElement.src = tarotUrls[22];
+			threeElement.src = tarotUrls[22];
+            quoteElement.textContent = quotes[0];
+			
+			card1textElement.textContent = '';
+			card2textElement.textContent = '';
+			card3textElement.textContent = '';
+			
+			oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+
+			card1Element.classList.remove('fadeIn1');
+			card2Element.classList.remove('fadeIn2');
+			card3Element.classList.remove('fadeIn3');
+			
+			void quoteElement.offsetWidth;
+
+			card1Element.classList.add('fadeIn1f');
+			card2Element.classList.add('fadeIn2f');
+			card3Element.classList.add('fadeIn3f');
+			
+			readingElement.textContent = tarotSums[22];
+			
+			card1Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[22];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			});
+		
+			card2Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[22];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			});
+		
+			card3Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[22];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			});
+		}
+		
+		let spreadOpen = false;
+		
+		function manageGame() {
+			if (spreadOpen) {
+				closeSpread();
+				spreadOpen = false;
+			} else {
+				generateSpread();
+				spreadOpen = true;
+			}
+		}
+	
+	document.getElementById('quote').addEventListener('mouseenter', function() {
+		document.getElementById('quote').style.color = "#ffff00";
+	});
+	
+	document.getElementById('quote').addEventListener('mouseleave', function() {
+		document.getElementById('quote').style.color = "#ffffff";
+	});
+	
+	document.getElementById('quote').addEventListener('click', function() {
+		manageGame();
+	});
+
+	document.addEventListener('keydown', (event) => {
+		if (event.code === 'Space') {
+			manageGame();
+		}
+	});
+	
+	closeSpread();
+    </script>
 </body>
 </html>
