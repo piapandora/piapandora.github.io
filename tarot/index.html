@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pandora's Tarot - Three Card Spread</title>
-	<link rel="icon" type="image/png" href="icons8-three-leaf-clover-48.png">
+	<link rel="icon" type="image/png" href="icons8-clover-60.png">
 	<style>
         body {
             font-family: Arial, sans-serif;
@@ -25,19 +25,18 @@
 		
         img {
 			height: 400px;
-			margin: 0;
-			padding-top: 10px;
+			padding-top: 15px;
         }
 		
 		#cards {
-			height: 640px;
+			height: 550px;
 			display: flex;
 			justify-content: space-evenly;
             background-color: #002000;
 		}
 		
 		#card1, #card2, #card3 {
-			color: #ffffff;
+			color: #dddddd;
 			font-size: 1.25rem;
 			font-style: italic;
 			display: flex;
@@ -46,7 +45,7 @@
 			justify-content: center;
 		}
 
-		#title, #quote {
+		#title, #quote, #reading {
 			color: #ffffff;
 			font-size: 1rem;
 			font-weight: bold;
@@ -58,6 +57,15 @@
 			height: 40px;
 		}
 
+		#reading {
+			color: #dddddd;
+			font-size: 1.25rem;
+			font-weight: normal;
+			font-style: italic;
+		    background-color: #002000;
+			padding-bottom: 50px;
+		}
+		
 		@keyframes fadeIn {
 			0% { opacity: 0 }
 			100% { opacity: 1 }
@@ -98,31 +106,49 @@
 			transition: opacity ease-in-out;
 			animation: fadeIn 1s 1.7s forwards;
 		}
+		
+		.bottom-button {
+			display: inline-block;
+			background-color: #004000;
+			color: #ffffff;
+			font-size: 1rem;
+			font-weight: bold;
+			text-align: center;
+			cursor: pointer;
+			text-decoration: none;
+			transition: background-color 0.3s;
+		}
+
+		.bottom-button:hover {
+			color: #ffff00;
+		}
+
     </style>
 </head>
 <body>
     <div class="container">
-		<div id="title">Pandora's Tarot - Three Card Spread</div>
+		<div id="title"></div>
 		<div id="cards">
 			<div id="card1" class="fadeIn1f">
 				PAST
-				<img id="one" src="tarot/CardBacks.png" alt="one">
+				<img id="one" src="" alt="one">
 			</div>
 			<div id="card2" class="fadeIn2f">
 				PRESENT
-				<img id="two" src="tarot/CardBacks.png" alt="two">
+				<img id="two" src="" alt="two">
 			</div>
 			<div id="card3" class="fadeIn3f">
 				FUTURE
-				<img id="three" src="tarot/CardBacks.png" alt="three">
+				<img id="three" src="" alt="three">
 			</div>
 		</div>
-		<div id="quote">Press Spacebar to begin!</div>
+		<div id="reading"></div>
+		<div id="quote" class="bottom-button"></div>
     </div>
 
     <script>
 	    const titles = [
-			"Pandora's Tarot - Three Card Spread",
+			"Pandora's Tarot - Three Card Spread"
         ];
 
 		const tarotUrls = [
@@ -148,11 +174,40 @@
 			'tarot/19-TheSun.png',
 			'tarot/20-Judgement.png',
 			'tarot/21-TheWorld.png',
+			'tarot/CardBacks.png'
 		];
 		
+		const tarotSums = [ 
+			'The Fool - Embrace new beginnings with trust and an open heart, even if the path ahead seems uncertain.', // The Fool
+			'The Magician - Harness your skills and resources to manifest your desires and take inspired action.', // The Magician
+			'The High Priestess - Trust your intuition and explore the mysteries within to uncover hidden truths.', // The High Priestess
+			'The Empress - Nurture creativity, abundance, and the natural flow of life’s cycles.', // The Empress
+			'The Emperor - Build a solid foundation through discipline, order, and strategic leadership.', // The Emperor
+			'The Hierophant - Seek guidance through tradition, spiritual learning, and shared values.', // The Hierophant
+			'The Lovers - Make choices aligned with your values and embrace connections rooted in mutual respect.', // The Lovers
+			'The Chariot - Use focus and determination to steer your life toward victory and control.', // The Chariot
+			'Strength - Cultivate inner courage and patience to overcome challenges with compassion.', // Strength
+			'The Hermit - Withdraw for reflection and seek wisdom through introspection and solitude.', // The Hermit
+			'Wheel of Fortune - Accept the cycles of change and trust in the ever-turning wheel of fate.', // Wheel of Fortune
+			'Justice - Seek truth and balance as you make decisions based on fairness and accountability.', // Justice
+			'The Hanged Man - Surrender to a new perspective and embrace stillness for growth.', // The Hanged Man
+			'Death - Let go of what no longer serves you to welcome transformation and rebirth.', // Death
+			'Temperance - Find harmony through moderation, patience, and blending opposites.', // Temperance
+			'The Devil - Acknowledge unhealthy attachments or fears and reclaim your power to break free.', // The Devil
+			'The Tower - Prepare for sudden upheaval that clears the way for a fresh start.', // The Tower
+			'The Star - Have faith in the future and let hope and inspiration guide you.', // The Star
+			'The Moon - Embrace the uncertainty of your emotions and uncover illusions or hidden truths.', // The Moon
+			'The Sun - Bask in joy, clarity, and the warmth of success and self-expression.', // The Sun
+			'Judgement - Reflect on past actions and answer the call for renewal and higher purpose.', // Judgement
+			'The World - Celebrate completion and wholeness as you step into the next cycle of your journey.', // The World
+			'' // Card Back
+		];
+
+
+		
 		const quotes = [
-			'Press Spacebar to begin!',
-			'Press Spacebar to reset...'
+			'Read My Cards',
+			'Reset Cards'
         ];
 
         function generateSpread() {
@@ -166,10 +221,11 @@
             const twoElement = document.getElementById('two');
             const threeElement = document.getElementById('three');
 			
+            const readingElement = document.getElementById('reading');
             const quoteElement = document.getElementById('quote');
 
 			const cardIndexes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
-
+			
 			const randomCard1 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
 			const randomCard2 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
 			const randomCard3 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
@@ -178,25 +234,41 @@
             oneElement.src = tarotUrls[randomCard1];
 			twoElement.src = tarotUrls[randomCard2];
 			threeElement.src = tarotUrls[randomCard3];
-            quoteElement.textContent = quotes[1];
-			/*
-			oneElement.classList.remove('fadeIn1');
-			twoElement.classList.remove('fadeIn2');
-			threeElement.classList.remove('fadeIn3');
-			*/
+			quoteElement.textContent = quotes[1];
+			
 			card1Element.classList.remove('fadeIn1f');
 			card2Element.classList.remove('fadeIn2f');
 			card3Element.classList.remove('fadeIn3f');
 			
 			void quoteElement.offsetWidth;
-			/*
-			oneElement.classList.add('fadeIn1');
-			twoElement.classList.add('fadeIn2');
-			threeElement.classList.add('fadeIn3');
-			*/
+
 			card1Element.classList.add('fadeIn1');
 			card2Element.classList.add('fadeIn2');
 			card3Element.classList.add('fadeIn3');
+			/*
+			card1Element.addEventListener('mouseenter', function() {
+				readingElement.textContent = tarotSums[randomCard1];
+			});
+		
+			card2Element.addEventListener('mouseenter', function() {
+				readingElement.textContent = tarotSums[randomCard2];
+			});
+		
+			card3Element.addEventListener('mouseenter', function() {
+				readingElement.textContent = tarotSums[randomCard3];
+			});
+			*/
+			card1Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[randomCard1];
+			});
+		
+			card2Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[randomCard2];
+			});
+		
+			card3Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[randomCard3];
+			});
 		}
 		
 		function closeSpread() {
@@ -210,37 +282,55 @@
             const twoElement = document.getElementById('two');
             const threeElement = document.getElementById('three');
 			
-            const quoteElement = document.getElementById('quote');
+            const readingElement = document.getElementById('reading');
+			const quoteElement = document.getElementById('quote');
 			
             titleElement.textContent = titles[0];
-            oneElement.src = "tarot/CardBacks.png";
-			twoElement.src = "tarot/CardBacks.png";
-			threeElement.src = "tarot/CardBacks.png";
+            oneElement.src = tarotUrls[22];
+			twoElement.src = tarotUrls[22];
+			threeElement.src = tarotUrls[22];
             quoteElement.textContent = quotes[0];
-/*
-			oneElement.classList.remove('fadeIn1');
-			twoElement.classList.remove('fadeIn2');
-			threeElement.classList.remove('fadeIn3');
-			*/
+
 			card1Element.classList.remove('fadeIn1');
 			card2Element.classList.remove('fadeIn2');
 			card3Element.classList.remove('fadeIn3');
 			
 			void quoteElement.offsetWidth;
-			/*
-			oneElement.classList.add('fadeIn1');
-			twoElement.classList.add('fadeIn2');
-			threeElement.classList.add('fadeIn3');
-			*/
+
 			card1Element.classList.add('fadeIn1f');
 			card2Element.classList.add('fadeIn2f');
 			card3Element.classList.add('fadeIn3f');
+			
+			readingElement.textContent = tarotSums[22];
+			/*
+			card1Element.addEventListener('mouseenter', function() {
+				readingElement.textContent = tarotSums[22];
+			});
+		
+			card2Element.addEventListener('mouseenter', function() {
+				readingElement.textContent = tarotSums[22];
+			});
+		
+			card3Element.addEventListener('mouseenter', function() {
+				readingElement.textContent = tarotSums[22];
+			});
+			*/
+			card1Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[22];
+			});
+		
+			card2Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[22];
+			});
+		
+			card3Element.addEventListener('click', function() {
+				readingElement.textContent = tarotSums[22];
+			});
 		}
-
+		
 		let spreadOpen = false;
-
-	document.addEventListener('keydown', (event) => {
-		if (event.code === 'Space') {
+		
+		function manageGame() {
 			if (spreadOpen) {
 				closeSpread();
 				spreadOpen = false;
@@ -249,7 +339,18 @@
 				spreadOpen = true;
 			}
 		}
+		
+	document.getElementById('quote').addEventListener('click', function() {
+		manageGame();
 	});
+
+	document.addEventListener('keydown', (event) => {
+		if (event.code === 'Space') {
+			manageGame();
+		}
+	});
+	
+	closeSpread();
     </script>
 </body>
 </html>
