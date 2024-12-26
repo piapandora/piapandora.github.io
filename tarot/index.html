@@ -63,7 +63,6 @@
 		}
 
 		#reading {
-			color: #dddddd;
 			font-size: 1.25rem;
 			font-weight: normal;
 			font-style: italic;
@@ -272,14 +271,12 @@
 			
 			card1Element.addEventListener('click', function() {
 				readingElement.textContent = tarotSums[randomCard1];
-				readingElement.style.color = "#dddddd";
 				oneElement.style.border = "10px solid rgba(193, 162, 197, 1)";
 				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 			});
  		
 			card2Element.addEventListener('click', function() {
-				readingElement.style.color = "#dddddd";
 				readingElement.textContent = tarotSums[randomCard2];
 				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 				twoElement.style.border = "10px solid rgba(193, 162, 197, 1)";
@@ -287,7 +284,6 @@
 			});
 		
 			card3Element.addEventListener('click', function() {
-				readingElement.style.color = "#dddddd";
 				readingElement.textContent = tarotSums[randomCard3];
 				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
@@ -316,7 +312,6 @@
 			
 			cardsElement.style.height = "640px";
 			readingElement.style.display = 'none';
-			readingElement.style.color = "#dddddd";
             card1textElement.style.display = 'none';
             card2textElement.style.display = 'none';
             card3textElement.style.display = 'none';
