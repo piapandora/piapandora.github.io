@@ -209,12 +209,10 @@
 			'The World - Celebrate completion and wholeness as you step into the next cycle of your journey.', // The World
 			'' // Card Back
 		];
-
-
 		
 		const quotes = [
-			'Read My Cards...',
-			'Reset Cards?'
+			'Click Here To Begin',
+			'New Reading?'
         ];
 
         function generateSpread() {
@@ -254,7 +252,7 @@
 			threeElement.src = tarotUrls[randomCard3];
 			quoteElement.textContent = quotes[1];
 			
-			readingElement.textContent = "Click on a card.";
+			readingElement.textContent = "Click on a card to learn more.";
 			
 			
 			card1textElement.textContent = 'PAST';
@@ -279,7 +277,7 @@
 				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 			});
-		
+ 		
 			card2Element.addEventListener('click', function() {
 				readingElement.style.color = "#dddddd";
 				readingElement.textContent = tarotSums[randomCard2];
@@ -295,7 +293,6 @@
 				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 				threeElement.style.border = "10px solid rgba(193, 162, 197, 1)";
 			});
-			
 		}
 		
 		function closeSpread() {
@@ -385,11 +382,15 @@
 		}
 	
 	document.getElementById('quote').addEventListener('mouseenter', function() {
-		document.getElementById('quote').style.color = "#ffff00";
+			this.style.color = "#ffff00";
 	});
 	
 	document.getElementById('quote').addEventListener('mouseleave', function() {
-		document.getElementById('quote').style.color = "#ffffff";
+			if (spreadOpen) {
+				this.style.color = "#dddddd";
+			} else {
+				this.style.color = "#ffffff";
+			}
 	});
 	
 	document.getElementById('quote').addEventListener('click', function() {
