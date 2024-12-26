@@ -11,7 +11,7 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #000000;
+            background-color: #002000;
 			/* code below disables mouse-select behaviour */
 			user-select: none;
 			-moz-user-select: none;
@@ -25,7 +25,8 @@
 		
         img {
 			height: 400px;
-			padding-top: 15px;
+			border: 10px solid rgba(10, 8, 26, 1);
+			box-shadow: inset 0 0 10px rgba(10, 8, 26, 1);
         }
 		
 		#cards {
@@ -56,6 +57,10 @@
 			align-items: center;
 			height: 40px;
 		}
+		
+		#card1-text, #card2-text, #card3-text {
+			padding-bottom: 15px;
+		}
 
 		#reading {
 			color: #dddddd;
@@ -63,7 +68,8 @@
 			font-weight: normal;
 			font-style: italic;
 		    background-color: #002000;
-			padding-bottom: 50px;
+			padding-top: 10px;
+			padding-bottom: 40px;
 		}
 		
 		@keyframes fadeIn {
@@ -87,6 +93,12 @@
 			opacity: 0;
 			transition: opacity ease-in-out;
 			animation: fadeIn 2s 2.3s forwards;
+		}
+		
+		.fadeIn4 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 5s .3s forwards;
 		}
 		
 		.fadeIn1f {
@@ -118,11 +130,6 @@
 			text-decoration: none;
 			transition: background-color 0.3s;
 		}
-
-		.bottom-button:hover {
-			color: #ffff00;
-		}
-
     </style>
 </head>
 <body>
@@ -130,15 +137,15 @@
 		<div id="title"></div>
 		<div id="cards">
 			<div id="card1" class="fadeIn1f">
-				PAST
+				<div id="card1-text"></div>
 				<img id="one" src="" alt="one">
 			</div>
 			<div id="card2" class="fadeIn2f">
-				PRESENT
+				<div id="card2-text"></div>
 				<img id="two" src="" alt="two">
 			</div>
 			<div id="card3" class="fadeIn3f">
-				FUTURE
+				<div id="card3-text"></div>
 				<img id="three" src="" alt="three">
 			</div>
 		</div>
@@ -213,9 +220,14 @@
         function generateSpread() {
             const titleElement = document.getElementById('title');
 			
+			const cardsElement = document.getElementById('cards');
 			const card1Element = document.getElementById('card1');
 			const card2Element = document.getElementById('card2');
 			const card3Element = document.getElementById('card3');
+			
+			const card1textElement = document.getElementById('card1-text');
+			const card2textElement = document.getElementById('card2-text');
+			const card3textElement = document.getElementById('card3-text');
 			
 			const oneElement = document.getElementById('one');
             const twoElement = document.getElementById('two');
@@ -230,11 +242,24 @@
 			const randomCard2 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
 			const randomCard3 = cardIndexes.splice((Math.floor(Math.random() * cardIndexes.length)), 1)[0];
 			
+			cardsElement.style.height = "550px";
+			readingElement.style.display = 'block';
+            card1textElement.style.display = 'block';
+            card2textElement.style.display = 'block';
+            card3textElement.style.display = 'block';
+			
             titleElement.textContent = titles[0];
             oneElement.src = tarotUrls[randomCard1];
 			twoElement.src = tarotUrls[randomCard2];
 			threeElement.src = tarotUrls[randomCard3];
 			quoteElement.textContent = quotes[1];
+			
+			readingElement.textContent = "Click on a card.";
+			
+			
+			card1textElement.textContent = 'PAST';
+			card2textElement.textContent = 'PRESENT';
+			card3textElement.textContent = 'FUTURE';
 			
 			card1Element.classList.remove('fadeIn1f');
 			card2Element.classList.remove('fadeIn2f');
@@ -245,38 +270,45 @@
 			card1Element.classList.add('fadeIn1');
 			card2Element.classList.add('fadeIn2');
 			card3Element.classList.add('fadeIn3');
-			/*
-			card1Element.addEventListener('mouseenter', function() {
-				readingElement.textContent = tarotSums[randomCard1];
-			});
-		
-			card2Element.addEventListener('mouseenter', function() {
-				readingElement.textContent = tarotSums[randomCard2];
-			});
-		
-			card3Element.addEventListener('mouseenter', function() {
-				readingElement.textContent = tarotSums[randomCard3];
-			});
-			*/
+			readingElement.classList.add('fadeIn4');
+			
 			card1Element.addEventListener('click', function() {
 				readingElement.textContent = tarotSums[randomCard1];
+				readingElement.style.color = "#dddddd";
+				oneElement.style.border = "10px solid rgba(193, 162, 197, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 			});
 		
 			card2Element.addEventListener('click', function() {
+				readingElement.style.color = "#dddddd";
 				readingElement.textContent = tarotSums[randomCard2];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(193, 162, 197, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 			});
 		
 			card3Element.addEventListener('click', function() {
+				readingElement.style.color = "#dddddd";
 				readingElement.textContent = tarotSums[randomCard3];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(193, 162, 197, 1)";
 			});
+			
 		}
 		
 		function closeSpread() {
 		    const titleElement = document.getElementById('title');
 			
+			const cardsElement = document.getElementById('cards');
 			const card1Element = document.getElementById('card1');
 			const card2Element = document.getElementById('card2');
 			const card3Element = document.getElementById('card3');
+						
+			const card1textElement = document.getElementById('card1-text');
+			const card2textElement = document.getElementById('card2-text');
+			const card3textElement = document.getElementById('card3-text');
 						
 			const oneElement = document.getElementById('one');
             const twoElement = document.getElementById('two');
@@ -285,11 +317,26 @@
             const readingElement = document.getElementById('reading');
 			const quoteElement = document.getElementById('quote');
 			
+			cardsElement.style.height = "640px";
+			readingElement.style.display = 'none';
+			readingElement.style.color = "#dddddd";
+            card1textElement.style.display = 'none';
+            card2textElement.style.display = 'none';
+            card3textElement.style.display = 'none';
+			
             titleElement.textContent = titles[0];
             oneElement.src = tarotUrls[22];
 			twoElement.src = tarotUrls[22];
 			threeElement.src = tarotUrls[22];
             quoteElement.textContent = quotes[0];
+			
+			card1textElement.textContent = '';
+			card2textElement.textContent = '';
+			card3textElement.textContent = '';
+			
+			oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+			threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 
 			card1Element.classList.remove('fadeIn1');
 			card2Element.classList.remove('fadeIn2');
@@ -302,29 +349,26 @@
 			card3Element.classList.add('fadeIn3f');
 			
 			readingElement.textContent = tarotSums[22];
-			/*
-			card1Element.addEventListener('mouseenter', function() {
-				readingElement.textContent = tarotSums[22];
-			});
-		
-			card2Element.addEventListener('mouseenter', function() {
-				readingElement.textContent = tarotSums[22];
-			});
-		
-			card3Element.addEventListener('mouseenter', function() {
-				readingElement.textContent = tarotSums[22];
-			});
-			*/
+			
 			card1Element.addEventListener('click', function() {
 				readingElement.textContent = tarotSums[22];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 			});
 		
 			card2Element.addEventListener('click', function() {
 				readingElement.textContent = tarotSums[22];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 			});
 		
 			card3Element.addEventListener('click', function() {
 				readingElement.textContent = tarotSums[22];
+				oneElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				twoElement.style.border = "10px solid rgba(10, 8, 26, 1)";
+				threeElement.style.border = "10px solid rgba(10, 8, 26, 1)";
 			});
 		}
 		
@@ -339,7 +383,15 @@
 				spreadOpen = true;
 			}
 		}
-		
+	
+	document.getElementById('quote').addEventListener('mouseenter', function() {
+		document.getElementById('quote').style.color = "#ffff00";
+	});
+	
+	document.getElementById('quote').addEventListener('mouseleave', function() {
+		document.getElementById('quote').style.color = "#ffffff";
+	});
+	
 	document.getElementById('quote').addEventListener('click', function() {
 		manageGame();
 	});
