@@ -85,6 +85,8 @@
             document.getElementById('bottom').src = bottomLayers[randomIndex2];
             document.getElementById('middle').src = middleLayers[randomIndex3];
             document.getElementById('top').src = topLayers[getRandomIndex(topLayers)];
+			document.getElementById('logo').style.display = 'none';
+			
 
             // Check for a match and log the result
             if (randomIndex1 === randomIndex2 && randomIndex2 === randomIndex3) {
@@ -124,14 +126,16 @@
                     isClickable = true;
                     console.log("Clicking re-enabled!");
 					document.body.style.backgroundImage = `url('bg1.jpg')`;
+					document.getElementById('top').src = 'top.svg';
 					document.getElementById('logo').style.display = 'none';
-                }, 3000);
+                }, 3500);
             }
         }
 
         // Attach the "hugMe" function to the body click event
         document.body.addEventListener("click", hugMe);
 		document.getElementById('logo').style.display = 'none';
+		
     </script>
 
 </body>
