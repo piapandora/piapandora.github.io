@@ -2,188 +2,122 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pia Pandora | Games & Apps</title>
-	<link rel="icon" type="image/png" href="micro-logo.png">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-	
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Random Hug</title>
     <style>
         body {
-			font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
+			background-image: url('bg1.jpg');
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            //justify-content: center;//
             height: 100vh;
-			background-color: #650000;
-            color: #1E2330;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer; /* Indicate interactivity */
+			/* code below disables mouse-select behaviour */
+			user-select: none;
+			-moz-user-select: none;
+			-webkit-user-drag: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
         }
 
-        .container {
-            text-align: center;
-            max-width: 400px;
+        .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-			margin-top: 40px;
-			margin-bottom: 30px;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
+            height: 100%;
+            pointer-events: none;
         }
-
-        .profile {
-            margin-bottom: 20px;
-        }
-
-        .profile img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-
-        .profile h1 {
-			font-family: "Libre Baskerville", serif;
-            margin: 0;
-            font-size: 24px;
-            color: #1E2330;
-        }
-		
-		.profile h3 {
-			font-family: 'Poppins', sans-serif;
-            margin: -3px 0 10px 0;
-            font-size: 18px;
-            font-style: italic;
-            color: #555;
-        }
-
-        .links a {
-		    display: block;
-            text-decoration: none;
-			background-color: #EECBBF;
-            color: #1E2330;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-size: 18px;
-			font-style: bold;
-            transition: background-color 0.3s;
-        }
-
-        .links a:hover {
-		    background-color: #800000;
-			color: #ffffff;
-        }
-
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .social-icons a {
-            text-decoration: none;
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            background-color: #eee;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #555;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .social-icons a:hover {
-            background-color: #EECBBF;
-            color: white;
-        }
-
-        footer {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #555;
-        }
-		
-		@media (max-width: 768px) {
-			body {
-				flex-basis: 100%;
-			}
-			.container {
-				width: 70%;
-			}
-		}
-
-		@keyframes fadeIn {
-			0% { opacity: 0 }
-			100% { opacity: 1 }
-		}
-
-		#fadeIn1, #fadeIn2, #fadeIn2b, #fadeIn2c, #fadeIn2d, #fadeIn2e, #fadeIn3 {
-			opacity: 0;
-			transition: opacity ease-in-out;
-		}
-
-		#fadeIn1 {
-			animation: fadeIn 3s 0.3s forwards;
-		}
-		
-		#fadeIn2 {
-			animation: fadeIn 3s 1.3s forwards;
-		}
-		
-		#fadeIn2b {
-			animation: fadeIn 3s 1.6s forwards;
-		}
-		
-		#fadeIn2c {
-			animation: fadeIn 3s 1.9s forwards;
-		}
-		
-		#fadeIn2d {
-			animation: fadeIn 3s 2.2s forwards;
-		}
-		
-		#fadeIn2e {
-			animation: fadeIn 3s 2.5s forwards;
-		}
-		
-		#fadeIn3 {
-			animation: fadeIn 3s 3.3s forwards;
-		}
-		
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="profile" id="fadeIn1">
-            <img src="mini-logo.jpg" alt="Profile Picture">
-            <h1>Pia Pandora</h1>
-            <h3><i>Games & Apps</i></h3>
-			
-        </div>
-        <div class="links">
-            <a href="https://piapandora.itch.io" target="_blank" id="fadeIn2">Pia Pandora Games</a>
-            <a href="https://piapandora.com/sihirlipencere" target="_blank" id="fadeIn2b">Sihirli Pencere: 3 Boyutlu Boyama</a>
-            <a href="https://piapandora.com/crossview" target="_blank" id="fadeIn2c">CrossView 3D Portraits</a>
-            <a href="https://app.piapandora.com" target="_blank" id="fadeIn2d">Teen Beauty AI</a>
-            <a href="https://piapandora.com/tarot" target="_blank" id="fadeIn2e">Pandora's Tarot</a>
-			
-        </div>
-        <div class="social-icons" id="fadeIn3">
-            <a href="https://www.instagram.com/pia.pandora" target="_blank" aria-label="Instagram"><img src="icons8-instagram-50.png" height="25px" width="25px" alt="Instagram Logo"></a>
-            <a href="mailto:canaksahin@hotmail.com" target="_blank" aria-label="Mail"><img src="icons8-mail-64.png" height="25px" width="25px" alt="Mail Logo"></a>
-        </div>
-        <footer id="fadeIn3">
-            <a href="http://www.canaksahin.com" target="_blank" aria-label="Author" style="text-decoration: none; color: #1E2330"><b>Can Akşahin</b></a><b> &copy; 2024</b>
-        </footer>
-    </div>
+<body onclick="hugMe()">
+
+    <!-- Layers -->
+    <img id="hair" src="hair.svg" alt="Layer 2" class="layer">
+    <img id="bottom" src="bottom.svg" alt="Layer 3" class="layer">
+    <img id="middle" src="middle.svg" alt="Layer 4" class="layer">
+    <img id="top" src="top.svg" alt="Layer 5" class="layer">
+
+    <script>
+        // Arrays for background and layer images
+        const backgrounds = [
+            'bg1.jpg', 
+            'bg2.jpg', 
+            'bg3.jpg', 
+            'bg4.jpg', 
+            'bg5.jpg',
+        ];
+        const topLayers = [
+            'top.svg', 
+            'top2.svg', 
+            'top3.svg', 
+        ];
+        const hairLayers = [
+            'hair.svg', 
+            'hair2.svg', 
+            'hair3.svg', 
+            'hair4.svg', 
+            'hair5.svg', 
+        ];
+        const bottomLayers = [
+            'bottom.svg', 
+            'bottom2.svg', 
+            'bottom3.svg', 
+        ];
+        const middleLayers = [
+            'middle.svg', 
+            'middle2.svg', 
+            'middle3.svg', 
+        ];
+
+        // Function to get a random index for an array
+        function getRandomIndex(array) {
+            return Math.floor(Math.random() * array.length);
+        }
+
+        // Function to randomly change the background image
+        function toggleBackground() {
+            const randomIndex = getRandomIndex(backgrounds);
+            document.body.style.backgroundImage = `url('${backgrounds[randomIndex]}')`;
+        }
+
+        // Functions to randomly change the layers
+        function toggleTopLayer() {
+            const randomIndex = getRandomIndex(topLayers);
+            document.getElementById('top').src = topLayers[randomIndex];
+        }
+
+        function toggleHairLayer() {
+            const randomIndex = getRandomIndex(hairLayers);
+            document.getElementById('hair').src = hairLayers[randomIndex];
+        }
+
+        function toggleBottomLayer() {
+            const randomIndex = getRandomIndex(bottomLayers);
+            document.getElementById('bottom').src = bottomLayers[randomIndex];
+        }
+
+        function toggleMiddleLayer() {
+            const randomIndex = getRandomIndex(middleLayers);
+            document.getElementById('middle').src = middleLayers[randomIndex];
+        }
+
+        // "Hug Me" function to trigger all random toggles
+        function hugMe() {
+            toggleBackground();
+            toggleTopLayer();
+            toggleHairLayer();
+            toggleBottomLayer();
+            toggleMiddleLayer();
+        }
+    </script>
+
 </body>
 </html>
