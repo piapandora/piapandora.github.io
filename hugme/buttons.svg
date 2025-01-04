@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG with Z-Layers</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    .svg-container {
+      width: 360px;
+      height: 640px;
+      overflow: hidden;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="svg-container">
+    <!-- SVG content with Z-layers -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="360" height="640" viewBox="0 0 360 640">
+      <!-- Layer 1 (Z-Layer 1) -->
+      <g id="layer1">
+        <rect x="0" y="0" width="360" height="640" fill="lightblue"/>
+        <!-- Add other elements for layer 1 -->
+      </g>
+
+      <!-- Layer 2 (Z-Layer 2) -->
+      <g id="layer2" style="display:none;">
+        <circle cx="180" cy="320" r="100" fill="red"/>
+        <!-- Add other elements for layer 2 -->
+      </g>
+
+      <!-- Layer 3 (Z-Layer 3) -->
+      <g id="layer3" style="display:none;">
+        <rect x="50" y="100" width="260" height="440" fill="green"/>
+        <!-- Add other elements for layer 3 -->
+      </g>
+    </svg>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const svg = document.querySelector('svg');
+
+      // Access the SVG layers (Z-layers)
+      const layer1 = svg.querySelector('#layer1');
+      const layer2 = svg.querySelector('#layer2');
+      const layer3 = svg.querySelector('#layer3');
+      
+      // Initial setup: Only show layer1 and layer3, hide layer2
+      layer1.style.display = 'block';
+      layer2.style.display = 'none';
+      layer3.style.display = 'block';
+
+      // Function to toggle layers
+      function toggleLayers() {
+        // Toggle visibility of layers (for demonstration purposes)
+        if (layer1.style.display === 'block') {
+          layer1.style.display = 'none';
+          layer2.style.display = 'block'; // Show layer 2
+        } else {
+          layer1.style.display = 'block';
+          layer2.style.display = 'none'; // Hide layer 2
+        }
+      }
+
+      // Change layers every 3 seconds for demonstration
+      setInterval(toggleLayers, 3000);
+    });
+  </script>
+</body>
+</html>
