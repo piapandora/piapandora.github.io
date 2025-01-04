@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Random Hug</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer; /* Indicate interactivity */
+			/* code below disables mouse-select behaviour */
+			user-select: none;
+			-moz-user-select: none;
+			-webkit-user-drag: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+        }
+
+        .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body onclick="hugMe()">
+
+    <!-- Layers -->
+    <img id="hair" src="hair.svg" alt="Layer 2" class="layer">
+    <img id="bottom" src="bottom.svg" alt="Layer 3" class="layer">
+    <img id="middle" src="middle.svg" alt="Layer 4" class="layer">
+    <img id="top" src="top.svg" alt="Layer 5" class="layer">
+
+    <script>
+        // Arrays for background and layer images
+        const backgrounds = [
+            'bg1.jpeg', 
+            'bg2.jpeg', 
+            'bg3.jpeg', 
+            'bg4.jpeg', 
+            'bg5.png',
+            'bg6.webp',
+            'bg7.jpg'
+        ];
+        const topLayers = [
+            'top.svg', 
+            'top2.svg', 
+            'top3.svg', 
+        ];
+        const hairLayers = [
+            'hair.svg', 
+            'hair2.svg', 
+            'hair3.svg', 
+            'hair4.svg', 
+        ];
+        const bottomLayers = [
+            'bottom.svg', 
+            'bottom2.svg', 
+        ];
+        const middleLayers = [
+            'middle.svg', 
+            'middle2.svg', 
+        ];
+
+        // Function to get a random index for an array
+        function getRandomIndex(array) {
+            return Math.floor(Math.random() * array.length);
+        }
+
+        // Function to randomly change the background image
+        function toggleBackground() {
+            const randomIndex = getRandomIndex(backgrounds);
+            document.body.style.backgroundImage = `url('${backgrounds[randomIndex]}')`;
+        }
+
+        // Functions to randomly change the layers
+        function toggleTopLayer() {
+            const randomIndex = getRandomIndex(topLayers);
+            document.getElementById('top').src = topLayers[randomIndex];
+        }
+
+        function toggleHairLayer() {
+            const randomIndex = getRandomIndex(hairLayers);
+            document.getElementById('hair').src = hairLayers[randomIndex];
+        }
+
+        function toggleBottomLayer() {
+            const randomIndex = getRandomIndex(bottomLayers);
+            document.getElementById('bottom').src = bottomLayers[randomIndex];
+        }
+
+        function toggleMiddleLayer() {
+            const randomIndex = getRandomIndex(middleLayers);
+            document.getElementById('middle').src = middleLayers[randomIndex];
+        }
+
+        // "Hug Me" function to trigger all random toggles
+        function hugMe() {
+            toggleBackground();
+            toggleTopLayer();
+            toggleHairLayer();
+            toggleBottomLayer();
+            toggleMiddleLayer();
+        }
+    </script>
+
+</body>
+</html>
