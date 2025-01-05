@@ -92,8 +92,6 @@
 
             // Check for a match and log the result
             if (randomIndex1 === randomIndex2 && randomIndex2 === randomIndex3) {
-				document.body.style.backgroundImage = `url('bg2.jpg')`;
-				document.getElementById('logo').style.display = 'block';
 
                 switch (randomIndex1) {
                     case 0:
@@ -120,6 +118,9 @@
                         console.log("You have a match!");
                         break;
                 }
+				
+				document.getElementById('logo').style.display = 'block';
+				document.body.style.backgroundImage = `url('bg2.jpg')`;
 
                 // Temporarily disable clicks for 3 seconds
                 isClickable = false;
