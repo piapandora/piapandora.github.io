@@ -36,11 +36,9 @@
 			height: 100%;
 			pointer-events: none;
 		}
-
     </style>
 </head>
 <body>
-
     <!-- Layers -->
     <img id="hair" src="hair.png" alt="Layer 2" class="layer">
     <img id="bottom" src="bottom.png" alt="Layer 3" class="layer">
@@ -88,7 +86,6 @@
             document.getElementById('middle').src = middleLayers[randomIndex3];
             document.getElementById('top').src = topLayers[getRandomIndex(topLayers)];
 			document.getElementById('logo').style.display = 'none';
-			
 
             // Check for a match and log the result
             if (randomIndex1 === randomIndex2 && randomIndex2 === randomIndex3) {
@@ -140,8 +137,6 @@
         // Attach the "hugMe" function to the body click event
         document.body.addEventListener("click", hugMe);
 		document.getElementById('logo').style.display = 'none';
-		
     </script>
-
 </body>
 </html>
