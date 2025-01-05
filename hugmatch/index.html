@@ -40,10 +40,10 @@
 <body>
 
     <!-- Layers -->
-    <img id="hair" src="hair1.svg" alt="Layer 2" class="layer">
-    <img id="bottom" src="bottom1.svg" alt="Layer 3" class="layer">
-    <img id="middle" src="middle1.svg" alt="Layer 4" class="layer">
-    <img id="top" src="top1.svg" alt="Layer 5" class="layer">
+    <img id="hair" src="hair.svg" alt="Layer 2" class="layer">
+    <img id="bottom" src="bottom.svg" alt="Layer 3" class="layer">
+    <img id="middle" src="middle.svg" alt="Layer 4" class="layer">
+    <img id="top" src="top.svg" alt="Layer 5" class="layer">
 	<img id="logo" src="logo.svg" alt="Layer 6" class="layer">
 
     <script>
@@ -126,6 +126,9 @@
                     isClickable = true;
                     console.log("Clicking re-enabled!");
 					document.body.style.backgroundImage = `url('bg1.jpg')`;
+					document.getElementById('hair').src = 'hair.svg';
+					document.getElementById('bottom').src = 'bottom.svg';
+					document.getElementById('middle').src = 'middle.svg';
 					document.getElementById('top').src = 'top.svg';
 					document.getElementById('logo').style.display = 'none';
                 }, 3500);
