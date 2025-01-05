@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Hugging Color Match</title>
+    <link rel="icon" type="image/png" href="icons8-clover-60.png">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
+            background-image: url('bg1.jpg');
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-drag: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+
+		.layer {
+			position: absolute;
+			top: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			width: auto;
+			height: 100%;
+			pointer-events: none;
+		}
+
+    </style>
+</head>
+<body>
+
+    <!-- Layers -->
+    <img id="hair" src="hair.png" alt="Layer 2" class="layer">
+    <img id="bottom" src="bottom.png" alt="Layer 3" class="layer">
+    <img id="middle" src="middle.png" alt="Layer 4" class="layer">
+    <img id="top" src="top.png" alt="Layer 5" class="layer">
+	<img id="logo" src="logo.png" alt="Layer 6" class="layer">
+
+    <script>
+        // Arrays for background and layer images
+        const backgrounds = ['bg1.jpg'];
+        const hairLayers = ['hair1.png', 'hair2.png', 'hair3.png', 'hair4.png', 'hair5.png'];
+        const bottomLayers = ['bottom1.png', 'bottom2.png', 'bottom3.png', 'bottom4.png', 'bottom5.png'];
+        const middleLayers = ['middle1.png', 'middle2.png', 'middle3.png', 'middle4.png', 'middle5.png'];
+        const topLayers = ['top.png'];
+		const logoLayers = ['logo.png'];
+
+        let isClickable = true; // Flag to prevent multiple clicks within 3 seconds
+
+        // Function to get a random index for an array
+        function getRandomIndex(array) {
+            return Math.floor(Math.random() * array.length);
+        }
+
+        // Function to randomly change the background image
+        function toggleBackground() {
+            const randomIndex = getRandomIndex(backgrounds);
+            document.body.style.backgroundImage = `url('${backgrounds[randomIndex]}')`;
+        }
+
+        // "Hug Me" function to trigger all random toggles
+        function hugMe() {
+            if (!isClickable) return; // Exit if clicks are temporarily disabled
+
+            // Generate random indices for each layer
+            const randomIndex1 = getRandomIndex(hairLayers);
+            const randomIndex2 = getRandomIndex(bottomLayers);
+            const randomIndex3 = getRandomIndex(middleLayers);
+
+            // Apply random background
+            toggleBackground();
+
+            // Apply random layers using the generated indices
+            document.getElementById('hair').src = hairLayers[randomIndex1];
+            document.getElementById('bottom').src = bottomLayers[randomIndex2];
+            document.getElementById('middle').src = middleLayers[randomIndex3];
+            document.getElementById('top').src = topLayers[getRandomIndex(topLayers)];
+			document.getElementById('logo').style.display = 'none';
+			
+
+            // Check for a match and log the result
+            if (randomIndex1 === randomIndex2 && randomIndex2 === randomIndex3) {
+				document.body.style.backgroundImage = `url('bg2.jpg')`;
+				document.getElementById('logo').style.display = 'block';
+
+                switch (randomIndex1) {
+                    case 0:
+                        console.log("You have a match: RED!");
+						document.getElementById('top').src = 'top1.png';
+                        break;
+                    case 1:
+                        console.log("You have a match: YELLOW!");
+						document.getElementById('top').src = 'top2.png';
+                        break;
+                    case 2:
+                        console.log("You have a match: PURPLE!");
+						document.getElementById('top').src = 'top3.png';
+                        break;
+                    case 3:
+                        console.log("You have a match: BLUE!");
+						document.getElementById('top').src = 'top4.png';
+                        break;
+                    case 4:
+                        console.log("You have a match: GREEN!");
+						document.getElementById('top').src = 'top5.png';
+                        break;
+                    default:
+                        console.log("You have a match!");
+                        break;
+                }
+
+                // Temporarily disable clicks for 3 seconds
+                isClickable = false;
+                setTimeout(() => {
+                    isClickable = true;
+                    console.log("Clicking re-enabled!");
+					document.body.style.backgroundImage = `url('bg1.jpg')`;
+					document.getElementById('hair').src = 'hair.png';
+					document.getElementById('bottom').src = 'bottom.png';
+					document.getElementById('middle').src = 'middle.png';
+					document.getElementById('top').src = 'top.png';
+					document.getElementById('logo').style.display = 'none';
+                }, 3500);
+            }
+        }
+
+        // Attach the "hugMe" function to the body click event
+        document.body.addEventListener("click", hugMe);
+		document.getElementById('logo').style.display = 'none';
+		
+    </script>
+
+</body>
+</html>
