@@ -90,33 +90,32 @@
 
             // Check for a match and log the result
             if (randomIndex1 === randomIndex2 && randomIndex2 === randomIndex3) {
-                console.log("You have a match!");
 				document.body.style.backgroundImage = `url('bg2.jpg')`;
 				document.getElementById('logo').style.display = 'block';
 
                 switch (randomIndex1) {
                     case 0:
-                        console.log("RED!");
+                        console.log("You have a match: RED!");
 						document.getElementById('top').src = 'top1.svg';
                         break;
                     case 1:
-                        console.log("YELLOW!");
+                        console.log("You have a match: YELLOW!");
 						document.getElementById('top').src = 'top2.svg';
                         break;
                     case 2:
-                        console.log("PURPLE!");
+                        console.log("You have a match: PURPLE!");
 						document.getElementById('top').src = 'top3.svg';
                         break;
                     case 3:
-                        console.log("BLUE!");
+                        console.log("You have a match: BLUE!");
 						document.getElementById('top').src = 'top4.svg';
                         break;
                     case 4:
-                        console.log("GREEN!");
+                        console.log("You have a match: GREEN!");
 						document.getElementById('top').src = 'top5.svg';
                         break;
                     default:
-                        console.log("QUE?");
+                        console.log("You have a match!");
                         break;
                 }
 
