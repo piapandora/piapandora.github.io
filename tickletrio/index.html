@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pia Pandora's Tickle Trio</title>
+	<link rel="icon" type="image/png" href="icons8-feather-55.png">
+	<style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #111111;
+			/* code below disables mouse-select behaviour */
+			user-select: none;
+			-moz-user-select: none;
+			-webkit-user-drag: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+        }
+		
+		.container {
+		}
+		
+        img {
+			height: 400px;
+			border: 15px solid rgba(0, 0, 0, 1);
+        }
+		
+		#cards {
+			height: 550px;
+			display: flex;
+			justify-content: space-evenly;
+            background-color: #111111;
+		}
+		
+		#card1, #card2, #card3 {
+			color: #dddddd;
+			font-size: 1.25rem;
+			font-style: italic;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+						
+		#card1-text, #card2-text, #card3-text {
+			padding-bottom: 15px;
+		}
+
+		#title, #quote, #reading {
+			color: #ffffff;
+			font-size: 1rem;
+			font-weight: bold;
+			background-color: #222222;
+			text-align: center;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 40px;
+		}
+		
+		#quote {
+			color: #dddddd;
+		}
+
+		#reading {
+			font-size: 1.25rem;
+			font-weight: normal;
+			font-style: italic;
+		    background-color: #111111;
+			padding-top: 10px;
+			padding-bottom: 40px;
+		}
+		
+		@keyframes fadeIn {
+			0% { opacity: 0 }
+			100% { opacity: 1 }
+		}
+		
+		@keyframes fadeOut {
+			0% { opacity: 1 }
+			100% { opacity: 0 }
+		}
+
+		.fadeIn1 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s .3s forwards;
+		}
+		
+		.fadeIn2 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s 1.3s forwards;
+		}
+		
+		.fadeIn3 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s 2.3s forwards;
+		}
+		
+		.fadeIn4 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 5s .3s forwards;
+		}
+		
+		.fadeIn4b {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 3s .3s forwards;
+		}
+
+		
+		.fadeOut {
+			opacity: 1;
+			transition: opacity ease-in-out;
+			animation: fadeOut 1s 1s forwards;
+		}
+		
+		.bottom-button {
+			display: inline-block;
+			background-color: #002000;
+			color: #dddddd;
+			font-size: 1rem;
+			font-weight: bold;
+			text-align: center;
+			cursor: pointer;
+			text-decoration: none;
+			transition: background-color 0.3s;
+		}
+    </style>
+</head>
+<body>
+    <div class="container">
+		<div id="title"></div>
+		<div id="cards">
+			<div id="card1" class="fadeIn1">
+				<div id="card1-text"></div>
+				<img id="one" src="" alt="one">
+			</div>
+			<div id="card2" class="fadeIn2">
+				<div id="card2-text"></div>
+				<img id="two" src="" alt="two">
+			</div>
+			<div id="card3" class="fadeIn3">
+				<div id="card3-text"></div>
+				<img id="three" src="" alt="three">
+			</div>
+		</div>
+		<div id="reading"></div>
+		<div id="quote" class="bottom-button"></div>
+    </div>
+
+    <script>
+	    const titles = [
+			"Pia Pandora's Tickle Trio"
+        ];
+		
+		const cardUrls = [
+			'cards/CardBacks.png',		
+		];
+
+		const petraUrls = [
+			'petra/PETRA-001.png',
+			'petra/PETRA-002.png',
+			'petra/PETRA-003.png',
+		];
+		
+		const piaUrls = [
+			'pia/PIA-001.png',
+			'pia/PIA-002.png',
+			'pia/PIA-003.png',
+		];
+		
+		const lunaUrls = [
+			'luna/LUNA-001.png',
+			'luna/LUNA-002.png',
+			'luna/LUNA-003.png',
+		];
+		
+		const petraSums = [
+			'You made Petra giggle.',
+			'You made Petra blush.',
+			'You made Petra smile.',
+		];
+		
+		const piaSums = [
+			'You made Pia giggle.',
+			'You made Pia blush.',
+			'You made Pia smile.',
+		];
+		
+		const lunaSums = [
+			'You made Luna giggle.',
+			'You made Luna blush.',
+			'You made Luna smile.',
+		];
+		
+		const quotes = [
+			'Click Here To Begin',
+			'Shuffle the Trio?'
+        ];
+		
+		let mainMenu = true;
+		let firstShuffle = true;
+		let selectionMade = false;
+		let selectedTickler;
+		
+		
+		function initializeApp() {
+		    const titleElement = document.getElementById('title');
+			
+			const cardsElement = document.getElementById('cards');
+			const card1Element = document.getElementById('card1');
+			const card2Element = document.getElementById('card2');
+			const card3Element = document.getElementById('card3');
+						
+			const card1textElement = document.getElementById('card1-text');
+			const card2textElement = document.getElementById('card2-text');
+			const card3textElement = document.getElementById('card3-text');
+						
+			const oneElement = document.getElementById('one');
+            const twoElement = document.getElementById('two');
+            const threeElement = document.getElementById('three');
+			
+            const readingElement = document.getElementById('reading');
+			const quoteElement = document.getElementById('quote');
+			
+			cardsElement.style.height = "640px";
+			readingElement.style.display = 'none';
+            card1textElement.style.display = 'none';
+            card2textElement.style.display = 'none';
+            card3textElement.style.display = 'none';
+			
+            titleElement.textContent = titles[0];
+            oneElement.src = cardUrls[0];
+			twoElement.src = cardUrls[0];
+			threeElement.src = cardUrls[0];
+            quoteElement.textContent = quotes[0];
+			
+			card1textElement.textContent = '';
+			card2textElement.textContent = '';
+			card3textElement.textContent = '';
+			
+			oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+			twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+			threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+
+			card1Element.classList.add('fadeIn1');
+			card2Element.classList.add('fadeIn2');
+			card3Element.classList.add('fadeIn3');
+			
+			readingElement.textContent = '';
+			
+			const cards = ['card1', 'card2', 'card3'];
+
+			cards.forEach(card => {
+				document.getElementById(card).addEventListener('mouseenter', function() {
+					this.style.cursor = "pointer";
+				});
+
+				document.getElementById(card).addEventListener('mouseleave', function() {
+					this.style.cursor = "default";
+				});
+				
+				document.getElementById(card).addEventListener('click', function() {
+				if (mainMenu) {
+					resetApp();
+				}
+				});
+			});
+
+		}
+		
+		function resetApp() {
+				mainMenu = false;
+				firstShuffle = true;
+				selectionMade = false;
+				selectedTickler = null;
+				generateSpread();
+		}
+
+        function generateSpread() {
+            const titleElement = document.getElementById('title');
+			
+			const cardsElement = document.getElementById('cards');
+			const card1Element = document.getElementById('card1');
+			const card2Element = document.getElementById('card2');
+			const card3Element = document.getElementById('card3');
+			
+			const card1textElement = document.getElementById('card1-text');
+			const card2textElement = document.getElementById('card2-text');
+			const card3textElement = document.getElementById('card3-text');
+			
+			const oneElement = document.getElementById('one');
+            const twoElement = document.getElementById('two');
+            const threeElement = document.getElementById('three');
+			
+            const readingElement = document.getElementById('reading');
+            const quoteElement = document.getElementById('quote');
+
+			const cardIndexes = [0, 1, 2];
+			const quoteIndexes = [0, 1, 2];
+			
+
+			const randomCard1 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
+			const randomCard2 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
+			const randomCard3 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
+			
+			const randomQuote1 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
+			const randomQuote2 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
+			const randomQuote3 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
+			
+			cardsElement.style.height = "550px";
+			readingElement.style.display = 'block';
+            card1textElement.style.display = 'block';
+            card2textElement.style.display = 'block';
+            card3textElement.style.display = 'block';
+			
+            titleElement.textContent = titles[0];
+			
+			if (selectedTickler !== 'petra') {
+				oneElement.src = petraUrls[randomCard1];
+			}
+			
+			if (selectedTickler !== 'pia') {
+				twoElement.src = piaUrls[randomCard2];
+			}
+			
+			if (selectedTickler !== 'luna') {
+				threeElement.src = lunaUrls[randomCard3];			
+			}
+			
+			quoteElement.textContent = quotes[1];
+			
+			readingElement.textContent = "Choose your favorite tickler!";
+			
+			card1textElement.textContent = 'PETRA';
+			card2textElement.textContent = 'PIA';
+			card3textElement.textContent = 'LUNA';
+			
+			oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+			twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+			threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+			
+			card1Element.classList.remove('fadeIn1');
+			card2Element.classList.remove('fadeIn1');
+			card3Element.classList.remove('fadeIn1');
+			card2Element.classList.remove('fadeIn2');
+			card3Element.classList.remove('fadeIn3');
+			card1Element.classList.remove('fadeOut');
+			card2Element.classList.remove('fadeOut');
+			card3Element.classList.remove('fadeOut');
+			readingElement.classList.remove('fadeIn4');
+			readingElement.classList.remove('fadeIn4b');
+						
+			void quoteElement.offsetWidth;
+
+			if (firstShuffle) {
+				card1Element.classList.add('fadeIn1');
+				card2Element.classList.add('fadeIn2');
+				card3Element.classList.add('fadeIn3');
+				readingElement.classList.add('fadeIn4');
+				
+			} else {
+				if (selectedTickler !== 'petra') {
+					card1Element.classList.add('fadeIn1');
+				}
+				
+				if (selectedTickler !== 'pia') {
+					card2Element.classList.add('fadeIn1');
+				}
+				
+				if (selectedTickler !== 'luna') {
+					card3Element.classList.add('fadeIn1');
+				}
+			}
+			
+			firstShuffle = false;			
+			
+			readingElement.classList.add('fadeIn4b');
+			
+			card1Element.addEventListener('click', function() {
+				if (selectionMade == false) {
+					selectionMade = true;
+					selectedTickler = 'petra';
+						
+					readingElement.textContent = petraSums[randomQuote1];
+					oneElement.style.border = "15px solid rgba(255, 255, 0, 1)";
+					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					
+					setTimeout(function() {
+						oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+						}, 3000);
+							
+					card2Element.classList.add('fadeOut');
+					card3Element.classList.add('fadeOut');
+					
+					void quoteElement.offsetWidth;
+					
+					setTimeout(function() {
+						generateSpread();
+						}, 3000);
+						
+					setTimeout(function() {
+						selectionMade = false;
+						}, 5000);
+				}
+			});
+ 		
+			card2Element.addEventListener('click', function() {
+				if (selectionMade == false) {
+					selectionMade = true;
+					selectedTickler = 'pia';
+					
+					readingElement.textContent = piaSums[randomQuote2];
+					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					twoElement.style.border = "15px solid rgba(255, 255, 0, 1)";
+					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					
+					setTimeout(function() {
+						twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+						}, 3000);
+							
+					card1Element.classList.add('fadeOut');
+					card3Element.classList.add('fadeOut');
+					
+					void quoteElement.offsetWidth;
+					
+					setTimeout(function() {
+						selectionMade = false;
+						generateSpread();
+						}, 3000);
+				}
+			});
+		
+			card3Element.addEventListener('click', function() {
+				if (selectionMade == false) {
+					selectionMade = true;
+					selectedTickler = 'luna';
+					
+					readingElement.textContent = lunaSums[randomQuote3];
+					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					threeElement.style.border = "15px solid rgba(255, 255, 0, 1)";
+					
+					setTimeout(function() {
+						threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+						}, 3000);
+							
+					card1Element.classList.add('fadeOut');
+					card2Element.classList.add('fadeOut');
+					
+					void quoteElement.offsetWidth;
+					
+					setTimeout(function() {
+						selectionMade = false;
+						generateSpread();
+						}, 3000);
+				}
+			});
+		}
+			
+	document.getElementById('quote').addEventListener('mouseenter', function() {
+			this.style.color = "#ffff00";
+	});
+	
+	document.getElementById('quote').addEventListener('mouseleave', function() {
+			this.style.color = "#dddddd";
+	});
+	
+	document.getElementById('quote').addEventListener('click', function() {
+		resetApp();
+	});
+	
+	document.addEventListener('keydown', (event) => {
+		if (event.code === 'Space') {
+			resetApp();
+		}
+	});
+		
+	initializeApp();
+    </script>
+</body>
+</html>
