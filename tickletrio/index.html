@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Tickle Trio</title>
-	<link rel="icon" type="image/png" href="icons8-feather-55.png">
+	<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
 	<style>
         body {
             font-family: Arial, sans-serif;
@@ -158,7 +158,7 @@
         ];
 		
 		const cardUrls = [
-			'cards/CardBacks.png',		
+			'misc/CardBack.png',		
 		];
 
 		const petraUrls = [
@@ -241,9 +241,6 @@
 		/*const cardIndexes = [0, 1, 2];*/
 		/*const quoteIndexes = [0, 1, 2];*/
 
-		const randomPetra = Math.floor(Math.random() * petraUrls.length);
-		const randomPia = Math.floor(Math.random() * piaUrls.length);
-		const randomLuna = Math.floor(Math.random() * lunaUrls.length);
 				
 		function initializeApp() {
 			/*readingElement.style.display = 'none';*/
@@ -323,6 +320,10 @@
 		}
 
         function generateSpread() {
+			const randomPetra = Math.floor(Math.random() * petraUrls.length);
+			const randomPia = Math.floor(Math.random() * piaUrls.length);
+			const randomLuna = Math.floor(Math.random() * lunaUrls.length);
+
 			/*const randomQuote1 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomQuote2 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomQuote3 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];*/
