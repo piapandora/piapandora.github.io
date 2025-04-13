@@ -154,7 +154,7 @@
     <script>
 	    const titles = [
 			"Pia Pandora's Tickle Trio",
-			"Who's your favorite Tickler?"
+			"Choose your favorite tickler!"
         ];
 		
 		const cardUrls = [
@@ -184,7 +184,7 @@
 			'luna/LUNA-002.png',
 			'luna/LUNA-003.png',
 		];
-		
+		/*
 		const petraSums = [
 			'You made Petra giggle.',
 			'You made Petra blush.',
@@ -201,7 +201,7 @@
 			'You made Luna giggle.',
 			'You made Luna blush.',
 			'You made Luna smile.',
-		];
+		];*/
 		
 		const quotes = [
 			'Click Here To Begin',
@@ -244,7 +244,7 @@
 			threeElement.src = cardUrls[0];
             quoteElement.textContent = quotes[0];
 			
-			card1textElement.textContent = '';
+			/*card1textElement.textContent = '';
 			card2textElement.textContent = '';
 			card3textElement.textContent = '';
 			
@@ -252,28 +252,49 @@
 			twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 			threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 
-			card1Element.classList.add('fadeIn1');
-			card2Element.classList.add('fadeIn2');
-			card3Element.classList.add('fadeIn3');
+			card1Element.classList.add('fadeIn2');
+			card2Element.classList.add('fadeIn1');
+			card3Element.classList.add('fadeIn3');*/
 			
 			/*readingElement.textContent = '';*/
 			
-			const cards = ['card1', 'card2', 'card3'];
+			document.getElementById('cards').addEventListener('mouseenter', function() {
+				this.style.cursor = "pointer";
+			});
 
-			cards.forEach(card => {
-				document.getElementById(card).addEventListener('mouseenter', function() {
-					this.style.cursor = "pointer";
-				});
-
-				document.getElementById(card).addEventListener('mouseleave', function() {
-					this.style.cursor = "default";
-				});
+			document.getElementById('cards').addEventListener('mouseleave', function() {
+				this.style.cursor = "default";
+			});
 				
-				document.getElementById(card).addEventListener('click', function() {
+			document.getElementById('cards').addEventListener('click', function() {
 				if (mainMenu && !selectionMade) {
 					resetApp();
 				}
-				});
+			});
+
+			document.getElementById('quote').addEventListener('mouseenter', function() {
+				if (!selectionMade) {
+					this.style.color = "#ffff00";
+				} else {
+					this.style.color = "#dddddd";
+				}
+			});
+			
+			document.getElementById('quote').addEventListener('mouseleave', function() {
+					this.style.color = "#dddddd";
+			});
+			
+			document.getElementById('quote').addEventListener('click', function() {
+				if (!selectionMade) {
+					resetApp();
+				}
+			});
+			
+			document.addEventListener('keydown', (event) => {
+				if (event.code === 'Space' && !selectionMade) {
+					event.preventDefault();
+					resetApp();
+				}
 			});
 		}
 		
@@ -308,15 +329,15 @@
             const quoteElement = document.getElementById('quote');
 
 			const cardIndexes = [0, 1, 2];
-			const quoteIndexes = [0, 1, 2];
+			/*const quoteIndexes = [0, 1, 2];*/
 			
 			const randomCard1 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomCard2 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomCard3 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			
-			const randomQuote1 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
+			/*const randomQuote1 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomQuote2 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
-			const randomQuote3 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
+			const randomQuote3 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];*/
 			
 			/*readingElement.style.display = 'block';*/
             card1textElement.style.display = 'block';
@@ -492,31 +513,6 @@
 				}
 			});
 		}
-			
-	document.getElementById('quote').addEventListener('mouseenter', function() {
-		if (!selectionMade) {
-			this.style.color = "#ffff00";
-		} else {
-			this.style.color = "#dddddd";
-		}
-	});
-	
-	document.getElementById('quote').addEventListener('mouseleave', function() {
-			this.style.color = "#dddddd";
-	});
-	
-	document.getElementById('quote').addEventListener('click', function() {
-		if (!selectionMade) {
-			resetApp();
-		}
-	});
-	
-	document.addEventListener('keydown', (event) => {
-		if (event.code === 'Space' && !selectionMade) {
-			event.preventDefault();
-			resetApp();
-		}
-	});
 		
 	initializeApp();
     </script>
