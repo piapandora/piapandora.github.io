@@ -365,6 +365,8 @@
 				card2Element.classList.add('fadeIn2');
 				card3Element.classList.add('fadeIn3');
 				readingElement.classList.add('fadeIn4');
+				readingElement.textContent = "Choose your favorite tickler!";
+				
 				
 			} else {
 				if (selectedTickler !== 'petra') {
@@ -378,11 +380,14 @@
 				if (selectedTickler !== 'luna') {
 					card3Element.classList.add('fadeIn1');
 				}
+				
+				readingElement.classList.add('fadeIn4b');
+				readingElement.textContent = '';
 			}
 			
 			firstShuffle = false;			
 			
-			readingElement.classList.add('fadeIn4b');
+			
 			
 			card1Element.addEventListener('click', function() {
 				if (selectionMade == false) {
@@ -396,7 +401,7 @@
 					
 					setTimeout(function() {
 						oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-						}, 3000);
+						}, 7000);
 							
 					card2Element.classList.add('fadeOut');
 					card3Element.classList.add('fadeOut');
@@ -405,11 +410,11 @@
 					
 					setTimeout(function() {
 						generateSpread();
-						}, 3000);
+						}, 5000);
 						
 					setTimeout(function() {
 						selectionMade = false;
-						}, 5000);
+						}, 7000);
 				}
 			});
  		
