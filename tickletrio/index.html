@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pia Pandora's Tickle Trio</title>
+    <title>The Tickle Trio</title>
 	<link rel="icon" type="image/png" href="icons8-feather-55.png">
 	<style>
         body {
@@ -153,7 +153,7 @@
 
     <script>
 	    const titles = [
-			"Pia Pandora's Tickle Trio",
+			"The Tickle Trio",
 			"Choose your favorite tickler!"
         ];
 		
@@ -172,18 +172,19 @@
 			'pia/PIA-002.png',
 			'pia/PIA-003.png',
 		];
-
-		/*const piaUrls = [
-			'https://assets.piapandora.com/lorem-picsum/1001-5000x3333.jpg',
-			'https://assets.piapandora.com/lorem-picsum/1004-5000x3333.jpg',
-			'https://assets.piapandora.com/lorem-picsum/1005-5000x3333.jpg',
-		];*/
 		
 		const lunaUrls = [
 			'luna/LUNA-001.png',
 			'luna/LUNA-002.png',
 			'luna/LUNA-003.png',
 		];
+
+		/*const piaUrls = [
+			'https://assets.piapandora.com/lorem-picsum/1001-5000x3333.jpg',
+			'https://assets.piapandora.com/lorem-picsum/1004-5000x3333.jpg',
+			'https://assets.piapandora.com/lorem-picsum/1005-5000x3333.jpg',
+		];*/
+
 		/*
 		const petraSums = [
 			'You made Petra giggle.',
@@ -207,32 +208,44 @@
 			'Click Here To Begin',
 			'Shuffle the Trio?'
         ];
+
+		const cardNames = [
+			'PETRA',
+			'PIA',
+			'LUNA'
+        ];
 		
 		let mainMenu = true;
 		let firstShuffle = true;
 		let selectionMade = false;
 		let selectedTickler;
-		
-		
-		function initializeApp() {
-		    const titleElement = document.getElementById('title');
-			
-			const cardsElement = document.getElementById('cards');
-			const card1Element = document.getElementById('card1');
-			const card2Element = document.getElementById('card2');
-			const card3Element = document.getElementById('card3');
-						
-			const card1textElement = document.getElementById('card1-text');
-			const card2textElement = document.getElementById('card2-text');
-			const card3textElement = document.getElementById('card3-text');
-						
-			const oneElement = document.getElementById('one');
-            const twoElement = document.getElementById('two');
-            const threeElement = document.getElementById('three');
-			
-            /*const readingElement = document.getElementById('reading');*/
-			const quoteElement = document.getElementById('quote');
 
+		const titleElement = document.getElementById('title');
+			
+		const cardsElement = document.getElementById('cards');
+		const card1Element = document.getElementById('card1');
+		const card2Element = document.getElementById('card2');
+		const card3Element = document.getElementById('card3');
+					
+		const card1textElement = document.getElementById('card1-text');
+		const card2textElement = document.getElementById('card2-text');
+		const card3textElement = document.getElementById('card3-text');
+					
+		const oneElement = document.getElementById('one');
+        const twoElement = document.getElementById('two');
+        const threeElement = document.getElementById('three');
+		
+        /*const readingElement = document.getElementById('reading');*/
+		const quoteElement = document.getElementById('quote');
+
+		/*const cardIndexes = [0, 1, 2];*/
+		/*const quoteIndexes = [0, 1, 2];*/
+
+		const randomPetra = Math.floor(Math.random() * petraUrls.length);
+		const randomPia = Math.floor(Math.random() * piaUrls.length);
+		const randomLuna = Math.floor(Math.random() * lunaUrls.length);
+				
+		function initializeApp() {
 			/*readingElement.style.display = 'none';*/
             card1textElement.style.display = 'none';
             card2textElement.style.display = 'none';
@@ -258,21 +271,21 @@
 			
 			/*readingElement.textContent = '';*/
 			
-			document.getElementById('cards').addEventListener('mouseenter', function() {
+			cardsElement.addEventListener('mouseenter', function() {
 				this.style.cursor = "pointer";
 			});
 
-			document.getElementById('cards').addEventListener('mouseleave', function() {
+			cardsElement.addEventListener('mouseleave', function() {
 				this.style.cursor = "default";
 			});
 				
-			document.getElementById('cards').addEventListener('click', function() {
+			cardsElement.addEventListener('click', function() {
 				if (mainMenu && !selectionMade) {
 					resetApp();
 				}
 			});
 
-			document.getElementById('quote').addEventListener('mouseenter', function() {
+			quoteElement.addEventListener('mouseenter', function() {
 				if (!selectionMade) {
 					this.style.color = "#ffff00";
 				} else {
@@ -280,11 +293,11 @@
 				}
 			});
 			
-			document.getElementById('quote').addEventListener('mouseleave', function() {
+			quoteElement.addEventListener('mouseleave', function() {
 					this.style.color = "#dddddd";
 			});
 			
-			document.getElementById('quote').addEventListener('click', function() {
+			quoteElement.addEventListener('click', function() {
 				if (!selectionMade) {
 					resetApp();
 				}
@@ -310,31 +323,6 @@
 		}
 
         function generateSpread() {
-            const titleElement = document.getElementById('title');
-			
-			const cardsElement = document.getElementById('cards');
-			const card1Element = document.getElementById('card1');
-			const card2Element = document.getElementById('card2');
-			const card3Element = document.getElementById('card3');
-			
-			const card1textElement = document.getElementById('card1-text');
-			const card2textElement = document.getElementById('card2-text');
-			const card3textElement = document.getElementById('card3-text');
-			
-			const oneElement = document.getElementById('one');
-            const twoElement = document.getElementById('two');
-            const threeElement = document.getElementById('three');
-			
-            /*const readingElement = document.getElementById('reading');*/
-            const quoteElement = document.getElementById('quote');
-
-			const cardIndexes = [0, 1, 2];
-			/*const quoteIndexes = [0, 1, 2];*/
-			
-			const randomCard1 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
-			const randomCard2 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
-			const randomCard3 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
-			
 			/*const randomQuote1 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomQuote2 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomQuote3 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];*/
@@ -345,26 +333,25 @@
             card3textElement.style.display = 'block';
 			
             titleElement.textContent = titles[1];
+			quoteElement.textContent = quotes[1];
 			
 			if (selectedTickler !== 'petra') {
-				oneElement.src = petraUrls[randomCard1];
+				oneElement.src = petraUrls[randomPetra];
 			}
 			
 			if (selectedTickler !== 'pia') {
-				twoElement.src = piaUrls[randomCard2];
+				twoElement.src = piaUrls[randomPia];
 			}
 			
 			if (selectedTickler !== 'luna') {
-				threeElement.src = lunaUrls[randomCard3];			
+				threeElement.src = lunaUrls[randomLuna];			
 			}
-			
-			quoteElement.textContent = quotes[1];
 			
 			/*readingElement.textContent = "Choose your favorite tickler!";*/
 			
-			card1textElement.textContent = 'PETRA';
-			card2textElement.textContent = 'PIA';
-			card3textElement.textContent = 'LUNA';
+			card1textElement.textContent = cardNames[0];
+			card2textElement.textContent = cardNames[1];
+			card3textElement.textContent = cardNames[2];
 			
 			oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 			twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
@@ -419,21 +406,20 @@
 					oneElement.style.border = "15px solid rgba(255, 255, 0, 1)";
 					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					document.getElementById('card1').style.color = '#ffff00';
+					card1Element.style.color = '#ffff00';
 
 					setTimeout(function() {
-						document.getElementById('card1').style.color = '#dddddd';
+						card1Element.style.color = '#dddddd';
 						}, 2500);
 					
 					setTimeout(function() {
 						oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-						document.getElementById('card1').style.color = '#dddddd';
 						}, 5000);
 							
 					card2Element.classList.add('fadeOut');
 					card3Element.classList.add('fadeOut');
 					
-					void quoteElement.offsetWidth;
+					/*void quoteElement.offsetWidth;*/
 					
 					setTimeout(function() {
 						generateSpread();
@@ -454,10 +440,10 @@
 					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 					twoElement.style.border = "15px solid rgba(255, 255, 0, 1)";
 					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					document.getElementById('card2').style.color = '#ffff00';
+					card2Element.style.color = '#ffff00';
 
 					setTimeout(function() {
-						document.getElementById('card2').style.color = '#dddddd';
+						card2Element.style.color = '#dddddd';
 						}, 2500);
 
 					setTimeout(function() {
@@ -467,7 +453,7 @@
 					card1Element.classList.add('fadeOut');
 					card3Element.classList.add('fadeOut');
 					
-					void quoteElement.offsetWidth;
+					/*void quoteElement.offsetWidth;*/
 					
 					setTimeout(function() {
 						generateSpread();
@@ -488,10 +474,10 @@
 					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 					threeElement.style.border = "15px solid rgba(255, 255, 0, 1)";
-					document.getElementById('card3').style.color = '#ffff00';
+					card3Element.style.color = '#ffff00';
 					
 					setTimeout(function() {
-						document.getElementById('card3').style.color = '#dddddd';
+						card3Element.style.color = '#dddddd';
 						}, 2500);
 					
 					setTimeout(function() {
@@ -501,7 +487,7 @@
 					card1Element.classList.add('fadeOut');
 					card2Element.classList.add('fadeOut');
 					
-					void quoteElement.offsetWidth;
+					/*void quoteElement.offsetWidth;*/
 					
 					setTimeout(function() {
 						generateSpread();
