@@ -205,7 +205,11 @@
 			card1Element.classList.add('fadeIn1');
 			card2Element.classList.add('fadeIn2');
 			card3Element.classList.add('fadeIn3');
-				
+
+			clicks();
+		}
+		
+		function clicks() {
 			cardsElement.addEventListener('click', function() {
 				if (mainMenu && !selectionMade) {
 					reset();
@@ -237,10 +241,6 @@
 				}
 			});
 
-			cards();
-		}
-		
-		function cards() {
 			card1Element.addEventListener('click', function() {
 				if (!selectionMade && !mainMenu) {
 					selectionMade = true;
