@@ -25,20 +25,12 @@
 		}*/
 		
         img {
-			height: 460px;
-			width: 345px;
+			height: 400px;
 			border: 15px solid rgba(0, 0, 0, 1);
         }
 		
-		/* fullscreen ticklers
-		img {
-			height: 568px;
-			width: 426.66px;
-			border: 15px solid rgba(0, 0, 0, 1);
-        }*/
-		
 		#cards {
-			height: 640px;
+			height: 550px;
 			display: flex;
 			justify-content: space-evenly;
             background-color: #111111;
@@ -111,10 +103,23 @@
 			animation: fadeIn 2s 2.3s forwards;
 		}
 		
+		.fadeIn4 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 5s .3s forwards;
+		}
+		
+		.fadeIn4b {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 3s .3s forwards;
+		}
+
+		
 		.fadeOut {
 			opacity: 1;
 			transition: opacity ease-in-out;
-			animation: fadeOut 1s .5s forwards;
+			animation: fadeOut 1s 1s forwards;
 		}
 		
 		.bottom-button {
@@ -147,14 +152,13 @@
 				<img id="three" src="" alt="three">
 			</div>
 		</div>
-		<!--<div id="reading"></div>-->
+		<div id="reading"></div>
 		<div id="quote" class="bottom-button"></div>
     </div>
 
     <script>
 	    const titles = [
-			"Pia Pandora's Tickle Trio",
-			"Who's your favorite Tickler?"
+			"Pia Pandora's Tickle Trio"
         ];
 		
 		const cardUrls = [
@@ -172,12 +176,6 @@
 			'pia/PIA-002.png',
 			'pia/PIA-003.png',
 		];
-
-		/*const piaUrls = [
-			'https://assets.piapandora.com/lorem-picsum/1001-5000x3333.jpg',
-			'https://assets.piapandora.com/lorem-picsum/1004-5000x3333.jpg',
-			'https://assets.piapandora.com/lorem-picsum/1005-5000x3333.jpg',
-		];*/
 		
 		const lunaUrls = [
 			'luna/LUNA-001.png',
@@ -230,10 +228,11 @@
             const twoElement = document.getElementById('two');
             const threeElement = document.getElementById('three');
 			
-            /*const readingElement = document.getElementById('reading');*/
+            const readingElement = document.getElementById('reading');
 			const quoteElement = document.getElementById('quote');
-
-			/*readingElement.style.display = 'none';*/
+			
+			cardsElement.style.height = "640px";
+			readingElement.style.display = 'none';
             card1textElement.style.display = 'none';
             card2textElement.style.display = 'none';
             card3textElement.style.display = 'none';
@@ -256,7 +255,7 @@
 			card2Element.classList.add('fadeIn2');
 			card3Element.classList.add('fadeIn3');
 			
-			/*readingElement.textContent = '';*/
+			readingElement.textContent = '';
 			
 			const cards = ['card1', 'card2', 'card3'];
 
@@ -270,20 +269,18 @@
 				});
 				
 				document.getElementById(card).addEventListener('click', function() {
-				if (mainMenu && !selectionMade) {
+				if (mainMenu) {
 					resetApp();
 				}
 				});
 			});
+
 		}
 		
 		function resetApp() {
 				mainMenu = false;
 				firstShuffle = true;
-				selectionMade = true;
-				setTimeout(function() {
-					selectionMade = false;
-				}, 3500);
+				selectionMade = false;
 				selectedTickler = null;
 				generateSpread();
 		}
@@ -304,12 +301,13 @@
             const twoElement = document.getElementById('two');
             const threeElement = document.getElementById('three');
 			
-            /*const readingElement = document.getElementById('reading');*/
+            const readingElement = document.getElementById('reading');
             const quoteElement = document.getElementById('quote');
 
 			const cardIndexes = [0, 1, 2];
 			const quoteIndexes = [0, 1, 2];
 			
+
 			const randomCard1 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomCard2 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomCard3 = cardIndexes[Math.floor(Math.random() * cardIndexes.length)];
@@ -318,12 +316,13 @@
 			const randomQuote2 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			const randomQuote3 = quoteIndexes[Math.floor(Math.random() * cardIndexes.length)];
 			
-			/*readingElement.style.display = 'block';*/
+			cardsElement.style.height = "550px";
+			readingElement.style.display = 'block';
             card1textElement.style.display = 'block';
             card2textElement.style.display = 'block';
             card3textElement.style.display = 'block';
 			
-            titleElement.textContent = titles[1];
+            titleElement.textContent = titles[0];
 			
 			if (selectedTickler !== 'petra') {
 				oneElement.src = petraUrls[randomCard1];
@@ -339,7 +338,7 @@
 			
 			quoteElement.textContent = quotes[1];
 			
-			/*readingElement.textContent = "Choose your favorite tickler!";*/
+			readingElement.textContent = "Choose your favorite tickler!";
 			
 			card1textElement.textContent = 'PETRA';
 			card2textElement.textContent = 'PIA';
@@ -357,8 +356,8 @@
 			card1Element.classList.remove('fadeOut');
 			card2Element.classList.remove('fadeOut');
 			card3Element.classList.remove('fadeOut');
-			/*readingElement.classList.remove('fadeIn4');
-			readingElement.classList.remove('fadeIn4b');*/
+			readingElement.classList.remove('fadeIn4');
+			readingElement.classList.remove('fadeIn4b');
 						
 			void quoteElement.offsetWidth;
 
@@ -366,8 +365,8 @@
 				card1Element.classList.add('fadeIn1');
 				card2Element.classList.add('fadeIn2');
 				card3Element.classList.add('fadeIn3');
-				/*readingElement.classList.add('fadeIn4');
-				readingElement.textContent = "Choose your favorite tickler!";*/
+				readingElement.classList.add('fadeIn4');
+				readingElement.textContent = "Choose your favorite tickler!";
 				
 				
 			} else {
@@ -383,31 +382,27 @@
 					card3Element.classList.add('fadeIn1');
 				}
 				
-				/*readingElement.classList.add('fadeIn4b');
-				readingElement.textContent = '';*/
+				readingElement.classList.add('fadeIn4b');
+				readingElement.textContent = '';
 			}
 			
 			firstShuffle = false;			
+			
+			
 			
 			card1Element.addEventListener('click', function() {
 				if (!selectionMade) {
 					selectionMade = true;
 					selectedTickler = 'petra';
 						
-					/*readingElement.textContent = petraSums[randomQuote1];*/
+					readingElement.textContent = petraSums[randomQuote1];
 					oneElement.style.border = "15px solid rgba(255, 255, 0, 1)";
 					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					document.getElementById('card1').style.color = '#ffff00';
-
-					setTimeout(function() {
-						document.getElementById('card1').style.color = '#dddddd';
-						}, 2500);
 					
 					setTimeout(function() {
 						oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-						document.getElementById('card1').style.color = '#dddddd';
-						}, 5000);
+						}, 7000);
 							
 					card2Element.classList.add('fadeOut');
 					card3Element.classList.add('fadeOut');
@@ -416,11 +411,11 @@
 					
 					setTimeout(function() {
 						generateSpread();
-						}, 2500);
+						}, 5000);
 						
 					setTimeout(function() {
 						selectionMade = false;
-						}, 3500);
+						}, 7000);
 				}
 			});
  		
@@ -429,19 +424,14 @@
 					selectionMade = true;
 					selectedTickler = 'pia';
 					
-					/*readingElement.textContent = piaSums[randomQuote2];*/
+					readingElement.textContent = piaSums[randomQuote2];
 					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 					twoElement.style.border = "15px solid rgba(255, 255, 0, 1)";
 					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					document.getElementById('card2').style.color = '#ffff00';
-
-					setTimeout(function() {
-						document.getElementById('card2').style.color = '#dddddd';
-						}, 2500);
-
+					
 					setTimeout(function() {
 						twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-						}, 5000);
+						}, 3000);
 							
 					card1Element.classList.add('fadeOut');
 					card3Element.classList.add('fadeOut');
@@ -449,12 +439,9 @@
 					void quoteElement.offsetWidth;
 					
 					setTimeout(function() {
-						generateSpread();
-						}, 2500);
-						
-					setTimeout(function() {
 						selectionMade = false;
-						}, 3500);
+						generateSpread();
+						}, 3000);
 				}
 			});
 		
@@ -463,19 +450,14 @@
 					selectionMade = true;
 					selectedTickler = 'luna';
 					
-					/*readingElement.textContent = lunaSums[randomQuote3];*/
+					readingElement.textContent = lunaSums[randomQuote3];
 					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 					threeElement.style.border = "15px solid rgba(255, 255, 0, 1)";
-					document.getElementById('card3').style.color = '#ffff00';
-					
-					setTimeout(function() {
-						document.getElementById('card3').style.color = '#dddddd';
-						}, 2500);
 					
 					setTimeout(function() {
 						threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-						}, 5000);
+						}, 3000);
 							
 					card1Element.classList.add('fadeOut');
 					card2Element.classList.add('fadeOut');
@@ -483,12 +465,9 @@
 					void quoteElement.offsetWidth;
 					
 					setTimeout(function() {
-						generateSpread();
-						}, 2500);
-						
-					setTimeout(function() {
 						selectionMade = false;
-						}, 3500);
+						generateSpread();
+						}, 3000);
 				}
 			});
 		}
