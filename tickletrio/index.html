@@ -116,15 +116,15 @@
 		<div id="cards">
 			<div id="card1">
 				<div id="card1-name"></div>
-				<img id="one" alt="one">
+				<img id="one" alt="image one">
 			</div>
 			<div id="card2">
 				<div id="card2-name"></div>
-				<img id="two" alt="two">
+				<img id="two" alt="image two">
 			</div>
 			<div id="card3">
 				<div id="card3-name"></div>
-				<img id="three" alt="three">
+				<img id="three" alt="image three">
 			</div>
 		</div>
 		<div id="button"></div>
@@ -236,8 +236,105 @@
 					reset();
 				}
 			});
+
+			cards();
 		}
 		
+		function cards() {
+			card1Element.addEventListener('click', function() {
+				if (!selectionMade && !mainMenu) {
+					selectionMade = true;
+					selectedTickler = 'petra';
+						
+					oneElement.style.border = "15px solid rgba(255, 255, 0, 1)";
+					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					card1Element.style.color = '#ffff00';
+
+					setTimeout(function() {
+						card1Element.style.color = '#dddddd';
+						}, 2500);
+					
+					setTimeout(function() {
+						oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+						}, 5000);
+							
+					card2Element.classList.add('fadeOut');
+					card3Element.classList.add('fadeOut');
+					
+					setTimeout(function() {
+						generate();
+						}, 2500);
+						
+					setTimeout(function() {
+						selectionMade = false;
+						}, 3000);
+				}
+			});
+ 		
+			card2Element.addEventListener('click', function() {
+				if (!selectionMade && !mainMenu) {
+					selectionMade = true;
+					selectedTickler = 'pia';
+					
+					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					twoElement.style.border = "15px solid rgba(255, 255, 0, 1)";
+					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					card2Element.style.color = '#ffff00';
+
+					setTimeout(function() {
+						card2Element.style.color = '#dddddd';
+						}, 2500);
+
+					setTimeout(function() {
+						twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+						}, 5000);
+							
+					card1Element.classList.add('fadeOut');
+					card3Element.classList.add('fadeOut');
+					
+					setTimeout(function() {
+						generate();
+						}, 2500);
+						
+					setTimeout(function() {
+						selectionMade = false;
+						}, 3000);
+				}
+			});
+		
+			card3Element.addEventListener('click', function() {
+				if (!selectionMade && !mainMenu) {
+					selectionMade = true;
+					selectedTickler = 'luna';
+					
+					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+					threeElement.style.border = "15px solid rgba(255, 255, 0, 1)";
+					card3Element.style.color = '#ffff00';
+					
+					setTimeout(function() {
+						card3Element.style.color = '#dddddd';
+						}, 2500);
+					
+					setTimeout(function() {
+						threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+						}, 5000);
+							
+					card1Element.classList.add('fadeOut');
+					card2Element.classList.add('fadeOut');
+					
+					setTimeout(function() {
+						generate();
+						}, 2500);
+						
+					setTimeout(function() {
+						selectionMade = false;
+						}, 3000);
+				}
+			});
+		}
+
 		function reset() {
 				mainMenu = false;
 				firstShuffle = true;
@@ -310,100 +407,7 @@
 				}
 			}
 			
-			firstShuffle = false;			
-			
-			card1Element.addEventListener('click', function() {
-				if (!selectionMade) {
-					selectionMade = true;
-					selectedTickler = 'petra';
-						
-					oneElement.style.border = "15px solid rgba(255, 255, 0, 1)";
-					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					card1Element.style.color = '#ffff00';
-
-					setTimeout(function() {
-						card1Element.style.color = '#dddddd';
-						}, 2500);
-					
-					setTimeout(function() {
-						oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-						}, 5000);
-							
-					card2Element.classList.add('fadeOut');
-					card3Element.classList.add('fadeOut');
-					
-					setTimeout(function() {
-						generate();
-						}, 2500);
-						
-					setTimeout(function() {
-						selectionMade = false;
-						}, 3000);
-				}
-			});
- 		
-			card2Element.addEventListener('click', function() {
-				if (!selectionMade) {
-					selectionMade = true;
-					selectedTickler = 'pia';
-					
-					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					twoElement.style.border = "15px solid rgba(255, 255, 0, 1)";
-					threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					card2Element.style.color = '#ffff00';
-
-					setTimeout(function() {
-						card2Element.style.color = '#dddddd';
-						}, 2500);
-
-					setTimeout(function() {
-						twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-						}, 5000);
-							
-					card1Element.classList.add('fadeOut');
-					card3Element.classList.add('fadeOut');
-					
-					setTimeout(function() {
-						generate();
-						}, 2500);
-						
-					setTimeout(function() {
-						selectionMade = false;
-						}, 3000);
-				}
-			});
-		
-			card3Element.addEventListener('click', function() {
-				if (!selectionMade) {
-					selectionMade = true;
-					selectedTickler = 'luna';
-					
-					oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-					threeElement.style.border = "15px solid rgba(255, 255, 0, 1)";
-					card3Element.style.color = '#ffff00';
-					
-					setTimeout(function() {
-						card3Element.style.color = '#dddddd';
-						}, 2500);
-					
-					setTimeout(function() {
-						threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-						}, 5000);
-							
-					card1Element.classList.add('fadeOut');
-					card2Element.classList.add('fadeOut');
-					
-					setTimeout(function() {
-						generate();
-						}, 2500);
-						
-					setTimeout(function() {
-						selectionMade = false;
-						}, 3000);
-				}
-			});
+			firstShuffle = false;
 		}
 		
 	initialize();
