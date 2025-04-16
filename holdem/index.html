@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Card Hold'em</title>
+	<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+	<style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #111111;
+			/* code below disables mouse-select behaviour */
+			user-select: none;
+			-moz-user-select: none;
+			-webkit-user-drag: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+        }
+		
+		img {
+			height: 460px;
+			width: 345px;
+			border: 15px solid rgba(0, 0, 0, 1);
+			border-radius: 10px;
+        }
+
+		.border-yellow {
+			border-color: rgba(255, 255, 0, 1);
+		}
+
+		#cards {
+			height: 640px;
+			display: flex;
+			justify-content: space-evenly;
+            background-color: #111111;
+			cursor: pointer;
+		}
+		
+		#card1, #card2, #card3 {
+			color: #dddddd;
+			font-size: 1.25rem;
+			font-style: italic;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+						
+		#card1-name, #card2-name, #card3-name {
+			padding-bottom: 15px;
+		}
+
+		#title {
+			color: #ffffff;
+			font-size: 1rem;
+			font-weight: bold;
+			background-color: #222222;
+			text-align: center;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 40px;
+		}
+
+		#button {
+			color: #dddddd;
+			font-size: 1rem;
+			font-weight: bold;
+			background-color: #222222;
+			text-align: center;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 40px;
+			cursor: pointer;
+			text-decoration: none;
+			transition: background-color 0.3s;
+		}
+
+		@keyframes fadeIn {
+			0% { opacity: 0 }
+			100% { opacity: 1 }
+		}
+		
+		@keyframes fadeOut {
+			0% { opacity: 1 }
+			100% { opacity: 0 }
+		}
+
+		.fadeIn1 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s .3s forwards;
+		}
+		
+		.fadeIn2 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s 1.3s forwards;
+		}
+		
+		.fadeIn3 {
+			opacity: 0;
+			transition: opacity ease-in-out;
+			animation: fadeIn 2s 2.3s forwards;
+		}
+		
+		.fadeOut {
+			opacity: 1;
+			transition: opacity ease-in-out;
+			animation: fadeOut 1s .3s forwards;
+		}
+    </style>
+</head>
+<body>
+	<div id="title"></div>
+	<div id="cards">
+		<div id="card1">
+			<div id="card1-name"></div>
+			<img id="one" alt="image one">
+		</div>
+		<div id="card2">
+			<div id="card2-name"></div>
+			<img id="two" alt="image two">
+		</div>
+		<div id="card3">
+			<div id="card3-name"></div>
+			<img id="three" alt="image three">
+		</div>
+	</div>
+	<div id="button"></div>
+
+    <script>
+		let backsUrls = [
+			'misc/card-back-red.png',
+			'misc/card-back-purple.png',
+			'misc/card-back-orange.png',
+			'misc/card-back-green.png',
+			'misc/card-back-blue.png'
+		]
+		
+		let deckOfCards = [
+			'https://assets.piapandora.com/deck/ace-of-spades.png',
+			'https://assets.piapandora.com/deck/ace-of-hearts.png',
+			'https://assets.piapandora.com/deck/ace-of-diamonds.png',
+			'https://assets.piapandora.com/deck/ace-of-clubs.png',
+			'https://assets.piapandora.com/deck/king-of-spades.png',
+			'https://assets.piapandora.com/deck/king-of-hearts.png',
+			'https://assets.piapandora.com/deck/king-of-diamonds.png',
+			'https://assets.piapandora.com/deck/king-of-clubs.png',
+			'https://assets.piapandora.com/deck/queen-of-spades.png',
+			'https://assets.piapandora.com/deck/queen-of-hearts.png',
+			'https://assets.piapandora.com/deck/queen-of-diamonds.png',
+			'https://assets.piapandora.com/deck/queen-of-clubs.png',
+			'https://assets.piapandora.com/deck/jack-of-spades.png',
+			'https://assets.piapandora.com/deck/jack-of-hearts.png',
+			'https://assets.piapandora.com/deck/jack-of-diamonds.png',
+			'https://assets.piapandora.com/deck/jack-of-clubs.png',
+			'https://assets.piapandora.com/deck/10-of-spades.png',
+			'https://assets.piapandora.com/deck/10-of-hearts.png',
+			'https://assets.piapandora.com/deck/10-of-diamonds.png',
+			'https://assets.piapandora.com/deck/10-of-clubs.png',
+			'https://assets.piapandora.com/deck/9-of-spades.png',
+			'https://assets.piapandora.com/deck/9-of-hearts.png',
+			'https://assets.piapandora.com/deck/9-of-diamonds.png',
+			'https://assets.piapandora.com/deck/9-of-clubs.png',			
+			'https://assets.piapandora.com/deck/8-of-spades.png',
+			'https://assets.piapandora.com/deck/8-of-hearts.png',
+			'https://assets.piapandora.com/deck/8-of-diamonds.png',
+			'https://assets.piapandora.com/deck/8-of-clubs.png',
+			'https://assets.piapandora.com/deck/7-of-spades.png',
+			'https://assets.piapandora.com/deck/7-of-hearts.png',
+			'https://assets.piapandora.com/deck/7-of-diamonds.png',
+			'https://assets.piapandora.com/deck/7-of-clubs.png',
+			'https://assets.piapandora.com/deck/6-of-spades.png',
+			'https://assets.piapandora.com/deck/6-of-hearts.png',
+			'https://assets.piapandora.com/deck/6-of-diamonds.png',
+			'https://assets.piapandora.com/deck/6-of-clubs.png',
+			'https://assets.piapandora.com/deck/5-of-spades.png',
+			'https://assets.piapandora.com/deck/5-of-hearts.png',
+			'https://assets.piapandora.com/deck/5-of-diamonds.png',
+			'https://assets.piapandora.com/deck/5-of-clubs.png',
+			'https://assets.piapandora.com/deck/4-of-spades.png',
+			'https://assets.piapandora.com/deck/4-of-hearts.png',
+			'https://assets.piapandora.com/deck/4-of-diamonds.png',
+			'https://assets.piapandora.com/deck/4-of-clubs.png',
+			'https://assets.piapandora.com/deck/3-of-spades.png',
+			'https://assets.piapandora.com/deck/3-of-hearts.png',
+			'https://assets.piapandora.com/deck/3-of-diamonds.png',
+			'https://assets.piapandora.com/deck/3-of-clubs.png',
+			'https://assets.piapandora.com/deck/2-of-spades.png',
+			'https://assets.piapandora.com/deck/2-of-hearts.png',
+			'https://assets.piapandora.com/deck/2-of-diamonds.png',
+			'https://assets.piapandora.com/deck/2-of-clubs.png'
+		];
+
+		let cardUrls = [backsUrls[Math.floor(Math.random() * backsUrls.length)]];
+		let oneUrls = deckOfCards;
+		let twoUrls = deckOfCards;
+		let threeUrls = deckOfCards;
+
+		let titles = [
+			"Three Card Hold'em",
+			"Choose Card To Hold"
+		];
+		
+		let buttons = [
+			'Deal Cards?',
+			'Shuffle Cards?'
+		];
+
+		let cardNames = [
+			'- FLOP -',
+			'- TURN -',
+			'- RIVER -'
+		];
+
+		let mainMenu = true;
+		let goldilocks = 0;
+		let firstShuffle = true;
+		let selectionMade = false;
+		let selectedCard;
+
+		const titleElement = document.getElementById('title');
+			
+		const cardsElement = document.getElementById('cards');
+		const card1Element = document.getElementById('card1');
+		const card2Element = document.getElementById('card2');
+		const card3Element = document.getElementById('card3');
+					
+		const card1nameElement = document.getElementById('card1-name');
+		const card2nameElement = document.getElementById('card2-name');
+		const card3nameElement = document.getElementById('card3-name');
+					
+		const oneElement = document.getElementById('one');
+        const twoElement = document.getElementById('two');
+        const threeElement = document.getElementById('three');
+		
+		const buttonElement = document.getElementById('button');
+
+		function initialize() {
+			card1nameElement.style.display = 'none';
+            card2nameElement.style.display = 'none';
+            card3nameElement.style.display = 'none';
+			
+            titleElement.textContent = titles[0];
+            oneElement.src = cardUrls[0];
+			twoElement.src = cardUrls[0];
+			threeElement.src = cardUrls[0];
+            buttonElement.textContent = buttons[0];
+
+			card1Element.classList.add('fadeIn1');
+			card2Element.classList.add('fadeIn2');
+			card3Element.classList.add('fadeIn3');
+
+			cardsElement.addEventListener('click', function() {
+				if (mainMenu && !selectionMade) {
+					shuffle();
+				}
+			});
+
+			buttonElement.addEventListener('mouseenter', function() {
+				this.style.color = "#ffff00";
+			});
+			
+			buttonElement.addEventListener('mouseleave', function() {
+				this.style.color = "#dddddd";
+			});
+
+			buttonElement.addEventListener('click', function() {
+				if (!selectionMade) {
+					shuffle();
+				}
+			});
+			
+			document.addEventListener('keydown', (event) => {
+				if (event.code === 'KeyX') {
+					goldilocks++;
+					if (goldilocks >= 10) {
+						gimbal();
+					}
+				} else if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
+					event.preventDefault();
+					if (!selectionMade) {
+						shuffle();
+					}
+				} else if (event.code === 'KeyA' || event.code === 'ArrowLeft') {
+					event.preventDefault();
+					if (!selectionMade) {
+						one();
+					}
+				} else if (event.code === 'KeyS' || event.code === 'ArrowDown') {
+					event.preventDefault();
+					if (!selectionMade) {
+						two();
+					}
+				} else if (event.code === 'KeyD' || event.code === 'ArrowRight') {
+					event.preventDefault();
+					if (!selectionMade) {
+						three();
+					}
+				}
+			}, { passive: false });
+
+			card1Element.addEventListener('click', function() {
+				if (!selectionMade) one();
+			});
+ 		
+			card2Element.addEventListener('click', function() {
+				if (!selectionMade) two();
+			});
+		
+			card3Element.addEventListener('click', function() {
+				if (!selectionMade)	three();
+			});
+		}
+
+		function gimbal() {
+			if (!mainMenu) return;
+
+			alert(
+				String.fromCharCode(
+					10, 
+					87, 101, 108, 99, 111, 109, 101, 32, 116, 111, 32, 80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111, 33, 10, 10,
+					84, 104, 105, 115, 32, 97, 112, 112, 32, 102, 101, 97, 116, 117, 114, 101, 115, 32, 115, 117, 103, 103, 101, 115, 116, 105, 118, 101, 32, 97, 114, 116, 105, 115, 116, 105, 99, 32, 99, 111, 110, 116, 101, 110, 116, 46, 10, 10,
+					66, 121, 32, 99, 111, 110, 116, 105, 110, 117, 105, 110, 103, 44, 32, 121, 111, 117, 32, 99, 111, 110, 102, 105, 114, 109, 32, 121, 111, 117, 39, 114, 101, 32, 49, 56, 32, 111, 114, 32, 111, 108, 100, 101, 114, 46
+				)
+			);
+			
+			titles = [
+				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
+				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101)
+			];
+			
+			cardUrls = [
+				'misc/card-back.png'
+			];
+			
+			one3PadUrls = generate3PadUrls(1, 237, 'one', String.fromCharCode(80, 69, 84, 82, 65));
+			two3PadUrls = generate3PadUrls(1, 239, 'two', String.fromCharCode(80, 73, 65));
+			three3PadUrls = generate3PadUrls(1, 229, 'three', String.fromCharCode(76, 85, 78, 65));
+			
+			one5PadUrls = generate5PadUrls(1, 85, 'one', String.fromCharCode(80, 69, 84, 82, 65));
+			two5PadUrls = generate5PadUrls(1, 85, 'two', String.fromCharCode(80, 73, 65));
+			three5PadUrls = generate5PadUrls(1, 85, 'three', String.fromCharCode(76, 85, 78, 65));
+			
+			function generate3PadUrls(start, end, folder, name) {
+				const urls = [];
+				for (let i = start; i <= end; i++) {
+					const number = String(i).padStart(3, '0');
+					urls.push(`${folder}/${name}-${number}.png`);
+				}
+				return urls;
+			}
+			
+			function generate5PadUrls(start, end, folder, name) {
+				const urls = [];
+				for (let i = start; i <= end; i++) {
+					const number = String(i).padStart(5, '0');
+					urls.push(`${folder}/${name}_${number}_.png`);
+				}
+				return urls;
+			}
+			
+			oneUrls = [...one3PadUrls, ...one5PadUrls];
+			twoUrls = [...two3PadUrls, ...two5PadUrls];
+			threeUrls = [...three3PadUrls, ...three5PadUrls];
+			
+			buttons = [
+				String.fromCharCode(
+					67, 108, 105, 99, 107, 32, 72, 101, 114, 101, 32, 84, 111, 32, 66, 101, 103, 105, 110
+				),
+				String.fromCharCode(
+					83, 104, 117, 102, 102, 108, 101, 32, 84, 114, 105, 111, 63
+				)
+			];
+			
+			cardNames = [
+				String.fromCharCode(80, 69, 84, 82, 65),
+				String.fromCharCode(80, 73, 65),
+				String.fromCharCode(76, 85, 78, 65)
+			];
+
+			initialize();
+		}
+
+		function shuffle() {
+			firstShuffle = true;
+			selectionMade = true;
+			selectedCard = null;
+
+			if (!mainMenu) {
+				card1Element.classList.remove('fadeIn1');
+				card2Element.classList.remove('fadeIn1');
+				card3Element.classList.remove('fadeIn1');
+				card2Element.classList.remove('fadeIn2');
+				card3Element.classList.remove('fadeIn3');
+				card1Element.classList.remove('fadeOut');
+				card2Element.classList.remove('fadeOut');
+				card3Element.classList.remove('fadeOut');
+							
+				void buttonElement.offsetWidth;
+				
+				card1Element.classList.add('fadeOut');
+				card2Element.classList.add('fadeOut');
+				card3Element.classList.add('fadeOut');
+				
+				setTimeout(function() {
+					generate();
+					
+					setTimeout(function() {
+						selectionMade = false;
+					}, 4000);
+				}, 1300);
+			} else {
+				generate();
+
+				setTimeout(function() {
+					selectionMade = false;
+				}, 4000);
+			}
+
+			mainMenu = false;
+		}
+		
+		function one() {
+			if (selectionMade || mainMenu) return;
+			selectionMade = true;
+			selectedCard = 'one';
+
+			oneElement.style.transition = 'none';
+			oneElement.classList.add('border-yellow');
+			card1Element.style.transition = 'none';
+			card1Element.style.color = '#ffff00';
+
+			setTimeout(function() {
+				oneElement.style.transition = 'border-color 1.3s ease';
+				oneElement.classList.remove('border-yellow');
+				card1Element.style.transition = 'color 1.3s ease';
+				card1Element.style.color = '#dddddd';
+				generate();
+			}, 2000);
+								
+			card2Element.classList.add('fadeOut');
+			card3Element.classList.add('fadeOut');
+					
+			setTimeout(function() {
+				selectionMade = false;
+			}, 4000);
+		}
+
+		function two() {
+			if (selectionMade || mainMenu) return;
+			selectionMade = true;
+			selectedCard = 'two';
+			
+			twoElement.style.transition = 'none';
+			twoElement.classList.add('border-yellow');
+			card2Element.style.transition = 'none';
+			card2Element.style.color = '#ffff00';
+			
+			setTimeout(function() {
+				twoElement.style.transition = 'border-color 1.3s ease';
+				twoElement.classList.remove('border-yellow');
+				card2Element.style.transition = 'color 1.3s ease';
+				card2Element.style.color = '#dddddd';
+
+				generate();
+			}, 2000);
+
+			card1Element.classList.add('fadeOut');
+			card3Element.classList.add('fadeOut');
+				
+			setTimeout(function() {
+				selectionMade = false;
+			}, 4000);
+		}
+
+		function three() {
+			if (selectionMade || mainMenu) return;
+			selectionMade = true;
+			selectedCard = 'three';
+
+			threeElement.style.transition = 'none';
+			threeElement.classList.add('border-yellow');
+			card3Element.style.transition = 'none';
+			card3Element.style.color = '#ffff00';
+			
+			setTimeout(function() {
+				threeElement.style.transition = 'border-color 1.3s ease';
+				threeElement.classList.remove('border-yellow');
+				card3Element.style.transition = 'color 1.3s ease';
+				card3Element.style.color = '#dddddd';
+
+				generate();
+			}, 2000);
+					
+			card1Element.classList.add('fadeOut');
+			card2Element.classList.add('fadeOut');
+				
+			setTimeout(function() {
+				selectionMade = false;
+			}, 4000);
+		}
+
+        function generate() {
+			const randomOne = Math.floor(Math.random() * oneUrls.length);
+			const randomTwo = Math.floor(Math.random() * twoUrls.length);
+			const randomThree = Math.floor(Math.random() * threeUrls.length);
+
+            card1nameElement.style.display = 'block';
+            card2nameElement.style.display = 'block';
+            card3nameElement.style.display = 'block';
+			
+            titleElement.textContent = titles[1];
+			buttonElement.textContent = buttons[1];
+			
+			if (selectedCard !== 'one') oneElement.src = oneUrls[randomOne];
+			if (selectedCard !== 'two') twoElement.src = twoUrls[randomTwo];
+			if (selectedCard !== 'three') threeElement.src = threeUrls[randomThree];
+
+			card1nameElement.textContent = cardNames[0];
+			card2nameElement.textContent = cardNames[1];
+			card3nameElement.textContent = cardNames[2];
+			
+			card1Element.classList.remove('fadeIn1');
+			card2Element.classList.remove('fadeIn1');
+			card3Element.classList.remove('fadeIn1');
+			card2Element.classList.remove('fadeIn2');
+			card3Element.classList.remove('fadeIn3');
+			card1Element.classList.remove('fadeOut');
+			card2Element.classList.remove('fadeOut');
+			card3Element.classList.remove('fadeOut');
+						
+			void buttonElement.offsetWidth;
+
+			if (firstShuffle) {
+				card1Element.classList.add('fadeIn1');
+				card2Element.classList.add('fadeIn2');
+				card3Element.classList.add('fadeIn3');
+			} else {
+				if (selectedCard !== 'one')	card1Element.classList.add('fadeIn1');
+				if (selectedCard !== 'two')	card2Element.classList.add('fadeIn1');
+				if (selectedCard !== 'three') card3Element.classList.add('fadeIn1');
+			}
+
+			firstShuffle = false;
+		}
+		
+	initialize();
+    </script>
+</body>
+</html>
