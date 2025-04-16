@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Tickle Trio</title>
+    <title>Three Card Hold'em</title>
 	<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
 	<style>
         body {
@@ -20,12 +20,17 @@
 			-ms-user-select: none;
         }
 		
-        img {
+		img {
 			height: 460px;
 			width: 345px;
 			border: 15px solid rgba(0, 0, 0, 1);
+			border-radius: 10px;
         }
-		
+
+		.border-yellow {
+			border-color: rgba(255, 255, 0, 1);
+		}
+
 		#cards {
 			height: 640px;
 			display: flex;
@@ -106,364 +111,121 @@
 		.fadeOut {
 			opacity: 1;
 			transition: opacity ease-in-out;
-			animation: fadeOut 1s .5s forwards;
+			animation: fadeOut 1s .3s forwards;
 		}
     </style>
 </head>
 <body>
-    <div id="container">
-		<div id="title"></div>
-		<div id="cards">
-			<div id="card1">
-				<div id="card1-name"></div>
-				<img id="one" alt="image one">
-			</div>
-			<div id="card2">
-				<div id="card2-name"></div>
-				<img id="two" alt="image two">
-			</div>
-			<div id="card3">
-				<div id="card3-name"></div>
-				<img id="three" alt="image three">
-			</div>
+	<div id="title"></div>
+	<div id="cards">
+		<div id="card1">
+			<div id="card1-name"></div>
+			<img id="one" alt="image one">
 		</div>
-		<div id="button"></div>
-    </div>
+		<div id="card2">
+			<div id="card2-name"></div>
+			<img id="two" alt="image two">
+		</div>
+		<div id="card3">
+			<div id="card3-name"></div>
+			<img id="three" alt="image three">
+		</div>
+	</div>
+	<div id="button"></div>
 
     <script>
-	    const titles = [
-			"The Tickle Trio",
-			"Choose your favorite tickler!"
-        ];
+		let backsUrls = [
+			'misc/card-back-red.png',
+			'misc/card-back-purple.png',
+			'misc/card-back-orange.png',
+			'misc/card-back-green.png',
+			'misc/card-back-blue.png'
+		]
+
+		let cardUrls = [backsUrls[Math.floor(Math.random() * backsUrls.length)]];
 		
-		const cardUrls = [
-			'misc/CardBack.png',		
+		let oneUrls = [
+			'misc/ace_of_spades.png',
+			'misc/ace_of_hearts.png',
+			'misc/ace_of_diamonds.png',
+			'misc/ace_of_clubs.png',
+			'misc/king_of_spades2.png',
+			'misc/king_of_hearts2.png',
+			'misc/king_of_diamonds2.png',
+			'misc/king_of_clubs2.png',
+			'misc/queen_of_spades2.png',
+			'misc/queen_of_hearts2.png',
+			'misc/queen_of_diamonds2.png',
+			'misc/queen_of_clubs2.png'
 		];
 
-		const petraUrls = [
-			'petra/PETRA-001.png',
-			'petra/PETRA-002.png',
-			'petra/PETRA-003.png',
-			/*'petra/PETRA-004.png',
-			'petra/PETRA-005.png',
-			'petra/PETRA-006.png',
-			'petra/PETRA-007.png',
-			'petra/PETRA-008.png',
-			'petra/PETRA-009.png',
-			'petra/PETRA-010.png',
-			'petra/PETRA-011.png',
-			'petra/PETRA-012.png',
-			'petra/PETRA-013.png',
-			'petra/PETRA-014.png',
-			'petra/PETRA-015.png',
-			'petra/PETRA-016.png',
-			'petra/PETRA-017.png',
-			'petra/PETRA-018.png',
-			'petra/PETRA-019.png',
-			'petra/PETRA-020.png',
-			'petra/PETRA-021.png',
-			'petra/PETRA-022.png',
-			'petra/PETRA-023.png',
-			'petra/PETRA-024.png',
-			'petra/PETRA-025.png',
-			'petra/PETRA-026.png',
-			'petra/PETRA-027.png',
-			'petra/PETRA-028.png',
-			'petra/PETRA-029.png',
-			'petra/PETRA-030.png',
-			'petra/PETRA-031.png',
-			'petra/PETRA-032.png',
-			'petra/PETRA-033.png',
-			'petra/PETRA-034.png',
-			'petra/PETRA-035.png',
-			'petra/PETRA-036.png',
-			'petra/PETRA-037.png',
-			'petra/PETRA-038.png',
-			'petra/PETRA-039.png',
-			'petra/PETRA-040.png',
-			'petra/PETRA-041.png',
-			'petra/PETRA-042.png',
-			'petra/PETRA-043.png',
-			'petra/PETRA-044.png',
-			'petra/PETRA-045.png',
-			'petra/PETRA-046.png',
-			'petra/PETRA-047.png',
-			'petra/PETRA-048.png',
-			'petra/PETRA-049.png',
-			'petra/PETRA-050.png',
-			'petra/PETRA-051.png',
-			'petra/PETRA-052.png',
-			'petra/PETRA-053.png',
-			'petra/PETRA-054.png',
-			'petra/PETRA-055.png',
-			'petra/PETRA-056.png',
-			'petra/PETRA-057.png',
-			'petra/PETRA-058.png',
-			'petra/PETRA-059.png',
-			'petra/PETRA-060.png',
-			'petra/PETRA-061.png',
-			'petra/PETRA-062.png',
-			'petra/PETRA-063.png',
-			'petra/PETRA-064.png',
-			'petra/PETRA-065.png',
-			'petra/PETRA-066.png',
-			'petra/PETRA-067.png',
-			'petra/PETRA-068.png',
-			'petra/PETRA-069.png',
-			'petra/PETRA-070.png',
-			'petra/PETRA-071.png',
-			'petra/PETRA-072.png',
-			'petra/PETRA-073.png',
-			'petra/PETRA-074.png',
-			'petra/PETRA-075.png',
-			'petra/PETRA-076.png',
-			'petra/PETRA-077.png',
-			'petra/PETRA-078.png',
-			'petra/PETRA-079.png',
-			'petra/PETRA-080.png',
-			'petra/PETRA-081.png',
-			'petra/PETRA-082.png',
-			'petra/PETRA-083.png',
-			'petra/PETRA-084.png',
-			'petra/PETRA-085.png',
-			'petra/PETRA-086.png',
-			'petra/PETRA-087.png',
-			'petra/PETRA-088.png',
-			'petra/PETRA-089.png',
-			'petra/PETRA-090.png',
-			'petra/PETRA-091.png',
-			'petra/PETRA-092.png',
-			'petra/PETRA-093.png',
-			'petra/PETRA-094.png',
-			'petra/PETRA-095.png',
-			'petra/PETRA-096.png',
-			'petra/PETRA-097.png',
-			'petra/PETRA-098.png',
-			'petra/PETRA-099.png',
-			'petra/PETRA-100.png'*/
+		let twoUrls = [
+			'misc/jack_of_spades2.png',
+			'misc/jack_of_hearts2.png',
+			'misc/jack_of_diamonds2.png',
+			'misc/jack_of_clubs2.png',
+			'misc/10_of_spades.png',
+			'misc/10_of_hearts.png',
+			'misc/10_of_diamonds.png',
+			'misc/10_of_clubs.png',
+			'misc/9_of_spades.png',
+			'misc/9_of_hearts.png',
+			'misc/9_of_diamonds.png',
+			'misc/9_of_clubs.png',
 		];
 		
-		const piaUrls = [
-			'pia/PIA-001.png',
-			'pia/PIA-002.png',
-			'pia/PIA-003.png',
-			/*'pia/PIA-004.png',
-			'pia/PIA-005.png',
-			'pia/PIA-006.png',
-			'pia/PIA-007.png',
-			'pia/PIA-008.png',
-			'pia/PIA-009.png',
-			'pia/PIA-010.png',
-			'pia/PIA-011.png',
-			'pia/PIA-012.png',
-			'pia/PIA-013.png',
-			'pia/PIA-014.png',
-			'pia/PIA-015.png',
-			'pia/PIA-016.png',
-			'pia/PIA-017.png',
-			'pia/PIA-018.png',
-			'pia/PIA-019.png',
-			'pia/PIA-020.png',
-			'pia/PIA-021.png',
-			'pia/PIA-022.png',
-			'pia/PIA-023.png',
-			'pia/PIA-024.png',
-			'pia/PIA-025.png',
-			'pia/PIA-026.png',
-			'pia/PIA-027.png',
-			'pia/PIA-028.png',
-			'pia/PIA-029.png',
-			'pia/PIA-030.png',
-			'pia/PIA-031.png',
-			'pia/PIA-032.png',
-			'pia/PIA-033.png',
-			'pia/PIA-034.png',
-			'pia/PIA-035.png',
-			'pia/PIA-036.png',
-			'pia/PIA-037.png',
-			'pia/PIA-038.png',
-			'pia/PIA-039.png',
-			'pia/PIA-040.png',
-			'pia/PIA-041.png',
-			'pia/PIA-042.png',
-			'pia/PIA-043.png',
-			'pia/PIA-044.png',
-			'pia/PIA-045.png',
-			'pia/PIA-046.png',
-			'pia/PIA-047.png',
-			'pia/PIA-048.png',
-			'pia/PIA-049.png',
-			'pia/PIA-050.png',
-			'pia/PIA-051.png',
-			'pia/PIA-052.png',
-			'pia/PIA-053.png',
-			'pia/PIA-054.png',
-			'pia/PIA-055.png',
-			'pia/PIA-056.png',
-			'pia/PIA-057.png',
-			'pia/PIA-058.png',
-			'pia/PIA-059.png',
-			'pia/PIA-060.png',
-			'pia/PIA-061.png',
-			'pia/PIA-062.png',
-			'pia/PIA-063.png',
-			'pia/PIA-064.png',
-			'pia/PIA-065.png',
-			'pia/PIA-066.png',
-			'pia/PIA-067.png',
-			'pia/PIA-068.png',
-			'pia/PIA-069.png',
-			'pia/PIA-070.png',
-			'pia/PIA-071.png',
-			'pia/PIA-072.png',
-			'pia/PIA-073.png',
-			'pia/PIA-074.png',
-			'pia/PIA-075.png',
-			'pia/PIA-076.png',
-			'pia/PIA-077.png',
-			'pia/PIA-078.png',
-			'pia/PIA-079.png',
-			'pia/PIA-080.png',
-			'pia/PIA-081.png',
-			'pia/PIA-082.png',
-			'pia/PIA-083.png',
-			'pia/PIA-084.png',
-			'pia/PIA-085.png',
-			'pia/PIA-086.png',
-			'pia/PIA-087.png',
-			'pia/PIA-088.png',
-			'pia/PIA-089.png',
-			'pia/PIA-090.png',
-			'pia/PIA-091.png',
-			'pia/PIA-092.png',
-			'pia/PIA-093.png',
-			'pia/PIA-094.png',
-			'pia/PIA-095.png',
-			'pia/PIA-096.png',
-			'pia/PIA-097.png',
-			'pia/PIA-098.png',
-			'pia/PIA-099.png',
-			'pia/PIA-100.png'*/
-		];
-		
-		const lunaUrls = [
-			'luna/LUNA-001.png',
-			'luna/LUNA-002.png',
-			'luna/LUNA-003.png',
-			/*'luna/LUNA-004.png',
-			'luna/LUNA-005.png',
-			'luna/LUNA-006.png',
-			'luna/LUNA-007.png',
-			'luna/LUNA-008.png',
-			'luna/LUNA-009.png',
-			'luna/LUNA-010.png',
-			'luna/LUNA-011.png',
-			'luna/LUNA-012.png',
-			'luna/LUNA-013.png',
-			'luna/LUNA-014.png',
-			'luna/LUNA-015.png',
-			'luna/LUNA-016.png',
-			'luna/LUNA-017.png',
-			'luna/LUNA-018.png',
-			'luna/LUNA-019.png',
-			'luna/LUNA-020.png',
-			'luna/LUNA-021.png',
-			'luna/LUNA-022.png',
-			'luna/LUNA-023.png',
-			'luna/LUNA-024.png',
-			'luna/LUNA-025.png',
-			'luna/LUNA-026.png',
-			'luna/LUNA-027.png',
-			'luna/LUNA-028.png',
-			'luna/LUNA-029.png',
-			'luna/LUNA-030.png',
-			'luna/LUNA-031.png',
-			'luna/LUNA-032.png',
-			'luna/LUNA-033.png',
-			'luna/LUNA-034.png',
-			'luna/LUNA-035.png',
-			'luna/LUNA-036.png',
-			'luna/LUNA-037.png',
-			'luna/LUNA-038.png',
-			'luna/LUNA-039.png',
-			'luna/LUNA-040.png',
-			'luna/LUNA-041.png',
-			'luna/LUNA-042.png',
-			'luna/LUNA-043.png',
-			'luna/LUNA-044.png',
-			'luna/LUNA-045.png',
-			'luna/LUNA-046.png',
-			'luna/LUNA-047.png',
-			'luna/LUNA-048.png',
-			'luna/LUNA-049.png',
-			'luna/LUNA-050.png',
-			'luna/LUNA-051.png',
-			'luna/LUNA-052.png',
-			'luna/LUNA-053.png',
-			'luna/LUNA-054.png',
-			'luna/LUNA-055.png',
-			'luna/LUNA-056.png',
-			'luna/LUNA-057.png',
-			'luna/LUNA-058.png',
-			'luna/LUNA-059.png',
-			'luna/LUNA-060.png',
-			'luna/LUNA-061.png',
-			'luna/LUNA-062.png',
-			'luna/LUNA-063.png',
-			'luna/LUNA-064.png',
-			'luna/LUNA-065.png',
-			'luna/LUNA-066.png',
-			'luna/LUNA-067.png',
-			'luna/LUNA-068.png',
-			'luna/LUNA-069.png',
-			'luna/LUNA-070.png',
-			'luna/LUNA-071.png',
-			'luna/LUNA-072.png',
-			'luna/LUNA-073.png',
-			'luna/LUNA-074.png',
-			'luna/LUNA-075.png',
-			'luna/LUNA-076.png',
-			'luna/LUNA-077.png',
-			'luna/LUNA-078.png',
-			'luna/LUNA-079.png',
-			'luna/LUNA-080.png',
-			'luna/LUNA-081.png',
-			'luna/LUNA-082.png',
-			'luna/LUNA-083.png',
-			'luna/LUNA-084.png',
-			'luna/LUNA-085.png',
-			'luna/LUNA-086.png',
-			'luna/LUNA-087.png',
-			'luna/LUNA-088.png',
-			'luna/LUNA-089.png',
-			'luna/LUNA-090.png',
-			'luna/LUNA-091.png',
-			'luna/LUNA-092.png',
-			'luna/LUNA-093.png',
-			'luna/LUNA-094.png',
-			'luna/LUNA-095.png',
-			'luna/LUNA-096.png',
-			'luna/LUNA-097.png',
-			'luna/LUNA-098.png',
-			'luna/LUNA-099.png',
-			'luna/LUNA-100.png'*/
+		let threeUrls = [
+			'misc/8_of_spades.png',
+			'misc/8_of_hearts.png',
+			'misc/8_of_diamonds.png',
+			'misc/8_of_clubs.png',
+			'misc/7_of_spades.png',
+			'misc/7_of_hearts.png',
+			'misc/7_of_diamonds.png',
+			'misc/7_of_clubs.png',
+			'misc/6_of_spades.png',
+			'misc/6_of_hearts.png',
+			'misc/6_of_diamonds.png',
+			'misc/6_of_clubs.png'/*,
+			'misc/5_of_spades.png',
+			'misc/5_of_hearts.png',
+			'misc/5_of_diamonds.png',
+			'misc/5_of_clubs.png',
+			'misc/4_of_spades.png',
+			'misc/4_of_hearts.png',
+			'misc/4_of_diamonds.png',
+			'misc/4_of_clubs.png',
+			'misc/3_of_spades.png',
+			'misc/3_of_hearts.png',
+			'misc/3_of_diamonds.png',
+			'misc/3_of_clubs.png',
+			'misc/2_of_spades.png',
+			'misc/2_of_hearts.png',
+			'misc/2_of_diamonds.png',
+			'misc/2_of_clubs.png'*/
 		];
 
-		const buttons = [
-			'Click Here To Begin',
-			'Shuffle the Trio?'
-        ];
-
-		const cardNames = [
-			'PETRA',
-			'PIA',
-			'LUNA'
-        ];
+		let titles = [
+			"Three Card Hold'em",
+			"Choose Card To Hold"
+		];
 		
+		let buttons = [
+			'Deal Cards?',
+			'Shuffle Cards?'
+		];
+
+		let cardNames = [
+			'- FLOP -',
+			'- TURN -',
+			'- RIVER -'
+		];
+
 		let mainMenu = true;
+		let goldilocks = 0;
 		let firstShuffle = true;
 		let selectionMade = false;
-		let selectedTickler;
+		let selectedCard;
 
 		const titleElement = document.getElementById('title');
 			
@@ -481,9 +243,9 @@
         const threeElement = document.getElementById('three');
 		
 		const buttonElement = document.getElementById('button');
-				
+
 		function initialize() {
-            card1nameElement.style.display = 'none';
+			card1nameElement.style.display = 'none';
             card2nameElement.style.display = 'none';
             card3nameElement.style.display = 'none';
 			
@@ -497,180 +259,260 @@
 			card2Element.classList.add('fadeIn2');
 			card3Element.classList.add('fadeIn3');
 
-			clicks();
-		}
-		
-		function clicks() {
 			cardsElement.addEventListener('click', function() {
 				if (mainMenu && !selectionMade) {
-					reset();
+					shuffle();
 				}
 			});
 
 			buttonElement.addEventListener('mouseenter', function() {
-				if (!selectionMade) {
-					this.style.color = "#ffff00";
-				} else {
-					this.style.color = "#dddddd";
-				}
+				this.style.color = "#ffff00";
 			});
 			
 			buttonElement.addEventListener('mouseleave', function() {
-					this.style.color = "#dddddd";
+				this.style.color = "#dddddd";
 			});
-			
+
 			buttonElement.addEventListener('click', function() {
 				if (!selectionMade) {
-					reset();
+					shuffle();
 				}
 			});
 			
 			document.addEventListener('keydown', (event) => {
-				if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
+				if (event.code === 'KeyX') {
+					goldilocks++;
+					if (goldilocks >= 10) {
+						gimbal();
+					}
+				} else if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
 					event.preventDefault();
 					if (!selectionMade) {
-						reset();
+						shuffle();
 					}
 				} else if (event.code === 'KeyA' || event.code === 'ArrowLeft') {
 					event.preventDefault();
 					if (!selectionMade) {
-						petra();
+						one();
 					}
 				} else if (event.code === 'KeyS' || event.code === 'ArrowDown') {
 					event.preventDefault();
 					if (!selectionMade) {
-						pia();
+						two();
 					}
 				} else if (event.code === 'KeyD' || event.code === 'ArrowRight') {
 					event.preventDefault();
 					if (!selectionMade) {
-						luna();
+						three();
 					}
 				}
 			}, { passive: false });
 
-
 			card1Element.addEventListener('click', function() {
-				if (!selectionMade) {
-					petra();
-				}
+				if (!selectionMade) one();
 			});
  		
 			card2Element.addEventListener('click', function() {
-				if (!selectionMade) {
-			        pia();
-			    }
+				if (!selectionMade) two();
 			});
 		
 			card3Element.addEventListener('click', function() {
-				if (!selectionMade) {
-					luna();
-				}
+				if (!selectionMade)	three();
 			});
 		}
+
+		function gimbal() {
+			if (!mainMenu) return;
+
+			alert(
+				String.fromCharCode(
+					10, 
+					87, 101, 108, 99, 111, 109, 101, 32, 116, 111, 32, 80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111, 33, 10, 10,
+					84, 104, 105, 115, 32, 97, 112, 112, 32, 102, 101, 97, 116, 117, 114, 101, 115, 32, 115, 117, 103, 103, 101, 115, 116, 105, 118, 101, 32, 97, 114, 116, 105, 115, 116, 105, 99, 32, 99, 111, 110, 116, 101, 110, 116, 46, 10, 10,
+					66, 121, 32, 99, 111, 110, 116, 105, 110, 117, 105, 110, 103, 44, 32, 121, 111, 117, 32, 99, 111, 110, 102, 105, 114, 109, 32, 121, 111, 117, 39, 114, 101, 32, 49, 56, 32, 111, 114, 32, 111, 108, 100, 101, 114, 46
+				)
+			);
+			
+			titles = [
+				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
+				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101)
+			];
+			
+			cardUrls = [
+				'misc/card-back.png'
+			];
+			
+			one3PadUrls = generate3PadUrls(1, 237, 'one', String.fromCharCode(80, 69, 84, 82, 65));
+			two3PadUrls = generate3PadUrls(1, 239, 'two', String.fromCharCode(80, 73, 65));
+			three3PadUrls = generate3PadUrls(1, 229, 'three', String.fromCharCode(76, 85, 78, 65));
+			
+			one5PadUrls = generate5PadUrls(1, 85, 'one', String.fromCharCode(80, 69, 84, 82, 65));
+			two5PadUrls = generate5PadUrls(1, 85, 'two', String.fromCharCode(80, 73, 65));
+			three5PadUrls = generate5PadUrls(1, 85, 'three', String.fromCharCode(76, 85, 78, 65));
+			
+			function generate3PadUrls(start, end, folder, name) {
+				const urls = [];
+				for (let i = start; i <= end; i++) {
+					const number = String(i).padStart(3, '0');
+					urls.push(`${folder}/${name}-${number}.png`);
+				}
+				return urls;
+			}
+			
+			function generate5PadUrls(start, end, folder, name) {
+				const urls = [];
+				for (let i = start; i <= end; i++) {
+					const number = String(i).padStart(5, '0');
+					urls.push(`${folder}/${name}_${number}_.png`);
+				}
+				return urls;
+			}
+			
+			oneUrls = [...one3PadUrls, ...one5PadUrls];
+			twoUrls = [...two3PadUrls, ...two5PadUrls];
+			threeUrls = [...three3PadUrls, ...three5PadUrls];
+			
+			buttons = [
+				String.fromCharCode(
+					67, 108, 105, 99, 107, 32, 72, 101, 114, 101, 32, 84, 111, 32, 66, 101, 103, 105, 110
+				),
+				String.fromCharCode(
+					83, 104, 117, 102, 102, 108, 101, 32, 84, 114, 105, 111, 63
+				)
+			];
+			
+			cardNames = [
+				String.fromCharCode(80, 69, 84, 82, 65),
+				String.fromCharCode(80, 73, 65),
+				String.fromCharCode(76, 85, 78, 65)
+			];
+
+			initialize();
+		}
+
+		function shuffle() {
+			firstShuffle = true;
+			selectionMade = true;
+			selectedCard = null;
+
+			if (!mainMenu) {
+				card1Element.classList.remove('fadeIn1');
+				card2Element.classList.remove('fadeIn1');
+				card3Element.classList.remove('fadeIn1');
+				card2Element.classList.remove('fadeIn2');
+				card3Element.classList.remove('fadeIn3');
+				card1Element.classList.remove('fadeOut');
+				card2Element.classList.remove('fadeOut');
+				card3Element.classList.remove('fadeOut');
+							
+				void buttonElement.offsetWidth;
+				
+				card1Element.classList.add('fadeOut');
+				card2Element.classList.add('fadeOut');
+				card3Element.classList.add('fadeOut');
+				
+				setTimeout(function() {
+					generate();
+					
+					setTimeout(function() {
+						selectionMade = false;
+					}, 4000);
+				}, 1300);
+			} else {
+				generate();
+
+				setTimeout(function() {
+					selectionMade = false;
+				}, 4000);
+			}
+
+			mainMenu = false;
+		}
 		
-		function petra() {
+		function one() {
 			if (selectionMade || mainMenu) return;
 			selectionMade = true;
-			selectedTickler = 'petra';
-			oneElement.style.border = "15px solid rgba(255, 255, 0, 1)";
-			twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+			selectedCard = 'one';
+
+			oneElement.style.transition = 'none';
+			oneElement.classList.add('border-yellow');
+			card1Element.style.transition = 'none';
 			card1Element.style.color = '#ffff00';
-				
+
 			setTimeout(function() {
+				oneElement.style.transition = 'border-color 1.3s ease';
+				oneElement.classList.remove('border-yellow');
+				card1Element.style.transition = 'color 1.3s ease';
 				card1Element.style.color = '#dddddd';
-			}, 2500);
-				
-			setTimeout(function() {
-				oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			}, 3000);
-						
+				generate();
+			}, 2000);
+								
 			card2Element.classList.add('fadeOut');
 			card3Element.classList.add('fadeOut');
-				
-			setTimeout(function() {
-				generate();
-			}, 2500);
 					
 			setTimeout(function() {
 				selectionMade = false;
-			}, 3000);
+			}, 4000);
 		}
 
-		function pia() {
+		function two() {
 			if (selectionMade || mainMenu) return;
 			selectionMade = true;
-			selectedTickler = 'pia';
+			selectedCard = 'two';
 			
-			oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			twoElement.style.border = "15px solid rgba(255, 255, 0, 1)";
-			threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
+			twoElement.style.transition = 'none';
+			twoElement.classList.add('border-yellow');
+			card2Element.style.transition = 'none';
 			card2Element.style.color = '#ffff00';
+			
 			setTimeout(function() {
+				twoElement.style.transition = 'border-color 1.3s ease';
+				twoElement.classList.remove('border-yellow');
+				card2Element.style.transition = 'color 1.3s ease';
 				card2Element.style.color = '#dddddd';
-			}, 2500);
-			setTimeout(function() {
-				twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			}, 3000);
-					
+
+				generate();
+			}, 2000);
+
 			card1Element.classList.add('fadeOut');
 			card3Element.classList.add('fadeOut');
-			
-			setTimeout(function() {
-				generate();
-			}, 2500);
 				
 			setTimeout(function() {
 				selectionMade = false;
-			}, 3000);
+			}, 4000);
 		}
 
-		function luna() {
+		function three() {
 			if (selectionMade || mainMenu) return;
 			selectionMade = true;
-			selectedTickler = 'luna';
-			
-			oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			threeElement.style.border = "15px solid rgba(255, 255, 0, 1)";
+			selectedCard = 'three';
+
+			threeElement.style.transition = 'none';
+			threeElement.classList.add('border-yellow');
+			card3Element.style.transition = 'none';
 			card3Element.style.color = '#ffff00';
 			
 			setTimeout(function() {
+				threeElement.style.transition = 'border-color 1.3s ease';
+				threeElement.classList.remove('border-yellow');
+				card3Element.style.transition = 'color 1.3s ease';
 				card3Element.style.color = '#dddddd';
-			}, 2500);
-			
-			setTimeout(function() {
-				threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			}, 3000);
+
+				generate();
+			}, 2000);
 					
 			card1Element.classList.add('fadeOut');
 			card2Element.classList.add('fadeOut');
-			
-			setTimeout(function() {
-				generate();
-			}, 2500);
 				
 			setTimeout(function() {
 				selectionMade = false;
-			}, 3000);
-		}
-
-		function reset() {
-			mainMenu = false;
-			firstShuffle = true;
-			selectionMade = true;
-			setTimeout(function() {
-				selectionMade = false;
-			}, 3000);
-			selectedTickler = null;
-			generate();
+			}, 4000);
 		}
 
         function generate() {
-			const randomPetra = Math.floor(Math.random() * petraUrls.length);
-			const randomPia = Math.floor(Math.random() * piaUrls.length);
-			const randomLuna = Math.floor(Math.random() * lunaUrls.length);
+			const randomOne = Math.floor(Math.random() * oneUrls.length);
+			const randomTwo = Math.floor(Math.random() * twoUrls.length);
+			const randomThree = Math.floor(Math.random() * threeUrls.length);
 
             card1nameElement.style.display = 'block';
             card2nameElement.style.display = 'block';
@@ -679,25 +521,13 @@
             titleElement.textContent = titles[1];
 			buttonElement.textContent = buttons[1];
 			
-			if (selectedTickler !== 'petra') {
-				oneElement.src = petraUrls[randomPetra];
-			}
-			
-			if (selectedTickler !== 'pia') {
-				twoElement.src = piaUrls[randomPia];
-			}
-			
-			if (selectedTickler !== 'luna') {
-				threeElement.src = lunaUrls[randomLuna];			
-			}
-			
+			if (selectedCard !== 'one') oneElement.src = oneUrls[randomOne];
+			if (selectedCard !== 'two') twoElement.src = twoUrls[randomTwo];
+			if (selectedCard !== 'three') threeElement.src = threeUrls[randomThree];
+
 			card1nameElement.textContent = cardNames[0];
 			card2nameElement.textContent = cardNames[1];
 			card3nameElement.textContent = cardNames[2];
-			
-			oneElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			twoElement.style.border = "15px solid rgba(0, 0, 0, 1)";
-			threeElement.style.border = "15px solid rgba(0, 0, 0, 1)";
 			
 			card1Element.classList.remove('fadeIn1');
 			card2Element.classList.remove('fadeIn1');
@@ -715,19 +545,11 @@
 				card2Element.classList.add('fadeIn2');
 				card3Element.classList.add('fadeIn3');
 			} else {
-				if (selectedTickler !== 'petra') {
-					card1Element.classList.add('fadeIn1');
-				}
-				
-				if (selectedTickler !== 'pia') {
-					card2Element.classList.add('fadeIn1');
-				}
-				
-				if (selectedTickler !== 'luna') {
-					card3Element.classList.add('fadeIn1');
-				}
+				if (selectedCard !== 'one')	card1Element.classList.add('fadeIn1');
+				if (selectedCard !== 'two')	card2Element.classList.add('fadeIn1');
+				if (selectedCard !== 'three') card3Element.classList.add('fadeIn1');
 			}
-			
+
 			firstShuffle = false;
 		}
 		
