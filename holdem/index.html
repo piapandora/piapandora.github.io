@@ -182,7 +182,7 @@
 
 		let mainMenu = true;
 		let goldilocks = 0;
-		let gimbals = false;
+		/*let gimbals = false;*/
 		let firstShuffle = true;
 		let selectionMade = false;
 		let selectedCard;
@@ -220,7 +220,7 @@
 			card3Element.classList.add('fadeIn3');
 
 			titleElement.addEventListener('click', function() {
-				if (mainMenu && !selectionMade) {
+				if (mainMenu) {
 					goldilocks++;
 					if (goldilocks === 10) {
 						gimbal();
@@ -301,9 +301,7 @@
 		}
 
 		function gimbal() {
-			if (!mainMenu) return;
-
-			gimbals = true;
+			/*gimbals = true;*/
 
 			setTimeout(function() {
 				alert(
@@ -314,7 +312,7 @@
 						66, 121, 32, 99, 111, 110, 116, 105, 110, 117, 105, 110, 103, 44, 32, 121, 111, 117, 32, 99, 111, 110, 102, 105, 114, 109, 32, 121, 111, 117, 39, 114, 101, 32, 49, 56, 32, 111, 114, 32, 111, 108, 100, 101, 114, 46
 					)
 				);
-			}, 300);
+			}, 100);
 
 			titles = [
 				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
