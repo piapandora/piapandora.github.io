@@ -264,12 +264,14 @@
 			}, 10000);*/
 
 			document.addEventListener('keydown', (event) => {
-				if (event.code === 'KeyX') {
+				/*if (event.code === 'KeyX') {
 					goldilocks++;
 					if (goldilocks === 40) {
 						gimbal();
 					}
-				} else if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
+				} else 
+				*/
+				if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
 					event.preventDefault();
 					if (!selectionMade) {
 						shuffle();
