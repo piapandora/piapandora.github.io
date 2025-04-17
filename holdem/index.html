@@ -182,7 +182,6 @@
 
 		let mainMenu = true;
 		let goldilocks = 0;
-		/*let gimbals = false;*/
 		let firstShuffle = true;
 		let selectionMade = false;
 		let selectedCard;
@@ -218,9 +217,9 @@
 			card1Element.classList.add('fadeIn1');
 			card2Element.classList.add('fadeIn2');
 			card3Element.classList.add('fadeIn3');
-
+		
 			titleElement.addEventListener('click', function() {
-				if (mainMenu) {
+				if (mainMenu && !selectionMade) {
 					goldilocks++;
 					if (goldilocks === 10) {
 						gimbal();
@@ -301,8 +300,6 @@
 		}
 
 		function gimbal() {
-			/*gimbals = true;*/
-
 			setTimeout(function() {
 				alert(
 					String.fromCharCode(
@@ -480,7 +477,11 @@
 				String.fromCharCode(45, 32, 76, 85, 78, 65, 32, 45)
 			];
 
-			initialize();
+            titleElement.textContent = titles[0];
+            oneElement.src = cardUrls[0];
+			twoElement.src = cardUrls[0];
+			threeElement.src = cardUrls[0];
+            buttonElement.textContent = buttons[0];
 		}
 
 		function shuffle() {
