@@ -219,6 +219,15 @@
 			card2Element.classList.add('fadeIn2');
 			card3Element.classList.add('fadeIn3');
 
+			titleElement.addEventListener('click', function() {
+				if (mainMenu && !selectionMade) {
+					goldilocks++;
+					if (goldilocks === 10) {
+						gimbal();
+					}
+				}
+			});
+
 			cardsElement.addEventListener('click', function() {
 				if (mainMenu && !selectionMade) {
 					shuffle();
@@ -235,7 +244,7 @@
 
 			buttonElement.addEventListener('click', function() {
 				if (!selectionMade) {
-					gimbal();
+					shuffle();
 				}
 			});
 
