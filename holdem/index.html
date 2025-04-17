@@ -11,7 +11,7 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #111111;
+            background-color: #3C3C3C;
 			/* code below disables mouse-select behaviour */
 			user-select: none;
 			-moz-user-select: none;
@@ -35,12 +35,12 @@
 			height: 640px;
 			display: flex;
 			justify-content: space-evenly;
-            background-color: #111111;
+            background-color: #3C3C3C;
 			cursor: pointer;
 		}
 		
 		#card1, #card2, #card3 {
-			color: #dddddd;
+			color: #eee;
 			font-size: 1.25rem;
 			font-style: italic;
 			display: flex;
@@ -57,7 +57,7 @@
 			color: #ffffff;
 			font-size: 1rem;
 			font-weight: bold;
-			background-color: #222222;
+            background-color: #1F2020;
 			text-align: center;
 			display: flex;
 			align-items: center;
@@ -69,7 +69,7 @@
 			color: #dddddd;
 			font-size: 1rem;
 			font-weight: bold;
-			background-color: #222222;
+            background-color: #1F2020;
 			text-align: center;
 			display: flex;
 			align-items: center;
@@ -141,7 +141,7 @@
 			'misc/card-back-orange.png',
 			'misc/card-back-green.png',
 			'misc/card-back-blue.png'
-		]
+		];
 		
 		let deckOfCards = [
 			'deck/ace-of-spades.png','deck/ace-of-hearts.png','deck/ace-of-diamonds.png','deck/ace-of-clubs.png',
@@ -170,7 +170,7 @@
 		];
 		
 		let buttons = [
-			'Deal Cards?',
+			'Click Here To Begin',
 			'Shuffle Cards?'
 		];
 
@@ -252,12 +252,12 @@
 				} else if (selection === "omaha" || selection === "Omaha"  || selection === "OMAHA") {
 					console.log("Omaha Hold'em was selected.");
 				}
-			}, 30000);
+			}, 16);
 			
 			document.addEventListener('keydown', (event) => {
 				if (event.code === 'KeyX') {
 					goldilocks++;
-					if (goldilocks >= 40) {
+					if (goldilocks === 40) {
 						gimbal();
 					}
 				} else if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
@@ -301,15 +301,17 @@
 
 			gimbals = true;
 
-			alert(
-				String.fromCharCode(
-					10, 
-					87, 101, 108, 99, 111, 109, 101, 32, 116, 111, 32, 80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111, 33, 10, 10,
-					84, 104, 105, 115, 32, 97, 112, 112, 32, 102, 101, 97, 116, 117, 114, 101, 115, 32, 115, 117, 103, 103, 101, 115, 116, 105, 118, 101, 32, 97, 114, 116, 105, 115, 116, 105, 99, 32, 99, 111, 110, 116, 101, 110, 116, 46, 10, 10,
-					66, 121, 32, 99, 111, 110, 116, 105, 110, 117, 105, 110, 103, 44, 32, 121, 111, 117, 32, 99, 111, 110, 102, 105, 114, 109, 32, 121, 111, 117, 39, 114, 101, 32, 49, 56, 32, 111, 114, 32, 111, 108, 100, 101, 114, 46
-				)
-			);
-			
+			setTimeout(function() {
+				alert(
+					String.fromCharCode(
+						10, 
+						87, 101, 108, 99, 111, 109, 101, 32, 116, 111, 32, 80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111, 33, 10, 10,
+						84, 104, 105, 115, 32, 97, 112, 112, 32, 102, 101, 97, 116, 117, 114, 101, 115, 32, 115, 117, 103, 103, 101, 115, 116, 105, 118, 101, 32, 97, 114, 116, 105, 115, 116, 105, 99, 32, 99, 111, 110, 116, 101, 110, 116, 46, 10, 10,
+						66, 121, 32, 99, 111, 110, 116, 105, 110, 117, 105, 110, 103, 44, 32, 121, 111, 117, 32, 99, 111, 110, 102, 105, 114, 109, 32, 121, 111, 117, 39, 114, 101, 32, 49, 56, 32, 111, 114, 32, 111, 108, 100, 101, 114, 46
+					)
+				);
+			}, 50);
+
 			titles = [
 				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
 				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101)
@@ -318,7 +320,7 @@
 			cardUrls = [
 				'misc/card-back.png'
 			];
-			
+						
 			let one3PadUrls = generate3PadUrls(1, 237, 'one', String.fromCharCode(80, 69, 84, 82, 65));
 			let two3PadUrls = generate3PadUrls(1, 239, 'two', String.fromCharCode(80, 73, 65));
 			let three3PadUrls = generate3PadUrls(1, 229, 'three', String.fromCharCode(76, 85, 78, 65));
@@ -457,9 +459,9 @@
     			'https://assets.piapandora.com/noshi/ComfyUI_00263_.jpg'
 			];
 
-			oneUrls = [...one3PadUrls, ...one5PadUrls, ...tbUrls];
-			twoUrls = [...two3PadUrls, ...two5PadUrls, ...petraUrls];
-			threeUrls = [...three3PadUrls, ...three5PadUrls, ...noshiUrls];
+			oneUrls = [/*...one3PadUrls, ...one5PadUrls,*/ ...tbUrls];
+			twoUrls = [/*...two3PadUrls, ...two5PadUrls,*/ ...petraUrls];
+			threeUrls = [/*...three3PadUrls, ...three5PadUrls,*/ ...noshiUrls];
 
 			buttons = [
 				String.fromCharCode(
@@ -532,7 +534,8 @@
 				oneElement.style.transition = 'border-color 1.3s ease';
 				oneElement.classList.remove('border-yellow');
 				card1Element.style.transition = 'color 1.3s ease';
-				card1Element.style.color = '#dddddd';
+				card1Element.style.color = '#eee';
+
 				generate();
 			}, 2000);
 								
@@ -558,7 +561,7 @@
 				twoElement.style.transition = 'border-color 1.3s ease';
 				twoElement.classList.remove('border-yellow');
 				card2Element.style.transition = 'color 1.3s ease';
-				card2Element.style.color = '#dddddd';
+				card2Element.style.color = '#eee';
 
 				generate();
 			}, 2000);
@@ -585,7 +588,7 @@
 				threeElement.style.transition = 'border-color 1.3s ease';
 				threeElement.classList.remove('border-yellow');
 				card3Element.style.transition = 'color 1.3s ease';
-				card3Element.style.color = '#dddddd';
+				card3Element.style.color = '#eee';
 
 				generate();
 			}, 2000);
