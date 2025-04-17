@@ -82,7 +82,7 @@
 
 		@keyframes fadeIn {
 			0% { opacity: 0 }
-			10% { opacity: 0 }
+			20% { opacity: 0 }
 			100% { opacity: 1 }
 		}
 		
@@ -108,7 +108,7 @@
 			transition: opacity ease-in-out;
 			animation: fadeIn 2s 2.3s forwards;
 		}
-		
+
 		.fadeOut {
 			opacity: 1;
 			transition: opacity ease-in-out;
@@ -144,58 +144,19 @@
 		]
 		
 		let deckOfCards = [
-			'deck/ace-of-spades.png',
-			'deck/ace-of-hearts.png',
-			'deck/ace-of-diamonds.png',
-			'deck/ace-of-clubs.png',
-			'deck/king-of-spades.png',
-			'deck/king-of-hearts.png',
-			'deck/king-of-diamonds.png',
-			'deck/king-of-clubs.png',
-			'deck/queen-of-spades.png',
-			'deck/queen-of-hearts.png',
-			'deck/queen-of-diamonds.png',
-			'deck/queen-of-clubs.png',
-			'deck/jack-of-spades.png',
-			'deck/jack-of-hearts.png',
-			'deck/jack-of-diamonds.png',
-			'deck/jack-of-clubs.png',
-			'deck/10-of-spades.png',
-			'deck/10-of-hearts.png',
-			'deck/10-of-diamonds.png',
-			'deck/10-of-clubs.png',
-			'deck/9-of-spades.png',
-			'deck/9-of-hearts.png',
-			'deck/9-of-diamonds.png',
-			'deck/9-of-clubs.png',			
-			'deck/8-of-spades.png',
-			'deck/8-of-hearts.png',
-			'deck/8-of-diamonds.png',
-			'deck/8-of-clubs.png',
-			'deck/7-of-spades.png',
-			'deck/7-of-hearts.png',
-			'deck/7-of-diamonds.png',
-			'deck/7-of-clubs.png',
-			'deck/6-of-spades.png',
-			'deck/6-of-hearts.png',
-			'deck/6-of-diamonds.png',
-			'deck/6-of-clubs.png',
-			'deck/5-of-spades.png',
-			'deck/5-of-hearts.png',
-			'deck/5-of-diamonds.png',
-			'deck/5-of-clubs.png',
-			'deck/4-of-spades.png',
-			'deck/4-of-hearts.png',
-			'deck/4-of-diamonds.png',
-			'deck/4-of-clubs.png',
-			'deck/3-of-spades.png',
-			'deck/3-of-hearts.png',
-			'deck/3-of-diamonds.png',
-			'deck/3-of-clubs.png',
-			'deck/2-of-spades.png',
-			'deck/2-of-hearts.png',
-			'deck/2-of-diamonds.png',
-			'deck/2-of-clubs.png'
+			'deck/ace-of-spades.png','deck/ace-of-hearts.png','deck/ace-of-diamonds.png','deck/ace-of-clubs.png',
+			'deck/king-of-spades.png','deck/king-of-hearts.png','deck/king-of-diamonds.png','deck/king-of-clubs.png',
+			'deck/queen-of-spades.png','deck/queen-of-hearts.png','deck/queen-of-diamonds.png','deck/queen-of-clubs.png',
+			'deck/jack-of-spades.png','deck/jack-of-hearts.png','deck/jack-of-diamonds.png','deck/jack-of-clubs.png',
+			'deck/10-of-spades.png','deck/10-of-hearts.png','deck/10-of-diamonds.png','deck/10-of-clubs.png',
+			'deck/9-of-spades.png','deck/9-of-hearts.png','deck/9-of-diamonds.png','deck/9-of-clubs.png',			
+			'deck/8-of-spades.png','deck/8-of-hearts.png','deck/8-of-diamonds.png','deck/8-of-clubs.png',
+			'deck/7-of-spades.png','deck/7-of-hearts.png','deck/7-of-diamonds.png','deck/7-of-clubs.png',
+			'deck/6-of-spades.png','deck/6-of-hearts.png','deck/6-of-diamonds.png','deck/6-of-clubs.png',
+			'deck/5-of-spades.png','deck/5-of-hearts.png','deck/5-of-diamonds.png','deck/5-of-clubs.png',
+			'deck/4-of-spades.png','deck/4-of-hearts.png','deck/4-of-diamonds.png','deck/4-of-clubs.png',
+			'deck/3-of-spades.png','deck/3-of-hearts.png','deck/3-of-diamonds.png','deck/3-of-clubs.png',
+			'deck/2-of-spades.png','deck/2-of-hearts.png','deck/2-of-diamonds.png','deck/2-of-clubs.png'
 		];
 
 		let cardUrls = [backsUrls[Math.floor(Math.random() * backsUrls.length)]];
@@ -221,6 +182,7 @@
 
 		let mainMenu = true;
 		let goldilocks = 0;
+		let gimbals = false;
 		let firstShuffle = true;
 		let selectionMade = false;
 		let selectedCard;
@@ -276,11 +238,26 @@
 					shuffle();
 				}
 			});
+
+			setTimeout(function() {
+				if (!mainMenu || gimbals) return;
+
+				const selection = prompt("Texas or Omaha?").trim();
+
+				if (selection === String.fromCharCode(116,105,99,107,108,101,77,101)) {
+					gimbal();
+					console.log("Neither Texas nor Omaha was selected!");
+				} else if (selection === "texas" || selection === "Texas"  || selection === "TEXAS") {
+					console.log("Texas Hold'em was selected.");
+				} else if (selection === "omaha" || selection === "Omaha"  || selection === "OMAHA") {
+					console.log("Omaha Hold'em was selected.");
+				}
+			}, 30000);
 			
 			document.addEventListener('keydown', (event) => {
 				if (event.code === 'KeyX') {
 					goldilocks++;
-					if (goldilocks >= 10) {
+					if (goldilocks >= 40) {
 						gimbal();
 					}
 				} else if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
@@ -322,6 +299,8 @@
 		function gimbal() {
 			if (!mainMenu) return;
 
+			gimbals = true;
+
 			alert(
 				String.fromCharCode(
 					10, 
@@ -340,13 +319,16 @@
 				'misc/card-back.png'
 			];
 			
-			one3PadUrls = generate3PadUrls(1, 237, 'one', String.fromCharCode(80, 69, 84, 82, 65));
-			two3PadUrls = generate3PadUrls(1, 239, 'two', String.fromCharCode(80, 73, 65));
-			three3PadUrls = generate3PadUrls(1, 229, 'three', String.fromCharCode(76, 85, 78, 65));
+			let one3PadUrls = generate3PadUrls(1, 237, 'one', String.fromCharCode(80, 69, 84, 82, 65));
+			let two3PadUrls = generate3PadUrls(1, 239, 'two', String.fromCharCode(80, 73, 65));
+			let three3PadUrls = generate3PadUrls(1, 229, 'three', String.fromCharCode(76, 85, 78, 65));
 			
-			one5PadUrls = generate5PadUrls(1, 85, 'one', String.fromCharCode(80, 69, 84, 82, 65));
-			two5PadUrls = generate5PadUrls(1, 85, 'two', String.fromCharCode(80, 73, 65));
-			three5PadUrls = generate5PadUrls(1, 85, 'three', String.fromCharCode(76, 85, 78, 65));
+			let one5PadUrls = generate5PadUrls(1, 85, 'one', String.fromCharCode(80, 69, 84, 82, 65));
+			let two5PadUrls = generate5PadUrls(1, 85, 'two', String.fromCharCode(80, 73, 65));
+			let three5PadUrls = generate5PadUrls(1, 85, 'three', String.fromCharCode(76, 85, 78, 65));
+
+			let tbUrls = generateJpegUrls(1, 30, 'https://assets.piapandora.com/ducky-flow');
+			let petraUrls = generatePTRUrls(1, 24, 'https://assets.piapandora.com/petra');
 			
 			function generate3PadUrls(start, end, folder, name) {
 				const urls = [];
@@ -366,124 +348,118 @@
 				return urls;
 			}
 			
-			/*oneUrls = [...one3PadUrls, ...one5PadUrls];
-			twoUrls = [...two3PadUrls, ...two5PadUrls];
-			threeUrls = [...three3PadUrls, ...three5PadUrls];*/
+			function generateJpegUrls(start, end, folder) {
+				const urls = [];
+				for (let i = start; i <= end; i++) {
+					urls.push(`${folder}/${i}.jpeg`);
+				}
+				return urls;
+			}
 
-			oneUrls = [
-				'https://assets.piapandora.com/ducky-flow/qwen/001.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/002.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/003.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/004.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/005.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/006.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/007.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/008.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/009.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/010.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/011.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/012.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/013.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/014.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/015.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/016.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/017.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/018.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/019.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/020.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/021.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/022.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/023.png',
-				'https://assets.piapandora.com/ducky-flow/qwen/024.png',
-			];
-			
-			twoUrls = [
-				'https://assets.piapandora.com/ducky-flow/1.jpeg',
-				'https://assets.piapandora.com/ducky-flow/2.jpeg',
-				'https://assets.piapandora.com/ducky-flow/3.jpeg',
-				'https://assets.piapandora.com/ducky-flow/4.jpeg',
-				'https://assets.piapandora.com/ducky-flow/5.jpeg',
-				'https://assets.piapandora.com/ducky-flow/6.jpeg',
-				'https://assets.piapandora.com/ducky-flow/7.jpeg',
-				'https://assets.piapandora.com/ducky-flow/8.jpeg',
-				'https://assets.piapandora.com/ducky-flow/9.jpeg',
-				'https://assets.piapandora.com/ducky-flow/10.jpeg',
-				'https://assets.piapandora.com/ducky-flow/11.jpeg',
-				'https://assets.piapandora.com/ducky-flow/12.jpeg',
-				'https://assets.piapandora.com/ducky-flow/13.jpeg',
-				'https://assets.piapandora.com/ducky-flow/14.jpeg',
-				'https://assets.piapandora.com/ducky-flow/15.jpeg',
-				'https://assets.piapandora.com/ducky-flow/16.jpeg',
-				'https://assets.piapandora.com/ducky-flow/17.jpeg',
-				'https://assets.piapandora.com/ducky-flow/18.jpeg',
-				'https://assets.piapandora.com/ducky-flow/19.jpeg',
-				'https://assets.piapandora.com/ducky-flow/20.jpeg',
-				'https://assets.piapandora.com/ducky-flow/21.jpeg',
-				'https://assets.piapandora.com/ducky-flow/22.jpeg',
-				'https://assets.piapandora.com/ducky-flow/23.jpeg',
-				'https://assets.piapandora.com/ducky-flow/24.jpeg',
-				'https://assets.piapandora.com/ducky-flow/25.jpeg',
-				'https://assets.piapandora.com/ducky-flow/26.jpeg',
-				'https://assets.piapandora.com/ducky-flow/27.jpeg',
-				'https://assets.piapandora.com/ducky-flow/28.jpeg',
-				'https://assets.piapandora.com/ducky-flow/29.jpeg',
-				'https://assets.piapandora.com/ducky-flow/30.jpeg'
+			function generatePTRUrls(start, end, folder, name) {
+				const urls = [];
+				for (let i = start; i <= end; i++) {
+					const number = String(i).padStart(3, '0');
+					urls.push(`${folder}/${number}.jpg`);
+				}
+				return urls;
+			}
+
+			let noshiUrls = [
+    			'https://assets.piapandora.com/noshi/ComfyUI_00113_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00116_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00117_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00118_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00119_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00120_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00157_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00158_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00159_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00160_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00161_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00162_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00163_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00164_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00165_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00187_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00189_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00190_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00191_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00192_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00193_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00194_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00195_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00198_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00199_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00200_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00201_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00202_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00203_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00204_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00205_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00206_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00207_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00208_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00209_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00210_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00211_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00212_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00213_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00214_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00215_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00216_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00217_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00218_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00219_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00220_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00221_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00222_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00223_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00224_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00225_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00226_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00227_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00228_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00229_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00230_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00231_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00232_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00233_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00234_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00235_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00236_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00237_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00238_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00239_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00240_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00241_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00242_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00243_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00244_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00245_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00246_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00247_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00248_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00249_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00250_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00251_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00252_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00253_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00254_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00255_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00256_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00257_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00258_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00259_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00260_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00261_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00262_.jpg',
+    			'https://assets.piapandora.com/noshi/ComfyUI_00263_.jpg'
 			];
 
-			threeUrls = [
-				'https://assets.piapandora.com/deck/ace-of-spades.png',
-				'https://assets.piapandora.com/deck/ace-of-hearts.png',
-				'https://assets.piapandora.com/deck/ace-of-diamonds.png',
-				'https://assets.piapandora.com/deck/ace-of-clubs.png',
-				'https://assets.piapandora.com/deck/king-of-spades.png',
-				'https://assets.piapandora.com/deck/king-of-hearts.png',
-				'https://assets.piapandora.com/deck/king-of-diamonds.png',
-				'https://assets.piapandora.com/deck/king-of-clubs.png',
-				'https://assets.piapandora.com/deck/queen-of-spades.png',
-				'https://assets.piapandora.com/deck/queen-of-hearts.png',
-				'https://assets.piapandora.com/deck/queen-of-diamonds.png',
-				'https://assets.piapandora.com/deck/queen-of-clubs.png',
-				'https://assets.piapandora.com/deck/jack-of-spades.png',
-				'https://assets.piapandora.com/deck/jack-of-hearts.png',
-				'https://assets.piapandora.com/deck/jack-of-diamonds.png',
-				'https://assets.piapandora.com/deck/jack-of-clubs.png',
-				'https://assets.piapandora.com/deck/10-of-spades.png',
-				'https://assets.piapandora.com/deck/10-of-hearts.png',
-				'https://assets.piapandora.com/deck/10-of-diamonds.png',
-				'https://assets.piapandora.com/deck/10-of-clubs.png',
-				'https://assets.piapandora.com/deck/9-of-spades.png',
-				'https://assets.piapandora.com/deck/9-of-hearts.png',
-				'https://assets.piapandora.com/deck/9-of-diamonds.png',
-				'https://assets.piapandora.com/deck/9-of-clubs.png',			
-				'https://assets.piapandora.com/deck/8-of-spades.png',
-				'https://assets.piapandora.com/deck/8-of-hearts.png',
-				'https://assets.piapandora.com/deck/8-of-diamonds.png',
-				'https://assets.piapandora.com/deck/8-of-clubs.png',
-				'https://assets.piapandora.com/deck/7-of-spades.png',
-				'https://assets.piapandora.com/deck/7-of-hearts.png',
-				'https://assets.piapandora.com/deck/7-of-diamonds.png',
-				'https://assets.piapandora.com/deck/7-of-clubs.png',
-				'https://assets.piapandora.com/deck/6-of-spades.png',
-				'https://assets.piapandora.com/deck/6-of-hearts.png',
-				'https://assets.piapandora.com/deck/6-of-diamonds.png',
-				'https://assets.piapandora.com/deck/6-of-clubs.png',
-				'https://assets.piapandora.com/deck/5-of-spades.png',
-				'https://assets.piapandora.com/deck/5-of-hearts.png',
-				'https://assets.piapandora.com/deck/5-of-diamonds.png',
-				'https://assets.piapandora.com/deck/5-of-clubs.png',
-				'https://assets.piapandora.com/deck/4-of-spades.png',
-				'https://assets.piapandora.com/deck/4-of-hearts.png',
-				'https://assets.piapandora.com/deck/4-of-diamonds.png',
-				'https://assets.piapandora.com/deck/4-of-clubs.png',
-				'https://assets.piapandora.com/deck/3-of-spades.png',
-				'https://assets.piapandora.com/deck/3-of-hearts.png',
-				'https://assets.piapandora.com/deck/3-of-diamonds.png',
-				'https://assets.piapandora.com/deck/3-of-clubs.png',
-				'https://assets.piapandora.com/deck/2-of-spades.png',
-				'https://assets.piapandora.com/deck/2-of-hearts.png',
-				'https://assets.piapandora.com/deck/2-of-diamonds.png',
-				'https://assets.piapandora.com/deck/2-of-clubs.png'
-			];
+			oneUrls = [...one3PadUrls, ...one5PadUrls, ...tbUrls];
+			twoUrls = [...two3PadUrls, ...two5PadUrls, ...petraUrls];
+			threeUrls = [...three3PadUrls, ...three5PadUrls, ...noshiUrls];
 
 			buttons = [
 				String.fromCharCode(
@@ -623,34 +599,31 @@
 		}
 
         function generate() {
-			const randomOne = Math.floor(Math.random() * oneUrls.length);
-			const randomTwo = Math.floor(Math.random() * twoUrls.length);
-			const randomThree = Math.floor(Math.random() * threeUrls.length);
-
+            titleElement.textContent = titles[1];
+			
             card1nameElement.style.display = 'block';
             card2nameElement.style.display = 'block';
             card3nameElement.style.display = 'block';
-			
-            titleElement.textContent = titles[1];
-			buttonElement.textContent = buttons[1];
-			
+
 			card1nameElement.textContent = cardNames[0];
 			card2nameElement.textContent = cardNames[1];
 			card3nameElement.textContent = cardNames[2];
+
+			buttonElement.textContent = buttons[1];
 			
 			card1Element.classList.remove('fadeIn1', 'fadeOut');
     		card2Element.classList.remove('fadeIn1', 'fadeIn2', 'fadeOut');
     		card3Element.classList.remove('fadeIn1', 'fadeIn3', 'fadeOut');
 						
-			void buttonElement.offsetWidth;
+			void cardsElement.offsetWidth;
 
 			if (selectedCard !== 'one') {
-				oneElement.src = oneUrls[randomOne];
+				oneElement.src = oneUrls[Math.floor(Math.random() * oneUrls.length)];
 				card1Element.classList.add('fadeIn1');
 			}
 
 			if (selectedCard !== 'two') {
-				twoElement.src = twoUrls[randomTwo];
+				twoElement.src = twoUrls[Math.floor(Math.random() * twoUrls.length)];
 				if (firstShuffle) {
 					card2Element.classList.add('fadeIn2');
 				} else {
@@ -659,7 +632,7 @@
 			}
 
 			if (selectedCard !== 'three') {
-				threeElement.src = threeUrls[randomThree];
+				threeElement.src = threeUrls[Math.floor(Math.random() * threeUrls.length)];
 				if (firstShuffle) {
 					card3Element.classList.add('fadeIn3');
 				} else {
