@@ -134,7 +134,7 @@
 	</div>
 	<div id="button"></div>
 
-    <script>
+	<script>
 		let backsUrls = [
 			'misc/card-back-red.png',
 			'misc/card-back-purple.png',
@@ -235,11 +235,12 @@
 
 			buttonElement.addEventListener('click', function() {
 				if (!selectionMade) {
+					gimbal();
 					shuffle();
 				}
 			});
 
-			setTimeout(function() {
+			/*setTimeout(function() {
 				if (!mainMenu || gimbals) return;
 
 				const selection = prompt("Texas or Omaha?").trim();
@@ -247,13 +248,13 @@
 				if (selection === String.fromCharCode(116,105,99,107,108,101,77,101)) {
 					gimbal();
 					console.log("Neither Texas nor Omaha was selected!");
-				} else if (selection === "texas" || selection === "Texas"  || selection === "TEXAS") {
+				} else if (selection.toLowerCase() === "texas") {
 					console.log("Texas Hold'em was selected.");
-				} else if (selection === "omaha" || selection === "Omaha"  || selection === "OMAHA") {
+				} else if (selection.toLowerCase() === "omaha") {
 					console.log("Omaha Hold'em was selected.");
 				}
-			}, 16);
-			
+			}, 10000);*/
+
 			document.addEventListener('keydown', (event) => {
 				if (event.code === 'KeyX') {
 					goldilocks++;
@@ -459,8 +460,8 @@
     			'https://assets.piapandora.com/noshi/ComfyUI_00263_.jpg'
 			];
 
-			oneUrls = [/*...one3PadUrls, ...one5PadUrls,*/ ...tbUrls];
-			twoUrls = [/*...two3PadUrls, ...two5PadUrls,*/ ...petraUrls];
+			oneUrls = [/*...one3PadUrls, ...one5PadUrls,*/ ...petraUrls];
+			twoUrls = [/*...two3PadUrls, ...two5PadUrls,*/ ...tbUrls];
 			threeUrls = [/*...three3PadUrls, ...three5PadUrls,*/ ...noshiUrls];
 
 			buttons = [
