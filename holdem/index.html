@@ -264,13 +264,6 @@
 			}, 10000);*/
 
 			document.addEventListener('keydown', (event) => {
-				/*if (event.code === 'KeyX') {
-					goldilocks++;
-					if (goldilocks === 40) {
-						gimbal();
-					}
-				} else 
-				*/
 				if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
 					event.preventDefault();
 					if (!selectionMade) {
@@ -321,7 +314,7 @@
 						66, 121, 32, 99, 111, 110, 116, 105, 110, 117, 105, 110, 103, 44, 32, 121, 111, 117, 32, 99, 111, 110, 102, 105, 114, 109, 32, 121, 111, 117, 39, 114, 101, 32, 49, 56, 32, 111, 114, 32, 111, 108, 100, 101, 114, 46
 					)
 				);
-			}, 50);
+			}, 300);
 
 			titles = [
 				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
