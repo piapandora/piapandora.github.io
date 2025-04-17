@@ -204,6 +204,24 @@
 		const buttonElement = document.getElementById('button');
 
 		function initialize() {
+			fetch('https://assets.piapandora.com/noshiUrls.json')
+				.then(res => {
+					if (!res.ok) {
+					throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+					}
+					return res.json(); // Parse the response as JSON
+				})
+				.then(noshiUrls => {
+					if (!noshiUrls || noshiUrls.length === 0) {
+					console.warn("No data in noshiUrls.json");
+					} else {
+					console.log("Loaded URLs:", noshiUrls);
+					}
+				})
+				.catch(err => {
+					console.error("Failed to load noshiUrls.json:", err);
+				});
+
 			card1nameElement.style.display = 'none';
             card2nameElement.style.display = 'none';
             card3nameElement.style.display = 'none';
@@ -369,7 +387,9 @@
 				return urls;
 			}
 
-			let noshiUrls = [
+
+
+			/*let noshiUrls = [
     			'https://assets.piapandora.com/noshi/ComfyUI_00113_.jpg',
     			'https://assets.piapandora.com/noshi/ComfyUI_00116_.jpg',
     			'https://assets.piapandora.com/noshi/ComfyUI_00117_.jpg',
@@ -459,7 +479,7 @@
     			'https://assets.piapandora.com/noshi/ComfyUI_00261_.jpg',
     			'https://assets.piapandora.com/noshi/ComfyUI_00262_.jpg',
     			'https://assets.piapandora.com/noshi/ComfyUI_00263_.jpg'
-			];
+			];*/
 
 			oneUrls = [/*...one3PadUrls, ...one5PadUrls,*/ ...petraUrls];
 			twoUrls = [/*...two3PadUrls, ...two5PadUrls,*/ ...tbUrls];
