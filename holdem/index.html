@@ -186,9 +186,9 @@
 
 		let mainMenu = true;
 		let offline = false;
-		let goldilocks = 0;
-		let offlock = 0;
 		let gimbals = false;
+		let offlock = 0;
+		let goldilocks = 0;
 		let firstShuffle = true;
 		let selectionMade = false;
 		let selectedCard;
@@ -264,7 +264,7 @@
 
 				const selection = prompt("Texas or Omaha?").trim();
 
-				if (selection === String.fromCharCode(116,105,99,107,108,101,77,101)) {
+				if (selection.toLowerCase() === "bridge") {
 					gimbal();
 					console.log("Neither Texas nor Omaha was selected!");
 				} else if (selection.toLowerCase() === "texas") {
