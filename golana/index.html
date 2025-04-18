@@ -8,7 +8,8 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 50px;
+            /*padding: 50px;*/
+			padding: 120px;
         }
         .price {
             font-size: 2em;
@@ -35,10 +36,12 @@
     <p id="loadingMessage" class="loading">Loading prices...</p>
 
     <div id="prices" style="display: none;">
-            <p id="bitcoinPrice" class="price"></p>
-            <p id="ethPrice" class="price"></p>
-            <p id="solPrice" class="price"></p>
-			<p id="total" class="price2"></p>
+        <!--
+		<p id="bitcoinPrice" class="price"></p>
+        <p id="ethPrice" class="price"></p>
+		-->
+        <p id="solPrice" class="price"></p>
+		<p id="total" class="price2"></p>
     </div>
 
     <script>
@@ -57,14 +60,14 @@
                 const data = await response.json();
 
                 // Get the prices from the response
-				const bitcoinPrice = data.bitcoin.usd * bitcoinAmount;
-				const ethPrice = data.ethereum.usd * ethereumAmount;
+				// const bitcoinPrice = data.bitcoin.usd * bitcoinAmount;
+				// const ethPrice = data.ethereum.usd * ethereumAmount;
 				const solPrice = data.solana.usd * solanaAmount;
-				const total = bitcoinPrice + ethPrice + solPrice;
+				const total = /*bitcoinPrice + ethPrice + */solPrice;
 
                 // Update the page with the prices
-				document.getElementById('bitcoinPrice').innerText = `${bitcoinAmount} BTC - $${bitcoinPrice.toLocaleString()}`;
-				document.getElementById('ethPrice').innerText = `${ethereumAmount} ETH - $${ethPrice.toLocaleString()}`;
+				// document.getElementById('bitcoinPrice').innerText = `${bitcoinAmount} BTC - $${bitcoinPrice.toLocaleString()}`;
+				// document.getElementById('ethPrice').innerText = `${ethereumAmount} ETH - $${ethPrice.toLocaleString()}`;
 				document.getElementById('solPrice').innerText = `${solanaAmount} SOL - $${solPrice.toLocaleString()}`;
 				document.getElementById('total').innerText = `$${total.toLocaleString()}`;
 
