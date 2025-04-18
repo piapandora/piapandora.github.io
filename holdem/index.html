@@ -135,6 +135,8 @@
 	<div id="button"></div>
 
 	<script>
+		let homeUse = false;
+
 		let backsUrls = [
 			'misc/card-back-red.png',
 			'misc/card-back-purple.png',
@@ -381,18 +383,14 @@
 				'misc/card-back.png'
 			];
 			
-			/*
 			let one3PadUrls = generate3PadUrls(1, 237, 'one', String.fromCharCode(80, 69, 84, 82, 65));
 			let two3PadUrls = generate3PadUrls(1, 239, 'two', String.fromCharCode(80, 73, 65));
 			let three3PadUrls = generate3PadUrls(1, 229, 'three', String.fromCharCode(76, 85, 78, 65));
 			
-			let one5PadUrls = generate5PadUrls(1, 85, 'one', String.fromCharCode(80, 69, 84, 82, 65));
-			let two5PadUrls = generate5PadUrls(1, 85, 'two', String.fromCharCode(80, 73, 65));
-			let three5PadUrls = generate5PadUrls(1, 85, 'three', String.fromCharCode(76, 85, 78, 65));
+			let one5PadUrls = generate5PadUrls(1, 130, 'one', String.fromCharCode(80, 69, 84, 82, 65));
+			let two5PadUrls = generate5PadUrls(1, 130, 'two', String.fromCharCode(80, 73, 65));
+			let three5PadUrls = generate5PadUrls(1, 130, 'three', String.fromCharCode(76, 85, 78, 65));
 
-			let tbUrls = generateJpegUrls(1, 30, 'https://assets.piapandora.com/ducky-flow');
-			let petraUrls = generatePTRUrls(1, 24, 'https://assets.piapandora.com/petra');
-			
 			function generate3PadUrls(start, end, folder, name) {
 				const urls = [];
 				for (let i = start; i <= end; i++) {
@@ -410,7 +408,11 @@
 				}
 				return urls;
 			}
-			
+
+			/*
+			let tbUrls = generateJpegUrls(1, 30, 'https://assets.piapandora.com/ducky-flow');
+			let petraUrls = generatePTRUrls(1, 24, 'https://assets.piapandora.com/petra');
+
 			function generateJpegUrls(start, end, folder) {
 				const urls = [];
 				for (let i = start; i <= end; i++) {
@@ -426,16 +428,17 @@
 					urls.push(`${folder}/${number}.jpg`);
 				}
 				return urls;
+			}*/
+
+			if (homeUse) {
+				oneUrls = [...one3PadUrls, ...one5PadUrls];
+				twoUrls = [...two3PadUrls, ...two5PadUrls];
+				oneUrls = [...three3PadUrls, ...three5PadUrls];
+			} else {
+				oneUrls = newOneUrls;
+				twoUrls = newTwoUrls;
+				threeUrls = newThreeUrls;
 			}
-
-			oneUrls = [...one3PadUrls, ...one5PadUrls];
-			twoUrls = [...two3PadUrls, ...two5PadUrls];
-			oneUrls = [...three3PadUrls, ...three5PadUrls];*/
-
-
-			oneUrls = newOneUrls;
-			twoUrls = newTwoUrls;
-			threeUrls = newThreeUrls;
 
 			buttons = [
 				String.fromCharCode(
