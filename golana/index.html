@@ -4,52 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Golana</title>
+    <link rel="icon" type="image/png" href="icons8-feather-55.png">
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            /*padding: 50px;*/
-			padding: 120px;
+            background-color: #39304a;
+            padding: 2rem;
         }
+
+        .wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .container {
+            background-color: #202030;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+
+        h1 {
+            font-size: 2.25em;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .hyphen {
+            color: white;
+        }
+
+        .loading {
+            font-size: 2em;
+            color: #F1E1B3;
+        }
+
+        #prices {
+            margin-top: 20px;
+            display: none;
+        }
+
         .price {
             font-size: 2em;
             font-weight: normal;
-            color: #4CAF50;
+            color: #F1E1B3;
         }
-		h1, .price2 {
+
+        .total-price {
             font-size: 2.25em;
             font-weight: bold;
-            color: #000000;
-        }
-        .loading {
-            font-size: 1.2em;
-            color: #ff9800;
-        }
-        #prices {
-            margin-top: 20px;
+            color: #fff;
         }
     </style>
 </head>
 <body>
-    <h1>- GOLANA -</h1>
+    <div class="wrapper">
+        <div class="container">
+            <h1><span class="hyphen">-</span> GOLANA <span class="hyphen">-</span></h1>
 
-    <p id="loadingMessage" class="loading">Loading prices...</p>
+            <p id="loadingMessage" class="loading">Loading prices...</p>
 
-    <div id="prices" style="display: none;">
-        <!--
-		<p id="bitcoinPrice" class="price"></p>
-        <p id="ethPrice" class="price"></p>
-		-->
-        <p id="solPrice" class="price"></p>
-		<p id="total" class="price2"></p>
+            <div id="prices">
+                <!--
+                <p id="bitcoinPrice" class="price"></p>
+                <p id="ethPrice" class="price"></p>
+                -->
+                <p id="solPrice" class="price"></p>
+                <p id="total" class="total-price"></p>
+            </div>
+        </div>
     </div>
 
     <script>
-		// Units you own
-		const bitcoinAmount = 0;
-		const ethereumAmount = 0;
-		const solanaAmount = 5;
-	
+        // Units you own
+        const bitcoinAmount = 0;
+        const ethereumAmount = 0;
+        const solanaAmount = 5;
+
         // URL for CoinGecko API to get the current prices of Bitcoin, Ethereum, and Solana in USD
         const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd';
 
@@ -60,26 +93,27 @@
                 const data = await response.json();
 
                 // Get the prices from the response
-				// const bitcoinPrice = data.bitcoin.usd * bitcoinAmount;
-				// const ethPrice = data.ethereum.usd * ethereumAmount;
-				const solPrice = data.solana.usd * solanaAmount;
-				const total = /*bitcoinPrice + ethPrice + */solPrice;
+                // const bitcoinPrice = data.bitcoin.usd * bitcoinAmount;
+                // const ethPrice = data.ethereum.usd * ethereumAmount;
+                const solPrice = data.solana.usd * solanaAmount;
+                const total = /*bitcoinPrice + ethPrice + */solPrice;
 
                 // Update the page with the prices
-				// document.getElementById('bitcoinPrice').innerText = `${bitcoinAmount} BTC - $${bitcoinPrice.toLocaleString()}`;
-				// document.getElementById('ethPrice').innerText = `${ethereumAmount} ETH - $${ethPrice.toLocaleString()}`;
-				document.getElementById('solPrice').innerText = `${solanaAmount} SOL - $${solPrice.toLocaleString()}`;
-				document.getElementById('total').innerText = `$${total.toLocaleString()}`;
+                // document.getElementById('bitcoinPrice').innerText = `${bitcoinAmount} BTC - $${bitcoinPrice.toLocaleString()}`;
+                // document.getElementById('ethPrice').innerText = `${ethereumAmount} ETH - $${ethPrice.toLocaleString()}`;
+                document.getElementById('solPrice').innerText = `${solanaAmount} SOL - $${solPrice.toLocaleString()}`;
+                document.getElementById('total').innerText = `$${total.toLocaleString()}`;
 
                 // Hide the loading message and show the prices
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('prices').style.display = 'block';
             } catch (error) {
                 console.error('Error fetching the crypto prices:', error);
-                document.getElementById('bitcoinPrice').innerText = 'Error fetching data';
-                document.getElementById('ethPrice').innerText = 'Error fetching data';
+                // document.getElementById('bitcoinPrice').innerText = 'Error fetching data';
+                // document.getElementById('ethPrice').innerText = 'Error fetching data';
                 document.getElementById('solPrice').innerText = 'Error fetching data';
                 document.getElementById('loadingMessage').style.display = 'none';
+                setTimeout(fetchCryptoPrices, 5000);
             }
         }
 
