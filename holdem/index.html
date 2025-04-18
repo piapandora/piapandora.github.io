@@ -135,7 +135,6 @@
 	<div id="button"></div>
 
 	<script>
-		let noshiUrls = [];
 		let backsUrls = [
 			'misc/card-back-red.png',
 			'misc/card-back-purple.png',
@@ -164,6 +163,9 @@
 		let oneUrls = deckOfCards;
 		let twoUrls = deckOfCards;
 		let threeUrls = deckOfCards;
+		let newOneUrls = [];
+		let newTwoUrls = [];
+		let newThreeUrls = [];
 
 		let titles = [
 			"Three Card Hold'em",
@@ -183,6 +185,7 @@
 
 		let mainMenu = true;
 		let goldilocks = 0;
+		let gimbals = false;
 		let firstShuffle = true;
 		let selectionMade = false;
 		let selectedCard;
@@ -205,24 +208,9 @@
 		const buttonElement = document.getElementById('button');
 
 		function initialize() {
-		fetch('https://assets.piapandora.com/noshiUrls.json')
-		.then(res => {
-			if (!res.ok) {
-			throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
-			}
-			return res.json(); // Parse the response as JSON
-		})
-		.then(data => {
-			if (!data || data.length === 0) {
-			console.warn("No data in noshiUrls.json");
-			} else {
-			noshiUrls = data;
-			/*console.log("Loaded URLs:", noshiUrls);*/
-			}
-		})
-		.catch(err => {
-			console.error("Failed to load noshiUrls.json:", err);
-		});
+			newOne();
+			newTwo();
+			newThree();
 
 			card1nameElement.style.display = 'none';
             card2nameElement.style.display = 'none';
@@ -242,13 +230,14 @@
 				if (mainMenu) {
 					goldilocks++;
 					if (goldilocks === 10) {
+						gimbals = true;
 						gimbal();
 					}
 				}
 			});
 
 			cardsElement.addEventListener('click', function() {
-				if (mainMenu && !selectionMade) {
+				if (mainMenu) {
 					shuffle();
 				}
 			});
@@ -319,21 +308,70 @@
 			});
 		}
 
+		function newOne() {
+			fetch('https://assets.piapandora.com/holdem/petra.json')
+			.then(res => {
+				if (!res.ok) {
+				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+				}
+				return res.json();
+			})
+			.then(data => {
+				if (!data || data.length === 0) {
+				console.warn("No data in one.json");
+				} else {
+				newOneUrls = data;
+				/*console.log("Loaded URLs:", newOneUrls);*/
+				}
+			})
+			.catch(err => {
+				console.error("Failed to load three.json:", err);
+			});
+		}
+
+		function newTwo() {
+			fetch('https://assets.piapandora.com/holdem/tb.json')
+			.then(res => {
+				if (!res.ok) {
+				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+				}
+				return res.json();
+			})
+			.then(data => {
+				if (!data || data.length === 0) {
+				console.warn("No data in two.json");
+				} else {
+				newTwoUrls = data;
+				/*console.log("Loaded URLs:", newTwoUrls);*/
+				}
+			})
+			.catch(err => {
+				console.error("Failed to load two.json:", err);
+			});
+		}
+
+		function newThree() {
+			fetch('https://assets.piapandora.com/holdem/noshi.json')
+			.then(res => {
+				if (!res.ok) {
+				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+				}
+				return res.json();
+			})
+			.then(data => {
+				if (!data || data.length === 0) {
+				console.warn("No data in three.json");
+				} else {
+				newThreeUrls = data;
+				/*console.log("Loaded URLs:", newThreeUrls);*/
+				}
+			})
+			.catch(err => {
+				console.error("Failed to load three.json:", err);
+			});
+		}
+
 		function gimbal() {
-			selectionMade = true;
-			setTimeout(function() {
-				alert(
-					String.fromCharCode(
-						10, 
-						87, 101, 108, 99, 111, 109, 101, 32, 116, 111, 32, 80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111, 33, 10, 10,
-						84, 104, 105, 115, 32, 97, 112, 112, 32, 102, 101, 97, 116, 117, 114, 101, 115, 32, 115, 117, 103, 103, 101, 115, 116, 105, 118, 101, 32, 97, 114, 116, 105, 115, 116, 105, 99, 32, 99, 111, 110, 116, 101, 110, 116, 46, 10, 10,
-						66, 121, 32, 99, 111, 110, 116, 105, 110, 117, 105, 110, 103, 44, 32, 121, 111, 117, 32, 99, 111, 110, 102, 105, 114, 109, 32, 121, 111, 117, 39, 114, 101, 32, 49, 56, 32, 111, 114, 32, 111, 108, 100, 101, 114, 46
-					)
-				);
-
-				selectionMade = false;
-			}, 1300);
-
 			titles = [
 				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
 				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101)
@@ -342,7 +380,8 @@
 			cardUrls = [
 				'misc/card-back.png'
 			];
-						
+			
+			/*
 			let one3PadUrls = generate3PadUrls(1, 237, 'one', String.fromCharCode(80, 69, 84, 82, 65));
 			let two3PadUrls = generate3PadUrls(1, 239, 'two', String.fromCharCode(80, 73, 65));
 			let three3PadUrls = generate3PadUrls(1, 229, 'three', String.fromCharCode(76, 85, 78, 65));
@@ -389,103 +428,14 @@
 				return urls;
 			}
 
+			oneUrls = [...one3PadUrls, ...one5PadUrls];
+			twoUrls = [...two3PadUrls, ...two5PadUrls];
+			oneUrls = [...three3PadUrls, ...three5PadUrls];*/
 
-			
-			/*let noshiUrls = [
-    			'https://assets.piapandora.com/noshi/ComfyUI_00113_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00116_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00117_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00118_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00119_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00120_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00157_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00158_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00159_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00160_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00161_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00162_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00163_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00164_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00165_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00187_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00189_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00190_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00191_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00192_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00193_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00194_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00195_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00198_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00199_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00200_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00201_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00202_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00203_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00204_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00205_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00206_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00207_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00208_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00209_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00210_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00211_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00212_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00213_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00214_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00215_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00216_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00217_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00218_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00219_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00220_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00221_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00222_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00223_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00224_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00225_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00226_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00227_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00228_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00229_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00230_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00231_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00232_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00233_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00234_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00235_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00236_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00237_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00238_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00239_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00240_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00241_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00242_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00243_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00244_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00245_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00246_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00247_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00248_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00249_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00250_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00251_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00252_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00253_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00254_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00255_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00256_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00257_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00258_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00259_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00260_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00261_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00262_.jpg',
-    			'https://assets.piapandora.com/noshi/ComfyUI_00263_.jpg'
-			];*/
 
-			oneUrls = [/*...one3PadUrls, ...one5PadUrls,*/ ...petraUrls];
-			twoUrls = [/*...two3PadUrls, ...two5PadUrls,*/ ...tbUrls];
-			threeUrls = [/*...three3PadUrls, ...three5PadUrls,*/ ...noshiUrls];
+			oneUrls = newOneUrls;
+			twoUrls = newTwoUrls;
+			threeUrls = newThreeUrls;
 
 			buttons = [
 				String.fromCharCode(
@@ -510,6 +460,18 @@
 		}
 
 		function shuffle() {
+			if (gimbals) {
+				alert(
+					String.fromCharCode(
+						10, 
+						87, 101, 108, 99, 111, 109, 101, 32, 116, 111, 32, 80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111, 33, 10, 10,
+						84, 104, 105, 115, 32, 97, 112, 112, 32, 102, 101, 97, 116, 117, 114, 101, 115, 32, 115, 117, 103, 103, 101, 115, 116, 105, 118, 101, 32, 97, 114, 116, 105, 115, 116, 105, 99, 32, 99, 111, 110, 116, 101, 110, 116, 46, 10, 10,
+						66, 121, 32, 99, 111, 110, 116, 105, 110, 117, 105, 110, 103, 44, 32, 121, 111, 117, 32, 99, 111, 110, 102, 105, 114, 109, 32, 121, 111, 117, 39, 114, 101, 32, 49, 56, 32, 111, 114, 32, 111, 108, 100, 101, 114, 46
+					)
+				);
+				gimbals = false;
+			}
+
 			firstShuffle = true;
 			selectionMade = true;
 			selectedCard = null;
