@@ -297,13 +297,11 @@
 					}
 				} else if (event.code === 'KeyH') {
 					event.preventDefault();
-					/*console.log("H KEY PRESSED!");*/
 					if (mainMenu && !gimbals) {
 						offlock++;
-						/*console.log(`offlocks : ${offlock}`);*/
-						if (offlock === 5) {
+						if (offlock === 30) {
 							offline = true;
-							/*console.log(offline);*/
+							console.log("offline");
 						}
 					}
 				}
@@ -323,7 +321,7 @@
 		}
 
 		function newOne() {
-			fetch('https://assets.piapandora.com/holdem/petra.json')
+			fetch('https://assets.piapandora.com/holdem/one.json')
 			.then(res => {
 				if (!res.ok) {
 				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
@@ -344,7 +342,7 @@
 		}
 
 		function newTwo() {
-			fetch('https://assets.piapandora.com/holdem/tb.json')
+			fetch('https://assets.piapandora.com/holdem/two.json')
 			.then(res => {
 				if (!res.ok) {
 				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
@@ -365,7 +363,7 @@
 		}
 
 		function newThree() {
-			fetch('https://assets.piapandora.com/holdem/noshi.json')
+			fetch('https://assets.piapandora.com/holdem/three.json')
 			.then(res => {
 				if (!res.ok) {
 				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
