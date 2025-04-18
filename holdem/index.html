@@ -135,7 +135,6 @@
 	<div id="button"></div>
 
 	<script>
-		let homeUse = false;
 
 		let backsUrls = [
 			'misc/card-back-red.png',
@@ -186,7 +185,9 @@
 		];
 
 		let mainMenu = true;
+		let offline = false;
 		let goldilocks = 0;
+		let offlock = 0;
 		let gimbals = false;
 		let firstShuffle = true;
 		let selectionMade = false;
@@ -293,6 +294,17 @@
 					event.preventDefault();
 					if (!selectionMade) {
 						three();
+					}
+				} else if (event.code === 'KeyH') {
+					event.preventDefault();
+					/*console.log("H KEY PRESSED!");*/
+					if (mainMenu && !gimbals) {
+						offlock++;
+						/*console.log(`offlocks : ${offlock}`);*/
+						if (offlock === 5) {
+							offline = true;
+							/*console.log(offline);*/
+						}
 					}
 				}
 			}, { passive: false });
@@ -409,11 +421,7 @@
 				return urls;
 			}
 
-			/*
-			let tbUrls = generateJpegUrls(1, 30, 'https://assets.piapandora.com/ducky-flow');
-			let petraUrls = generatePTRUrls(1, 24, 'https://assets.piapandora.com/petra');
-
-			function generateJpegUrls(start, end, folder) {
+			function generatePadlessNoNameUrls(start, end, folder) {
 				const urls = [];
 				for (let i = start; i <= end; i++) {
 					urls.push(`${folder}/${i}.jpeg`);
@@ -421,19 +429,19 @@
 				return urls;
 			}
 
-			function generatePTRUrls(start, end, folder, name) {
+			function generate3PadNoNameUrls(start, end, folder) {
 				const urls = [];
 				for (let i = start; i <= end; i++) {
 					const number = String(i).padStart(3, '0');
 					urls.push(`${folder}/${number}.jpg`);
 				}
 				return urls;
-			}*/
+			}
 
-			if (homeUse) {
+			if (offline) {
 				oneUrls = [...one3PadUrls, ...one5PadUrls];
 				twoUrls = [...two3PadUrls, ...two5PadUrls];
-				oneUrls = [...three3PadUrls, ...three5PadUrls];
+				threeUrls = [...three3PadUrls, ...three5PadUrls];
 			} else {
 				oneUrls = newOneUrls;
 				twoUrls = newTwoUrls;
