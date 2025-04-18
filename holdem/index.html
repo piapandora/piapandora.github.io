@@ -135,6 +135,7 @@
 	<div id="button"></div>
 
 	<script>
+		let noshiUrls = [];
 		let backsUrls = [
 			'misc/card-back-red.png',
 			'misc/card-back-purple.png',
@@ -204,23 +205,24 @@
 		const buttonElement = document.getElementById('button');
 
 		function initialize() {
-			fetch('https://assets.piapandora.com/noshiUrls.json')
-				.then(res => {
-					if (!res.ok) {
-					throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
-					}
-					return res.json(); // Parse the response as JSON
-				})
-				.then(noshiUrls => {
-					if (!noshiUrls || noshiUrls.length === 0) {
-					console.warn("No data in noshiUrls.json");
-					} else {
-					console.log("Loaded URLs:", noshiUrls);
-					}
-				})
-				.catch(err => {
-					console.error("Failed to load noshiUrls.json:", err);
-				});
+		fetch('https://assets.piapandora.com/noshiUrls.json')
+		.then(res => {
+			if (!res.ok) {
+			throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+			}
+			return res.json(); // Parse the response as JSON
+		})
+		.then(data => {
+			if (!data || data.length === 0) {
+			console.warn("No data in noshiUrls.json");
+			} else {
+			noshiUrls = data;
+			/*console.log("Loaded URLs:", noshiUrls);*/
+			}
+		})
+		.catch(err => {
+			console.error("Failed to load noshiUrls.json:", err);
+		});
 
 			card1nameElement.style.display = 'none';
             card2nameElement.style.display = 'none';
@@ -330,7 +332,7 @@
 				);
 
 				selectionMade = false;
-			}, 1000);
+			}, 1300);
 
 			titles = [
 				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
@@ -388,7 +390,7 @@
 			}
 
 
-
+			
 			/*let noshiUrls = [
     			'https://assets.piapandora.com/noshi/ComfyUI_00113_.jpg',
     			'https://assets.piapandora.com/noshi/ComfyUI_00116_.jpg',
