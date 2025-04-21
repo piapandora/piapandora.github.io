@@ -136,7 +136,7 @@
 
 	<script>
 
-		let backsUrls = [
+		let backUrls = [
 			'misc/card-back-red.png',
 			'misc/card-back-purple.png',
 			'misc/card-back-orange.png',
@@ -160,7 +160,7 @@
 			'deck/2-of-spades.png','deck/2-of-hearts.png','deck/2-of-diamonds.png','deck/2-of-clubs.png'
 		];
 
-		let cardUrls = [backsUrls[Math.floor(Math.random() * backsUrls.length)]];
+		let cardUrl = randomItem(backUrls);
 		let oneUrls = deckOfCards;
 		let twoUrls = deckOfCards;
 		let threeUrls = deckOfCards;
@@ -223,9 +223,9 @@
             card3nameElement.style.display = 'none';
 			
             titleElement.textContent = titles[0];
-            oneElement.src = cardUrls[0];
-			twoElement.src = cardUrls[0];
-			threeElement.src = cardUrls[0];
+            oneElement.src = cardUrl;
+			twoElement.src = cardUrl;
+			threeElement.src = cardUrl;
             buttonElement.textContent = buttons[0];
 
 			card1Element.classList.add('fadeIn1');
@@ -333,6 +333,10 @@
 			});
 		}
 
+		function randomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
 		function galleryToggle() {
 			if (!selectionMade && !gallery) {
 				gallery = true;
@@ -426,9 +430,7 @@
 				String.fromCharCode(71, 97, 108, 108, 101, 114, 121, 32, 77, 111, 100, 101)
 			];
 			
-			cardUrls = [
-				'misc/card-back.png'
-			];
+			cardUrl = 'misc/card-back.png';
 			
 			let one3PadUrls = generate3PadUrls(1, 237, 'one/petra/', 'PETRA');
 			let two3PadUrls = generate3PadUrls(1, 239, 'two/pia/', 'PIA');
@@ -503,9 +505,9 @@
 			];
 
             titleElement.textContent = titles[0];
-            oneElement.src = cardUrls[0];
-			twoElement.src = cardUrls[0];
-			threeElement.src = cardUrls[0];
+            oneElement.src = cardUrl;
+			twoElement.src = cardUrl;
+			threeElement.src = cardUrl;
             buttonElement.textContent = buttons[0];
 		}
 
@@ -665,12 +667,12 @@
 			void cardsElement.offsetWidth;
 
 			if (selectedCard !== 'one') {
-				oneElement.src = oneUrls[Math.floor(Math.random() * oneUrls.length)];
+				oneElement.src = randomItem(oneUrls);
 				card1Element.classList.add('fadeIn1');
 			}
 
 			if (selectedCard !== 'two') {
-				twoElement.src = twoUrls[Math.floor(Math.random() * twoUrls.length)];
+				twoElement.src = randomItem(twoUrls);
 				if (firstShuffle) {
 					card2Element.classList.add('fadeIn2');
 				} else {
@@ -679,7 +681,7 @@
 			}
 
 			if (selectedCard !== 'three') {
-				threeElement.src = threeUrls[Math.floor(Math.random() * threeUrls.length)];
+				threeElement.src = randomItem(threeUrls);
 				if (firstShuffle) {
 					card3Element.classList.add('fadeIn3');
 				} else {
