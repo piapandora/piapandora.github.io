@@ -233,12 +233,14 @@
 			card3Element.classList.add('fadeIn3');
 		
 			titleElement.addEventListener('click', function() {
-				/*if (mainMenu) return;*/
 				goldilocks++;
-				/*console.log(goldilocks)*/
-				if (mainMenu && goldilocks === 10) {
-					gimbals = true;
-					gimbal();
+				if (goldilocks === 10) {
+					if (mainMenu) {
+						gimbals = true;
+						gimbal();
+					} else {
+						galleryToggle()
+					}
 				} else if ((goldilocks >= 15) && (goldilocks % 5 === 0)){
 					galleryToggle()
 				}
@@ -337,13 +339,11 @@
 				galleryInterval = setInterval(function() {
 					shuffle();
 				}, 6000);
-				/*console.log("Gallery Mode: ON");*/
 			} else {
 				clearInterval(galleryInterval);
 				gallery = false;
 				titleElement.textContent = titles[1];
 				buttonElement.textContent = buttons[1];
-				/*console.log("Gallery Mode: OFF");*/
 			}
 		}
 		
