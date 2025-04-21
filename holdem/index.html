@@ -170,12 +170,13 @@
 
 		let titles = [
 			"Three Card Hold'em",
-			"Choose Card To Hold"
+			'Choose Card To Hold',
+			'Gallery Mode'
 		];
 		
 		let buttons = [
 			'Click Here To Begin',
-			'Shuffle Cards?'
+			'Shuffle Cards?',
 		];
 
 		let cardNames = [
@@ -187,6 +188,8 @@
 		let mainMenu = true;
 		let offline = false;
 		let gimbals = false;
+		let gallery = false;
+		let galleryInterval;
 		let offlock = 0;
 		let goldilocks = 0;
 		let firstShuffle = true;
@@ -230,12 +233,14 @@
 			card3Element.classList.add('fadeIn3');
 		
 			titleElement.addEventListener('click', function() {
-				if (mainMenu) {
-					goldilocks++;
-					if (goldilocks === 10) {
-						gimbals = true;
-						gimbal();
-					}
+				/*if (mainMenu) return;*/
+				goldilocks++;
+				/*console.log(goldilocks)*/
+				if (mainMenu && goldilocks === 10) {
+					gimbals = true;
+					gimbal();
+				} else if ((goldilocks >= 15) && (goldilocks % 5 === 0)){
+					galleryToggle()
 				}
 			});
 
@@ -254,7 +259,7 @@
 			});
 
 			buttonElement.addEventListener('click', function() {
-				if (!selectionMade) {
+				if (!selectionMade && !gallery) {
 					shuffle();
 				}
 			});
@@ -277,22 +282,22 @@
 			document.addEventListener('keydown', (event) => {
 				if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
 					event.preventDefault();
-					if (!selectionMade) {
+					if (!selectionMade && !gallery) {
 						shuffle();
 					}
 				} else if (event.code === 'KeyA' || event.code === 'ArrowLeft') {
 					event.preventDefault();
-					if (!selectionMade) {
+					if (!selectionMade && !gallery) {
 						one();
 					}
 				} else if (event.code === 'KeyS' || event.code === 'ArrowDown') {
 					event.preventDefault();
-					if (!selectionMade) {
+					if (!selectionMade && !gallery) {
 						two();
 					}
 				} else if (event.code === 'KeyD' || event.code === 'ArrowRight') {
 					event.preventDefault();
-					if (!selectionMade) {
+					if (!selectionMade && !gallery) {
 						three();
 					}
 				} else if (event.code === 'KeyH') {
@@ -304,22 +309,44 @@
 							console.log("offline");
 						}
 					}
+				} else if (event.code === 'KeyG') {
+					event.preventDefault();
+					galleryToggle()
 				}
 			}, { passive: false });
 
 			card1Element.addEventListener('click', function() {
-				if (!selectionMade) one();
+				if (!selectionMade && !gallery) one();
 			});
  		
 			card2Element.addEventListener('click', function() {
-				if (!selectionMade) two();
+				if (!selectionMade && !gallery) two();
 			});
 		
 			card3Element.addEventListener('click', function() {
-				if (!selectionMade)	three();
+				if (!selectionMade && !gallery)	three();
 			});
 		}
 
+		function galleryToggle() {
+			if (!selectionMade && !gallery) {
+				gallery = true;
+				titleElement.textContent = titles[2];
+				buttonElement.textContent = '';
+				shuffle();
+				galleryInterval = setInterval(function() {
+					shuffle();
+				}, 6000);
+				/*console.log("Gallery Mode: ON");*/
+			} else {
+				clearInterval(galleryInterval);
+				gallery = false;
+				titleElement.textContent = titles[1];
+				buttonElement.textContent = buttons[1];
+				/*console.log("Gallery Mode: OFF");*/
+			}
+		}
+		
 		function newOne() {
 			fetch('https://assets.piapandora.com/holdem/one.json')
 			.then(res => {
@@ -386,21 +413,26 @@
 		function gimbal() {
 			titles = [
 				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
-				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101)
+				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101),
+				String.fromCharCode(71, 97, 108, 108, 101, 114, 121, 32, 77, 111, 100, 101)
 			];
 			
 			cardUrls = [
 				'misc/card-back.png'
 			];
 			
-			let one3PadUrls = generate3PadUrls(1, 237, 'one', String.fromCharCode(80, 69, 84, 82, 65));
-			let two3PadUrls = generate3PadUrls(1, 239, 'two', String.fromCharCode(80, 73, 65));
-			let three3PadUrls = generate3PadUrls(1, 229, 'three', String.fromCharCode(76, 85, 78, 65));
+			let one3PadUrls = generate3PadUrls(1, 237, 'one/petra/', 'PETRA');
+			let two3PadUrls = generate3PadUrls(1, 239, 'two/pia/', 'PIA');
+			let three3PadUrls = generate3PadUrls(1, 229, 'three/luna/', 'LUNA');
 			
-			let one5PadUrls = generate5PadUrls(1, 130, 'one', String.fromCharCode(80, 69, 84, 82, 65));
-			let two5PadUrls = generate5PadUrls(1, 130, 'two', String.fromCharCode(80, 73, 65));
-			let three5PadUrls = generate5PadUrls(1, 130, 'three', String.fromCharCode(76, 85, 78, 65));
+			let one5PadUrls = generate5PadUrls(1, 130, 'one/petra-comfy/', 'PETRA');
+			let two5PadUrls = generate5PadUrls(1, 130, 'two/pia-comfy/', 'PIA');
+			let three5PadUrls = generate5PadUrls(1, 130, 'three/luna-comfy/', 'LUNA');
 
+			let one5Pad2Urls = generate5PadUrls(1, 100, 'one/petra-one', 'ONE');
+			let two5Pad2Urls = generate5PadUrls(1, 100, 'two/pia-two', 'TWO');
+			let three5Pad2Urls = generate5PadUrls(1, 100, 'three/luna-three', 'THREE');
+			
 			function generate3PadUrls(start, end, folder, name) {
 				const urls = [];
 				for (let i = start; i <= end; i++) {
@@ -437,9 +469,9 @@
 			}
 
 			if (offline) {
-				oneUrls = [...one3PadUrls, ...one5PadUrls];
-				twoUrls = [...two3PadUrls, ...two5PadUrls];
-				threeUrls = [...three3PadUrls, ...three5PadUrls];
+				oneUrls = [...one3PadUrls, ...one5PadUrls, ...one5Pad2Urls];
+				twoUrls = [...two3PadUrls, ...two5PadUrls, ...two5Pad2Urls];
+				threeUrls = [...three3PadUrls, ...three5PadUrls, ...three5Pad2Urls];
 			} else {
 				oneUrls = newOneUrls;
 				twoUrls = newTwoUrls;
@@ -452,7 +484,7 @@
 				),
 				String.fromCharCode(
 					83, 104, 117, 102, 102, 108, 101, 32, 84, 114, 105, 111, 63
-				)
+				),
 			];
 			
 			cardNames = [
@@ -601,7 +633,13 @@
 		}
 
         function generate() {
-            titleElement.textContent = titles[1];
+			if (!gallery) {
+				titleElement.textContent = titles[1];
+				buttonElement.textContent = buttons[1];
+			} else {
+				titleElement.textContent = titles[2];
+				buttonElement.textContent = '';
+			}
 			
             card1nameElement.style.display = 'block';
             card2nameElement.style.display = 'block';
@@ -610,9 +648,7 @@
 			card1nameElement.textContent = cardNames[0];
 			card2nameElement.textContent = cardNames[1];
 			card3nameElement.textContent = cardNames[2];
-
-			buttonElement.textContent = buttons[1];
-			
+		
 			card1Element.classList.remove('fadeIn1', 'fadeOut');
     		card2Element.classList.remove('fadeIn1', 'fadeIn2', 'fadeOut');
     		card3Element.classList.remove('fadeIn1', 'fadeIn3', 'fadeOut');
