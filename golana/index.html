@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Golana</title>
-    <link rel="icon" type="image/png" href="icons8-puppy-50.png">
+    <link rel="icon" type="image/png" href="misc/icons8-puppy-50.png">
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #39304a;
+            background-color: #615677;
             padding: 2rem;
         }
 
@@ -24,12 +24,23 @@
             padding: 10px 15px;
             margin: 10px 0;
             border-radius: 10px;
+			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
         }
+		
+		img {
+			width: 9em;
+			height: 6.75em;
+			border-radius: 50%;
+			margin-top: 22px;
+			border: 6px solid #000;
+			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
+		}
 
         h1 {
             font-size: 2.25em;
             font-weight: bold;
             color: #FFD700;
+			text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.75);
         }
 
         .hyphen {
@@ -50,18 +61,22 @@
             font-size: 2em;
             font-weight: normal;
             color: #F1E1B3;
+			text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.75);
         }
 
         .total-price {
             font-size: 2.25em;
             font-weight: bold;
             color: #fff;
+			text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.75);
         }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="container">
+			<img src="misc/gozde-ile-golge.jpg">
+			
             <h1><span class="hyphen">-</span> GOLANA <span class="hyphen">-</span></h1>
 
             <p id="loadingMessage" class="loading">Loading prices...</p>
