@@ -418,20 +418,6 @@
 		}
 
 		function gimbal() {
-			if (offline) {
-				document.title = "Tickle Trio (offline)";
-			} else {
-				document.title = String.fromCharCode(84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111);
-			}
-
-			titles = [
-				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
-				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101),
-				String.fromCharCode(71, 97, 108, 108, 101, 114, 121, 32, 77, 111, 100, 101)
-			];
-			
-			cardUrl = 'misc/card-back.png';
-			
 			let one3PadUrls = generate3PadUrls(1, 237, 'one/petra/', 'PETRA');
 			let two3PadUrls = generate3PadUrls(1, 239, 'two/pia/', 'PIA');
 			let three3PadUrls = generate3PadUrls(1, 229, 'three/luna/', 'LUNA');
@@ -440,9 +426,49 @@
 			let two5PadUrls = generate5PadUrls(1, 130, 'two/pia-comfy/', 'PIA');
 			let three5PadUrls = generate5PadUrls(1, 130, 'three/luna-comfy/', 'LUNA');
 
-			let one5Pad2Urls = generate5PadUrls(1, 100, 'one/petra-one', 'ONE');
-			let two5Pad2Urls = generate5PadUrls(1, 100, 'two/pia-two', 'TWO');
-			let three5Pad2Urls = generate5PadUrls(1, 100, 'three/luna-three', 'THREE');
+			let one5Pad2Urls = generate5PadUrls(1, 200, 'one/petra-one', 'ONE');
+			let two5Pad2Urls = generate5PadUrls(1, 200, 'two/pia-two', 'TWO');
+			let three5Pad2Urls = generate5PadUrls(1, 200, 'three/luna-three', 'THREE');
+
+			if (offline) {
+				document.title = String.fromCharCode(
+					84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111, 32, 45, 32, 72, 111, 109, 101, 32, 69, 100, 105, 116, 105, 111, 110
+				);
+				
+				cardUrl = 'misc/card-back-off.png';
+				
+				cardNames = [
+				"- PETRA -",
+				"- PIA -",
+				"- LUNA -"
+				];
+
+				oneUrls = [...one3PadUrls, ...one5PadUrls, ...one5Pad2Urls];
+				twoUrls = [...two3PadUrls, ...two5PadUrls, ...two5Pad2Urls];
+				threeUrls = [...three3PadUrls, ...three5PadUrls, ...three5Pad2Urls];
+			} else {
+				document.title = String.fromCharCode(
+					84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111
+				);
+
+				cardUrl = 'misc/card-back.png';
+
+				cardNames = [
+				"- CUTE -",
+				"- BEAUTIFUL -",
+				"- SEXY -"
+				];
+
+				oneUrls = newOneUrls;
+				twoUrls = newTwoUrls;
+				threeUrls = newThreeUrls;
+			}
+
+			titles = [
+				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
+				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101),
+				String.fromCharCode(71, 97, 108, 108, 101, 114, 121, 32, 77, 111, 100, 101)
+			];
 			
 			function generate3PadUrls(start, end, folder, name) {
 				const urls = [];
@@ -479,31 +505,11 @@
 				return urls;
 			}
 
-			if (offline) {
-				oneUrls = [...one3PadUrls, ...one5PadUrls, ...one5Pad2Urls];
-				twoUrls = [...two3PadUrls, ...two5PadUrls, ...two5Pad2Urls];
-				threeUrls = [...three3PadUrls, ...three5PadUrls, ...three5Pad2Urls];
-			} else {
-				oneUrls = newOneUrls;
-				twoUrls = newTwoUrls;
-				threeUrls = newThreeUrls;
-			}
-
 			buttons = [
-				String.fromCharCode(
-					67, 108, 105, 99, 107, 32, 72, 101, 114, 101, 32, 84, 111, 32, 66, 101, 103, 105, 110
-				),
-				String.fromCharCode(
-					83, 104, 117, 102, 102, 108, 101, 32, 84, 114, 105, 111, 63
-				),
-			];
+			"Click Here To Begin",
+			"Shuffle Trio?"
+			]
 			
-			cardNames = [
-				String.fromCharCode(45, 32, 80, 69, 84, 82, 65, 32, 45),
-				String.fromCharCode(45, 32, 80, 73, 65, 32, 45),
-				String.fromCharCode(45, 32, 76, 85, 78, 65, 32, 45)
-			];
-
             titleElement.textContent = titles[0];
             oneElement.src = cardUrl;
 			twoElement.src = cardUrl;
@@ -512,6 +518,10 @@
 		}
 
 		function shuffle() {
+			firstShuffle = true;
+			selectionMade = true;
+			selectedCard = null;
+
 			if (gimbals) {
 				alert(
 					String.fromCharCode(
@@ -523,10 +533,6 @@
 				);
 				gimbals = false;
 			}
-
-			firstShuffle = true;
-			selectionMade = true;
-			selectedCard = null;
 
 			if (!mainMenu) {
 				card1Element.classList.remove('fadeIn1');
