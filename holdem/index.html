@@ -21,6 +21,9 @@
         }
 
 		main {
+			color: #eee;
+			font-size: 1.25rem;
+			font-style: italic;
 			display: flex;
 			justify-content: space-evenly;
 		}
@@ -56,6 +59,16 @@
 			border-color: rgba(255, 255, 0, 1);
 		}
 
+		.border-to-yellow {
+			border-color: rgba(255, 255, 0, 1);
+			transition: none;
+		}
+
+		.border-to-black {
+			border-color: rgba(0, 0, 0, 1);
+			transition: border-color 1.3s ease;
+		}
+
 		#cards {
 			height: 640px;
 			display: flex;
@@ -65,15 +78,22 @@
 		}
 		
 		#card1, #card2, #card3 {
-			color: #eee;
-			font-size: 1.25rem;
-			font-style: italic;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
 			margin-left: 19.5px;
 			margin-right: 19.5px;
+		}
+
+		.text-to-yellow {
+			color: #ffff00;
+			transition: none;
+		}
+
+		.text-to-white {
+			color: #eee;
+			transition: color 1.3s ease;
 		}
 						
 		#card1-name, #card2-name, #card3-name {
@@ -627,16 +647,16 @@
 			selectionMade = true;
 			selectedCard = 'one';
 
-			oneElement.style.transition = 'none';
-			oneElement.classList.add('border-yellow');
-			card1Element.style.transition = 'none';
-			card1Element.style.color = '#ffff00';
+			oneElement.classList.remove('border-to-black');
+			oneElement.classList.add('border-to-yellow');
+			card1Element.classList.remove('text-to-white');
+			card1Element.classList.add('text-to-yellow');
 
 			setTimeout(function() {
-				oneElement.style.transition = 'border-color 1.3s ease';
-				oneElement.classList.remove('border-yellow');
-				card1Element.style.transition = 'color 1.3s ease';
-				card1Element.style.color = '#eee';
+				oneElement.classList.remove('border-to-yellow');
+				oneElement.classList.add('border-to-black');
+				card1Element.classList.remove('text-to-yellow');
+				card1Element.classList.add('text-to-white');
 
 				generate();
 			}, 2000);
@@ -654,16 +674,16 @@
 			selectionMade = true;
 			selectedCard = 'two';
 			
-			twoElement.style.transition = 'none';
-			twoElement.classList.add('border-yellow');
-			card2Element.style.transition = 'none';
-			card2Element.style.color = '#ffff00';
+			twoElement.classList.remove('border-to-black');
+			twoElement.classList.add('border-to-yellow');
+			card2Element.classList.remove('text-to-white');
+			card2Element.classList.add('text-to-yellow');
 			
 			setTimeout(function() {
-				twoElement.style.transition = 'border-color 1.3s ease';
-				twoElement.classList.remove('border-yellow');
-				card2Element.style.transition = 'color 1.3s ease';
-				card2Element.style.color = '#eee';
+				twoElement.classList.remove('border-to-yellow');
+				twoElement.classList.add('border-to-black');
+				card2Element.classList.remove('text-to-yellow');
+				card2Element.classList.add('text-to-white');
 
 				generate();
 			}, 2000);
@@ -681,16 +701,16 @@
 			selectionMade = true;
 			selectedCard = 'three';
 
-			threeElement.style.transition = 'none';
-			threeElement.classList.add('border-yellow');
-			card3Element.style.transition = 'none';
-			card3Element.style.color = '#ffff00';
+			threeElement.classList.remove('border-to-black');
+			threeElement.classList.add('border-to-yellow');
+			card3Element.classList.remove('text-to-white');
+			card3Element.classList.add('text-to-yellow');
 			
 			setTimeout(function() {
-				threeElement.style.transition = 'border-color 1.3s ease';
-				threeElement.classList.remove('border-yellow');
-				card3Element.style.transition = 'color 1.3s ease';
-				card3Element.style.color = '#eee';
+				threeElement.classList.remove('border-to-yellow');
+				threeElement.classList.add('border-to-black');
+				card3Element.classList.remove('text-to-yellow');
+				card3Element.classList.add('text-to-white');
 
 				generate();
 			}, 2000);
