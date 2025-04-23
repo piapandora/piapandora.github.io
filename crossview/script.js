@@ -48,8 +48,8 @@ menu.addEventListener("mouseenter", function() {
 // })
 
 btnE.addEventListener('click', () => {
-  menu.style.opacity = 0
-  colors.style.opacity = 0
+  menu.style.opacity = 0;
+  colors.style.opacity = 0;
 })
 
 btnF.addEventListener('click', () => {
