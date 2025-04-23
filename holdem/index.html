@@ -19,6 +19,11 @@
 			-webkit-user-select: none;
 			-ms-user-select: none;
         }
+
+		main {
+			display: flex;
+			justify-content: space-evenly;
+		}
 		
 		img {
 			height: 460px;
@@ -26,6 +31,26 @@
 			border: 15px solid rgba(0, 0, 0, 1);
 			border-radius: 10px;
         }
+		
+		.menu-bar {
+			display: flex;
+			justify-content: center;
+			margin: 0 auto;
+		}
+
+		.menu-btn {
+			border: none;
+			border-radius: 0;
+			background-color: #1F2020;
+			width: 16px;
+			height: 16px;
+			padding-top: 12px;
+			padding-bottom: 12px;
+			padding-left: 22px;
+			padding-right: 22px;
+			cursor: pointer;
+			transition-duration: 0.3s;
+		}
 
 		.border-yellow {
 			border-color: rgba(255, 255, 0, 1);
@@ -47,6 +72,8 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
+			margin-left: 19.5px;
+			margin-right: 19.5px;
 		}
 						
 		#card1-name, #card2-name, #card3-name {
@@ -63,6 +90,7 @@
 			align-items: center;
 			justify-content: center;
 			height: 40px;
+			width: 1160px;
 		}
 
 		#button {
@@ -75,6 +103,7 @@
 			align-items: center;
 			justify-content: center;
 			height: 40px;
+			width: 1280px;
 			cursor: pointer;
 			text-decoration: none;
 			transition: background-color 0.3s;
@@ -117,25 +146,34 @@
     </style>
 </head>
 <body>
-	<div id="title"></div>
-	<div id="cards">
-		<div id="card1">
-			<div id="card1-name"></div>
-			<img id="one" alt="image one">
+	<header class="menu-bar" id="menu">
+		<img src="misc/icons8-home-32.png" class="menu-btn" id="home-btn">
+		<div id="title"></div>
+		<img src="misc/icons8-fullscreen-32.png" class="menu-btn" id="full-btn">
+	</header>
+	
+	<main>
+		<div id="cards">
+			<div id="card1">
+				<div id="card1-name"></div>
+				<img id="one" alt="image one">
+			</div>
+			<div id="card2">
+				<div id="card2-name"></div>
+				<img id="two" alt="image two">
+			</div>
+			<div id="card3">
+				<div id="card3-name"></div>
+				<img id="three" alt="image three">
+			</div>
 		</div>
-		<div id="card2">
-			<div id="card2-name"></div>
-			<img id="two" alt="image two">
-		</div>
-		<div id="card3">
-			<div id="card3-name"></div>
-			<img id="three" alt="image three">
-		</div>
-	</div>
-	<div id="button"></div>
+	</main>
+
+	<footer class="menu-bar" id="footer">
+		<div id="button"></div>
+	</footer>
 
 	<script>
-
 		let backUrls = [
 			'misc/card-back-red.png',
 			'misc/card-back-purple.png',
@@ -196,7 +234,10 @@
 		let selectionMade = false;
 		let selectedCard;
 
+		const menuElement = document.getElementById('menu');
+		const homeBtnElement = document.getElementById('home-btn');
 		const titleElement = document.getElementById('title');
+		const fullBtnElement = document.getElementById('full-btn');
 			
 		const cardsElement = document.getElementById('cards');
 		const card1Element = document.getElementById('card1');
@@ -211,6 +252,7 @@
         const twoElement = document.getElementById('two');
         const threeElement = document.getElementById('three');
 		
+		const footerElement = document.getElementById('footer');
 		const buttonElement = document.getElementById('button');
 
 		function initialize() {
@@ -245,6 +287,18 @@
 					galleryToggle()
 				}
 			});
+
+			homeBtnElement.addEventListener('click', () => {
+				location.reload();
+			})
+
+			fullBtnElement.addEventListener('click', () => {
+				if (document.fullscreenElement) {
+					document.exitFullscreen();
+				} else {
+					document.documentElement.requestFullscreen();
+				}
+			})
 
 			cardsElement.addEventListener('click', function() {
 				if (mainMenu) {
@@ -426,9 +480,9 @@
 			let two5PadUrls = generate5PadUrls(1, 130, 'two/pia-comfy/', 'PIA');
 			let three5PadUrls = generate5PadUrls(1, 130, 'three/luna-comfy/', 'LUNA');
 
-			let one5Pad2Urls = generate5PadUrls(1, 200, 'one/petra-one', 'ONE');
-			let two5Pad2Urls = generate5PadUrls(1, 200, 'two/pia-two', 'TWO');
-			let three5Pad2Urls = generate5PadUrls(1, 200, 'three/luna-three', 'THREE');
+			let one5Pad2Urls = generate5PadUrls(1, 304, 'one/petra-one', 'ONE');
+			let two5Pad2Urls = generate5PadUrls(1, 304, 'two/pia-two', 'TWO');
+			let three5Pad2Urls = generate5PadUrls(1, 304, 'three/luna-three', 'THREE');
 
 			if (offline) {
 				document.title = String.fromCharCode(
@@ -522,7 +576,7 @@
 			selectionMade = true;
 			selectedCard = null;
 
-			if (gimbals) {
+			if (gimbals && !offline) {
 				alert(
 					String.fromCharCode(
 						10, 
