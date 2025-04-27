@@ -59,12 +59,6 @@
             color: white;
         }
 
-        .loading {
-            display: none;
-            font-size: 1.5em;
-            color: #F1E1B3;
-        }
-
         .price {
             font-size: 1.5em;
             font-weight: normal;
@@ -97,10 +91,10 @@
 			<img id="logo">
             <h1 id="title"><span class="hyphen">-</span> ZOLLARS <span class="hyphen">-</span></h1>
             <div id="prices">
-                <p id="btcPriceField" class="price"></p>
-                <p id="ethPriceField" class="price"></p>
-                <p id="solPriceField" class="price"></p>
-                <p id="total" class="total-price"></p>
+                <p id="btcPriceField" class="price">...</p>
+                <p id="ethPriceField" class="price">...</p>
+                <p id="solPriceField" class="price">...</p>
+                <p id="total" class="total-price">...</p>
             </div>
         </div>
     </main>
@@ -157,14 +151,12 @@
 
             const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd';
             async function fetchCryptoPrices() {
-                setTimeout(function() {
-                    container.style.opacity = '1';
-                    logo.src = "misc/logo.jpg";
-                    logo.style.opacity = '1';
-                    title.style.opacity = '1';
-                    prices.style.opacity = '1';
-                    total.style.opacity = '1';
-                }, 200);
+                container.style.opacity = '1';
+                logo.src = "misc/logo.jpg";
+                logo.style.opacity = '1';
+                title.style.opacity = '1';
+                prices.style.opacity = '1';
+                total.style.opacity = '1';
 
                 try {
                     const response = await fetch(apiUrl);
