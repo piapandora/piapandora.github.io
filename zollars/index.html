@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zollars</title>
+    <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #615677;
+            padding: 4rem;
+        }
+
+        main {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        button {
+            background-color: #F1E1B3;
+            color: #000;
+            font-size: 1em;
+            font-weight: normal;
+            margin: 7px;
+            padding: 0.5rem;
+            border-radius: 10px;
+			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #numpad {
+            padding: 6.3rem 0;
+            opacity: 0;
+            transition: opacity 2s 1s ease-in-out;
+        }
+
+        .container1 {
+            background-color: #202030;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-2.jpg');
+            background-size: cover; /* Adjust the background size */
+            background-position: center center; /* Center the background image */
+            background-repeat: no-repeat; /* Prevent repeating the image */
+            border-radius: 10px;
+			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        .container2 {
+            background-color: #202030;
+            padding: 10px 0;
+            border-radius: 10px;
+			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+		img {
+			border-radius: 50%;
+			margin-top: 27px;
+			border: 6.66px solid #000;
+			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
+		}
+
+        #logo1 {
+            width: 8em;
+			height: 8em;
+            opacity: 0;
+            transition: opacity 2s 1s ease-in-out;
+        }
+        
+        #logo2 {
+            width: 8.7em;
+			height: 6.75em;
+            opacity: 0;
+            transition: opacity 2s 1s ease-in-out;
+        }
+
+        h1 {
+            font-size: 2.25em;
+            font-weight: bold;
+            color: #FFD700;
+			text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.75);
+        }
+
+        #title {
+            opacity: 0;
+            transition: opacity 2s 1.66s ease-in-out;
+        }
+
+        .hyphen {
+            color: white;
+        }
+
+        .price {
+            font-size: 1.5em;
+            font-weight: normal;
+            color: #F1E1B3;
+			text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.75);
+        }
+        
+        #prices {
+            line-height: 0.75;
+            opacity: 0;
+            transition: opacity 2s 2.33s ease-in-out;
+        }
+
+        .total-price {
+            padding-top: 0.75rem;
+            font-size: 1.7em;
+            font-weight: bold;
+            color: #fff;
+			text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.75);
+        }
+
+        #total {
+            opacity: 0;
+            transition: opacity 2s 3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section class="container1">
+			<!-- <img id="logo1"> -->
+            <div id="numpad">
+                <button id="btn-01">01</button>
+                <button id="btn-02">02</button>
+                <button id="btn-03">03</button>
+                <button id="btn-04">04</button>
+                <button id="btn-05">05</button>
+                <button id="btn-06">06</button>
+                <button id="btn-07">07</button>
+                <button id="btn-08">08</button>
+                <br>
+                <button id="btn-09">09</button>
+                <button id="btn-10">10</button>
+                <button id="btn-11">11</button>
+                <button id="btn-12">12</button>
+                <button id="btn-13">13</button>
+                <button id="btn-14">14</button>
+                <button id="btn-15">15</button>
+                <button id="btn-16">16</button>
+                <br>
+                <button id="btn-17">17</button>
+                <button id="btn-18">18</button>
+                <button id="btn-19">19</button>
+                <button id="btn-20">20</button>
+                <button id="btn-21">21</button>
+                <button id="btn-22">22</button>
+                <button id="btn-23">23</button>
+                <button id="btn-24">24</button>
+                <br>
+                <button id="btn-25">25</button>
+                <button id="btn-26">26</button>
+                <button id="btn-27">27</button>
+                <button id="btn-28">28</button>
+                <button id="btn-29">29</button>
+                <button id="btn-30">30</button>
+                <button id="btn-31">31</button>
+                <button id="btn-32">32</button>
+                <br>
+                <button id="btn-33">33</button>
+                <button id="btn-34">34</button>
+                <button id="btn-35">35</button>
+                <button id="btn-36">36</button>
+                <button id="btn-37">37</button>
+                <button id="btn-38">38</button>
+                <button id="btn-39">39</button>
+                <button id="btn-40">40</button>
+            </div>
+        </section>
+        <section class="container2">
+			<img id="logo2">
+            <h1 id="title"><span class="hyphen">-</span> ZOLLARS <span class="hyphen">-</span></h1>
+            <div id="prices">
+                <p id="btcPriceField" class="price">...</p>
+                <p id="ethPriceField" class="price">...</p>
+                <p id="solPriceField" class="price">...</p>
+                <p id="total" class="total-price">...</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const container1 = document.getElementsByClassName("container1")[0];
+        const container2 = document.getElementsByClassName("container2")[0];
+        const logo1 = document.getElementById("logo1");
+        const logo2 = document.getElementById("logo2");
+        const logos = ["misc/logo-1.jpg", "misc/logo-2.jpg", "misc/logo-3.jpg"];
+        const numpad = document.getElementById("numpad");
+        const title = document.getElementById("title");
+        const prices = document.getElementById("prices");
+        const btcPriceField = document.getElementById("btcPriceField");
+        const ethPriceField = document.getElementById("ethPriceField");
+        const solPriceField = document.getElementById("solPriceField");
+        const total = document.getElementById("total");
+
+        const buttons = document.querySelectorAll("button");
+
+        const clickedState = {};
+
+        let nessyOK = false;
+
+        buttons.forEach((button, index) => {
+            const id = button.id;
+            clickedState[id] = false;
+
+            button.addEventListener("click", function () {
+                if (nessyOK) return;
+
+                if (!clickedState[id]) {
+                    // logo1.src = logos[2];
+                    // container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('misc/logo-3.jpg')";
+                    button.style.backgroundColor = "#FFD700";
+                    // console.log(`Button ${button.textContent} clicked!`);
+                    clickedState[id] = true;
+                    nessyCheck();
+                } else {
+                    // container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('misc/logo-3.jpg')";
+                    // logo1.src = logos[2];
+                    button.style.backgroundColor = "#F1E1B3";
+                    // console.log(`Button ${button.textContent} unclicked!`);
+                    clickedState[id] = false;
+                    nessyCheck();
+                }
+            });
+        });
+        
+        function randomSelection(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function showNumpad() {
+            container2.style.display = "none";
+            container1.style.display = "block";
+
+            container1.style.opacity = '0';
+            container1.offsetHeight;
+            container1.style.opacity = '1';
+
+            // logo1.src = logos[1];
+            // logo1.style.opacity = '1';
+            setTimeout(() => {
+                numpad.style.opacity = '1';
+            }, 500);
+        }
+
+        function nessyCheck() {
+            const nessy = [
+                String.fromCharCode(98, 116, 110, 45, 48, 54),
+                String.fromCharCode(98, 116, 110, 45, 49, 50),
+                String.fromCharCode(98, 116, 110, 45, 51, 49)
+            ];
+
+            let allNessyClicks = false;
+            let noExtraClicks = true;
+
+            if (nessy.every(id => clickedState[id])) {
+                allNessyClicks = true;
+            }
+
+            for (const id in clickedState) {
+                if (!nessy.includes(id) && clickedState[id]) {
+                    noExtraClicks = false;
+                    break;
+                }
+            }
+
+            if (allNessyClicks && noExtraClicks) {
+                nessyOK = true;
+                // logo1.src = logos[0];
+                
+                setTimeout(function() {
+                    container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg')";
+                }, 0);
+                
+                numpad.style.opacity = '1';
+                numpad.offsetHeight;
+                numpad.style.opacity = '0';
+
+                setTimeout(function() {
+                    container1.style.opacity = '1';
+                    container1.offsetHeight;
+                    container1.style.opacity = '0';
+                    setTimeout(initialize, 1000);
+                }, 3000);
+            }
+        }
+
+        /*function promptPassword() {
+    		const selection = prompt("Password?");
+
+            if (selection === null) {
+                incorrectPassword();
+                return;
+            }
+
+            if (selection.trim() === String.fromCharCode(49,50,48,54,51,49)) {
+                initialize();
+            } else {
+                incorrectPassword();
+            }
+        }*/
+
+        /*function incorrectPassword() {
+            container.style.opacity = '1';
+
+            logo.src = randomSelection(logos);
+            logo.style.width = "20em";
+            logo.style.height = "20em";
+            logo.style.marginTop = "65.5px";
+            logo.style.marginBottom = "65.5px";
+            logo.style.opacity = "1";
+            
+            title.remove();
+            prices.remove();
+        }*/
+
+        function initialize() {
+            const bitcoinAmount = 0.1;
+            const ethereumAmount = 0.44;
+            const solanaAmount = 5;
+            let errorCount = 0;
+
+            const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd';
+            async function fetchCryptoPrices() {
+                container1.style.display = "none";
+                container2.style.display = "block";
+
+                container2.style.opacity = '0';
+                container2.offsetHeight;
+                container2.style.opacity = '1';
+
+                logo2.src = "misc/logo.jpg";
+                logo2.style.opacity = '1';
+
+                title.style.opacity = '1';
+                prices.style.opacity = '1';
+                total.style.opacity = '1';
+
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+
+                    const btcPrice = data.bitcoin.usd * bitcoinAmount;
+                    const ethPrice = data.ethereum.usd * ethereumAmount;
+                    const solPrice = data.solana.usd * solanaAmount;
+                    const grandTotal = btcPrice + ethPrice + solPrice;
+
+                    btcPriceField.innerText = `${bitcoinAmount} BTC - $${btcPrice.toLocaleString()}`;
+                    ethPriceField.innerText = `${ethereumAmount} ETH - $${ethPrice.toLocaleString()}`;
+                    solPriceField.innerText = `${solanaAmount} SOL - $${solPrice.toLocaleString()}`;
+                    total.innerText = `$${grandTotal.toLocaleString()}`;
+                    
+                } catch (error) {
+                    console.error('Error fetching the crypto prices:', error);
+                    errorCount++;
+                    btcPriceField.innerText = 'Error fetching data';
+                    ethPriceField.innerText = 'Error fetching data';
+                    solPriceField.innerText = 'Error fetching data';
+                    if (errorCount < 3) {
+                        setTimeout(fetchCryptoPrices, 2000);
+                    }
+                }
+            }
+
+            fetchCryptoPrices();
+        }
+
+        showNumpad();
+    </script>
+</body>
+</html>
