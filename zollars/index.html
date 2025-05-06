@@ -35,12 +35,12 @@
             gap: 0.33rem;
             padding: 5.09rem 4rem;
             opacity: 0;
-            transition: opacity 2s 1s ease-in-out;
+            transition: opacity 2s ease-in-out;
         }
 
         .container1 {
             background-color: #202030;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-2.jpg');
+            background-image: linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg');
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -52,7 +52,6 @@
 
         .container2 {
             background-color: #202030;
-            /* background-image: linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo.jpg'); */
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -70,14 +69,7 @@
 			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
 		}
 
-        #logo1 {
-            width: 8em;
-			height: 8em;
-            opacity: 0;
-            transition: opacity 2s 1s ease-in-out;
-        }
-        
-        #logo2 {
+        #logo {
             width: 8.7em;
 			height: 6.75em;
             opacity: 0;
@@ -130,7 +122,6 @@
 <body>
     <main>
         <section class="container1">
-			<!-- <img id="logo1"> -->
             <div id="numpad">
                 <button id="btn-01">01</button>
                 <button id="btn-02">02</button>
@@ -140,7 +131,6 @@
                 <button id="btn-06">06</button>
                 <button id="btn-07">07</button>
                 <button id="btn-08">08</button>
-                <!-- <br> -->
                 <button id="btn-09">09</button>
                 <button id="btn-10">10</button>
                 <button id="btn-11">11</button>
@@ -149,7 +139,6 @@
                 <button id="btn-14">14</button>
                 <button id="btn-15">15</button>
                 <button id="btn-16">16</button>
-                <!-- <br> -->
                 <button id="btn-17">17</button>
                 <button id="btn-18">18</button>
                 <button id="btn-19">19</button>
@@ -158,7 +147,6 @@
                 <button id="btn-22">22</button>
                 <button id="btn-23">23</button>
                 <button id="btn-24">24</button>
-                <!-- <br> -->
                 <button id="btn-25">25</button>
                 <button id="btn-26">26</button>
                 <button id="btn-27">27</button>
@@ -167,7 +155,6 @@
                 <button id="btn-30">30</button>
                 <button id="btn-31">31</button>
                 <button id="btn-32">32</button>
-                <!-- <br> -->
                 <button id="btn-33">33</button>
                 <button id="btn-34">34</button>
                 <button id="btn-35">35</button>
@@ -179,7 +166,7 @@
             </div>
         </section>
         <section class="container2">
-			<img id="logo2">
+			<img id="logo">
             <h1 id="title"><span class="hyphen">-</span> ZOLLARS <span class="hyphen">-</span></h1>
             <div id="prices">
                 <p id="btcPriceField" class="price">...</p>
@@ -193,8 +180,7 @@
     <script>
         const container1 = document.getElementsByClassName("container1")[0];
         const container2 = document.getElementsByClassName("container2")[0];
-        const logo1 = document.getElementById("logo1");
-        const logo2 = document.getElementById("logo2");
+        const logo = document.getElementById("logo");
         const logos = ["misc/logo-1.jpg", "misc/logo-2.jpg", "misc/logo-3.jpg"];
         const numpad = document.getElementById("numpad");
         const title = document.getElementById("title");
@@ -218,17 +204,11 @@
                 if (nessyOK) return;
 
                 if (!clickedState[id]) {
-                    // logo1.src = logos[2];
-                    // container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('misc/logo-3.jpg')";
                     button.style.backgroundColor = "#FFD700";
-                    // console.log(`Button ${button.textContent} clicked!`);
                     clickedState[id] = true;
                     nessyCheck();
                 } else {
-                    // container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('misc/logo-3.jpg')";
-                    // logo1.src = logos[2];
                     button.style.backgroundColor = "#F1E1B3";
-                    // console.log(`Button ${button.textContent} unclicked!`);
                     clickedState[id] = false;
                     nessyCheck();
                 }
@@ -247,11 +227,9 @@
             container1.offsetHeight;
             container1.style.opacity = '1';
 
-            // logo1.src = logos[1];
-            // logo1.style.opacity = '1';
-            setTimeout(() => {
+            setTimeout(function() {
                 numpad.style.opacity = '1';
-            }, 500);
+            }, 1000)
         }
 
         function nessyCheck() {
@@ -277,22 +255,20 @@
 
             if (allNessyClicks && noExtraClicks) {
                 nessyOK = true;
-                // logo1.src = logos[0];
                 
-                // setTimeout(function() {
-                //     container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg')";
-                // }, 0);
+                container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.166), rgba(0, 0, 0, 0.166)), url('misc/logo-1.jpg')";
                 
                 numpad.style.opacity = '1';
                 numpad.offsetHeight;
                 numpad.style.opacity = '0';
+
 
                 setTimeout(function() {
                     container1.style.opacity = '1';
                     container1.offsetHeight;
                     container1.style.opacity = '0';
                     setTimeout(initialize, 1000);
-                }, 3000);
+                }, 2000);
             }
         }
 
@@ -340,8 +316,8 @@
                 container2.offsetHeight;
                 container2.style.opacity = '1';
 
-                logo2.src = "misc/logo.jpg";
-                logo2.style.opacity = '1';
+                logo.src = "misc/logo.jpg";
+                logo.style.opacity = '1';
 
                 title.style.opacity = '1';
                 prices.style.opacity = '1';
@@ -377,7 +353,6 @@
         }
 
         showNumpad();
-        // initialize();
     </script>
 </body>
 </html>
