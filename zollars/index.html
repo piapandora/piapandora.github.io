@@ -33,7 +33,7 @@
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             gap: 0.33rem;
-            padding: 5rem 4rem;
+            padding: 5.09rem 4rem;
             opacity: 0;
             transition: opacity 2s 1s ease-in-out;
         }
@@ -41,16 +41,21 @@
         .container1 {
             background-color: #202030;
             background-image: linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-2.jpg');
-            background-size: cover; /* Adjust the background size */
-            background-position: center center; /* Center the background image */
-            background-repeat: no-repeat; /* Prevent repeating the image */
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
             border-radius: 10px;
 			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
             opacity: 0;
             transition: opacity 1s ease-in-out;
         }
+
         .container2 {
             background-color: #202030;
+            /* background-image: linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo.jpg'); */
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
             padding: 10px 0;
             border-radius: 10px;
 			box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
@@ -274,9 +279,9 @@
                 nessyOK = true;
                 // logo1.src = logos[0];
                 
-                setTimeout(function() {
-                    container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg')";
-                }, 0);
+                // setTimeout(function() {
+                //     container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg')";
+                // }, 0);
                 
                 numpad.style.opacity = '1';
                 numpad.offsetHeight;
