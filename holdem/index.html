@@ -29,9 +29,12 @@
 		}
 		
 		img {
-			height: 460px;
-			width: 345px;
-			border: 15px solid rgba(0, 0, 0, 1);
+			/*width: 345px;
+			height: 460px;*/
+			width: 360px;
+			height: 480px;
+			/* border: 15px solid rgba(0, 0, 0, 1); */
+			border: 12px solid rgba(0, 0, 0, 1);
 			border-radius: 10px;
         }
 		
@@ -52,7 +55,6 @@
 			padding-left: 20px;
 			padding-right: 20px;
 			cursor: pointer;
-			transition-duration: 0.3s;
 		}
 
 		.border-to-yellow {
@@ -78,8 +80,10 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			margin-left: 19.5px;
-			margin-right: 19.5px;
+			/* margin-left: 19.5px;
+			margin-right: 19.5px; */
+			margin-left: 16px;
+			margin-right: 16px;
 		}
 
 		.text-to-yellow {
@@ -96,6 +100,17 @@
 			padding-bottom: 15px;
 		}
 
+		#menu, #footer {
+			background-color: #1F2020;
+			text-align: center;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			max-width: 1280px;
+			height: 40px;
+		}
+
 		#title {
 			color: #ffffff;
 			font-size: 1rem;
@@ -105,8 +120,8 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			height: 40px;
 			width: 1160px;
+			height: 40px;
 		}
 
 		#button {
@@ -118,11 +133,9 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			width: 1160px;
 			height: 40px;
-			width: 1280px;
 			cursor: pointer;
-			text-decoration: none;
-			transition: background-color 0.3s;
 		}
 
 		@keyframes fadeIn {
@@ -186,7 +199,9 @@
 	</main>
 
 	<footer class="menu-bar" id="footer">
+		<img src="misc/icons8-blank-32.png" class="menu-btn" id="blnk-btn">
 		<div id="button"></div>
+		<img src="misc/icons8-refresh-32.png" class="menu-btn" id="gall-btn">
 	</footer>
 
 	<script>
@@ -218,9 +233,12 @@
 		let oneUrls = deckOfCards;
 		let twoUrls = deckOfCards;
 		let threeUrls = deckOfCards;
+		let quotes = ["Check Your Hole Cards"];
 		let newOneUrls = [];
 		let newTwoUrls = [];
 		let newThreeUrls = [];
+		let newQuotes = [];
+		let newQuotesOff = [];
 
 		let titles = [
 			"Three Card Hold'em",
@@ -230,7 +248,7 @@
 		
 		let buttons = [
 			'Click Here To Begin',
-			'Shuffle Cards?',
+			'Shuffle Cards?'
 		];
 
 		let cardNames = [
@@ -239,13 +257,17 @@
 			'- RIVER -'
 		];
 
+		let devMode = false;
+		/*let devMode = false;*/
 		let mainMenu = true;
 		let offline = false;
 		let gimbals = false;
 		let gallery = false;
 		let galleryInterval;
+		let galleryTimeout;
 		let offlock = 0;
 		let goldilocks = 0;
+		let maxiNova = false;
 		let firstShuffle = true;
 		let selectionMade = false;
 		let selectedCard;
@@ -269,12 +291,16 @@
         const threeElement = document.getElementById('three');
 		
 		const footerElement = document.getElementById('footer');
+		const blnkBtnElement = document.getElementById('blnk-btn');
 		const buttonElement = document.getElementById('button');
+		const gallBtnElement = document.getElementById('gall-btn');
 
 		function initialize() {
-			newOne();
-			newTwo();
-			newThree();
+			fetchNewOne();
+			fetchNewTwo();
+			fetchNewThree();
+			fetchNewQuotes();
+			fetchNewQuotesOff();
 
 			card1nameElement.style.display = 'none';
             card2nameElement.style.display = 'none';
@@ -297,24 +323,12 @@
 						gimbals = true;
 						gimbal();
 					} else {
-						galleryToggle()
+						galleryToggle();
 					}
 				} else if ((goldilocks >= 15) && (goldilocks % 5 === 0)){
-					galleryToggle()
+					galleryToggle();
 				}
 			});
-
-			homeBtnElement.addEventListener('click', () => {
-				location.reload();
-			})
-
-			fullBtnElement.addEventListener('click', () => {
-				if (document.fullscreenElement) {
-					document.exitFullscreen();
-				} else {
-					document.documentElement.requestFullscreen();
-				}
-			})
 
 			cardsElement.addEventListener('click', function() {
 				if (mainMenu) {
@@ -322,8 +336,66 @@
 				}
 			});
 
+			homeBtnElement.addEventListener('mouseenter', function() {
+				this.src = "misc/icons8-home-yellow-32.png";
+			});
+			
+			homeBtnElement.addEventListener('mouseleave', function() {
+				this.src = "misc/icons8-home-32.png";
+			});
+
+			homeBtnElement.addEventListener('click', () => {
+				location.reload();
+			});
+
+			fullBtnElement.addEventListener('mouseenter', function() {
+				this.src = "misc/icons8-fullscreen-yellow-32.png";
+			});
+			
+			fullBtnElement.addEventListener('mouseleave', function() {
+				this.src = "misc/icons8-fullscreen-32.png";
+			});
+
+			fullBtnElement.addEventListener('click', () => {
+				if (document.fullscreenElement) {
+					document.exitFullscreen();
+				} else {
+					document.documentElement.requestFullscreen();
+				}
+			});
+
+			gallBtnElement.addEventListener('mouseenter', function() {
+				this.src = "misc/icons8-refresh-yellow-32.png";
+			});
+			
+			gallBtnElement.addEventListener('mouseleave', function() {
+				this.src = "misc/icons8-refresh-32.png";
+			});
+						
+			gallBtnElement.addEventListener('click', () => {
+				galleryToggle();
+			});
+
+			blnkBtnElement.addEventListener('mouseenter', function() {
+				if (!gallery) {
+					buttonElement.style.color = "#ffff00";
+				}
+			});
+			
+			blnkBtnElement.addEventListener('mouseleave', function() {
+				buttonElement.style.color = "#dddddd";
+			});
+
+			blnkBtnElement.addEventListener('click', function() {
+				if (!selectionMade && !gallery) {
+					shuffle();
+				}
+			});
+
 			buttonElement.addEventListener('mouseenter', function() {
-				this.style.color = "#ffff00";
+				if (!gallery) {
+					this.style.color = "#ffff00";
+				}
 			});
 			
 			buttonElement.addEventListener('mouseleave', function() {
@@ -356,6 +428,8 @@
 					event.preventDefault();
 					if (!selectionMade && !gallery) {
 						shuffle();
+					} else {
+						galleryToggle();
 					}
 				} else if (event.code === 'KeyA' || event.code === 'ArrowLeft') {
 					event.preventDefault();
@@ -382,11 +456,23 @@
 							setTimeout(function() {
 								titleElement.style.color = '#ffffff';
 							}, 300);
+						} else if (offlock === 70) {
+							titleElement.style.color = '#ff8000';
+							setTimeout(function() {
+								titleElement.style.color = '#ffffff';
+							}, 300);
+						} else if (offlock === 110) {
+							maxiNova = true;
+							titleElement.style.color = '#ff0000';
+							setTimeout(function() {
+								titleElement.style.color = '#ffffff';
+							}, 300);
+						} else if (offlock === 150 && devMode) {
+							gimbals = true;
+							gimbal();
+							galleryToggle();
 						}
 					}
-				} else if (event.code === 'KeyG') {
-					event.preventDefault();
-					galleryToggle()
 				}
 			}, { passive: false });
 
@@ -410,22 +496,28 @@
 		function galleryToggle() {
 			if (!selectionMade && !gallery) {
 				gallery = true;
+				
 				titleElement.textContent = titles[2];
-				buttonElement.textContent = '';
+				buttonElement.textContent = "";
+				
 				shuffle();
+
 				galleryInterval = setInterval(function() {
 					shuffle();
-				}, 6000);
+				}, 8000);
 			} else {
 				clearInterval(galleryInterval);
+				clearTimeout(galleryTimeout);
+				
 				gallery = false;
+								
 				titleElement.textContent = titles[1];
 				buttonElement.textContent = buttons[1];
 			}
 		}
 		
-		function newOne() {
-			fetch('https://assets.piapandora.com/holdem/one.json')
+		function fetchNewOne() {
+			fetch('misc/one.json')
 			.then(res => {
 				if (!res.ok) {
 				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
@@ -445,8 +537,8 @@
 			});
 		}
 
-		function newTwo() {
-			fetch('https://assets.piapandora.com/holdem/two.json')
+		function fetchNewTwo() {
+			fetch('misc/two.json')
 			.then(res => {
 				if (!res.ok) {
 				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
@@ -466,8 +558,8 @@
 			});
 		}
 
-		function newThree() {
-			fetch('https://assets.piapandora.com/holdem/three.json')
+		function fetchNewThree() {
+			fetch('misc/three.json')
 			.then(res => {
 				if (!res.ok) {
 				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
@@ -487,18 +579,66 @@
 			});
 		}
 
-		function gimbal() {
-			let one3PadUrls = generate3PadUrls(1, 237, 'one/petra/', 'PETRA');
-			let two3PadUrls = generate3PadUrls(1, 239, 'two/pia/', 'PIA');
-			let three3PadUrls = generate3PadUrls(1, 229, 'three/luna/', 'LUNA');
-			
-			let one5PadUrls = generate5PadUrls(1, 130, 'one/petra-comfy/', 'PETRA');
-			let two5PadUrls = generate5PadUrls(1, 130, 'two/pia-comfy/', 'PIA');
-			let three5PadUrls = generate5PadUrls(1, 130, 'three/luna-comfy/', 'LUNA');
+		function fetchNewQuotes() {
+			fetch('misc/quotes.json')
+			.then(res => {
+				if (!res.ok) {
+				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+				}
+				return res.json();
+			})
+			.then(data => {
+				if (!data || data.length === 0) {
+				console.warn("No data in quotes.json");
+				} else {
+				newQuotes = data;
+				/*console.log("Loaded Quotes:", newQuotes);*/
+				}
+			})
+			.catch(err => {
+				console.error("Failed to load quotes.json:", err);
+			});
+		}
 
-			let one5Pad2Urls = generate5PadUrls(1, 304, 'one/petra-one', 'ONE');
-			let two5Pad2Urls = generate5PadUrls(1, 304, 'two/pia-two', 'TWO');
-			let three5Pad2Urls = generate5PadUrls(1, 304, 'three/luna-three', 'THREE');
+		function fetchNewQuotesOff() {
+			fetch('misc/quotes-offline.json')
+			.then(res => {
+				if (!res.ok) {
+				throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+				}
+				return res.json();
+			})
+			.then(data => {
+				if (!data || data.length === 0) {
+				console.warn("No data in quotes-offline.json");
+				} else {
+				newQuotesOff = data;
+				/*console.log("Loaded Quotes:", newQuotesOff);*/
+				}
+			})
+			.catch(err => {
+				console.error("Failed to load quotes-offline.json:", err);
+			});
+		}
+
+		function gimbal() {
+			let one3PadUrls = generate3PadUrls(1, 237, 'one/petra', 'PETRA');
+			let two3PadUrls = generate3PadUrls(1, 239, 'two/pia', 'PIA');
+			let three3PadUrls = generate3PadUrls(1, 229, 'three/luna', 'LUNA');
+			
+			let one5PadUrls = generate5PadUrls(1, 130, 'one/petra-comfy', 'PETRA');
+			let two5PadUrls = generate5PadUrls(1, 130, 'two/pia-comfy', 'PIA');
+			let three5PadUrls = generate5PadUrls(1, 130, 'three/luna-comfy', 'LUNA');
+
+			let one5Pad2Urls= generate5PadUrls(957, 982, 'one/petra-one', 'ONE');
+			let two5Pad2Urls = generate5PadUrls(957, 982, 'two/pia-two', 'TWO');
+			let three5Pad2Urls = generate5PadUrls(957, 982, 'three/luna-three', 'THREE');
+
+			let one5Pad3Urls = generate5PadUrls(1, 183, 'one/petra-new', 'PETRA');
+			let two5Pad3Urls = generate5PadUrls(1, 167, 'two/pia-new', 'PIA');
+			let three5Pad3Urls = generate5PadUrls(1, 169, 'three/luna-new', 'LUNA');
+			
+			let pony5PadUrls = generate5PadUrls(1, 565, 'two/pony', 'PONY');
 
 			if (offline) {
 				document.title = String.fromCharCode(
@@ -513,9 +653,17 @@
 				"- LUNA -"
 				];
 
-				oneUrls = [...one3PadUrls, ...one5PadUrls, ...one5Pad2Urls];
-				twoUrls = [...two3PadUrls, ...two5PadUrls, ...two5Pad2Urls];
-				threeUrls = [...three3PadUrls, ...three5PadUrls, ...three5Pad2Urls];
+				if (!maxiNova) {
+					oneUrls = [...one3PadUrls, ...one5PadUrls, ...one5Pad2Urls, ...one5Pad3Urls, ...pony5PadUrls];
+					twoUrls = [...two3PadUrls, ...two5PadUrls, ...two5Pad2Urls, ...two5Pad3Urls, ...pony5PadUrls];
+					threeUrls = [...three3PadUrls, ...three5PadUrls, ...three5Pad2Urls, ...three5Pad3Urls, ...pony5PadUrls];
+					quotes = [...newQuotes, ...newQuotesOff];
+				} else {
+					oneUrls = [...one5Pad2Urls];
+					twoUrls = [...two5Pad2Urls];
+					threeUrls = [...three5Pad2Urls];
+					quotes = [...newQuotesOff];
+				}
 			} else {
 				document.title = String.fromCharCode(
 					84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111
@@ -524,20 +672,21 @@
 				cardUrl = 'misc/card-back.png';
 
 				cardNames = [
-				"- CUTE -",
-				"- BEAU -",
-				"- SEXY -"
+				"- ONE -",
+				"- TWO -",
+				"- THREE -"
 				];
 
 				oneUrls = newOneUrls;
 				twoUrls = newTwoUrls;
 				threeUrls = newThreeUrls;
+				quotes = newQuotes;
 			}
 
 			titles = [
 				String.fromCharCode(80, 105, 97, 32, 80, 97, 110, 100, 111, 114, 97, 39, 115, 32, 84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111),
 				String.fromCharCode(67, 104, 111, 111, 115, 101, 32, 89, 111, 117, 114, 32, 84, 105, 99, 107, 108, 101),
-				String.fromCharCode(71, 97, 108, 108, 101, 114, 121, 32, 77, 111, 100, 101)
+				String.fromCharCode(84, 105, 99, 107, 108, 101, 32, 84, 114, 105, 111, 32, 84, 86)
 			];
 			
 			function generate3PadUrls(start, end, folder, name) {
@@ -725,7 +874,25 @@
 				buttonElement.textContent = buttons[1];
 			} else {
 				titleElement.textContent = titles[2];
-				buttonElement.textContent = '';
+
+				buttonElement.textContent = randomItem(quotes);
+				buttonElement.classList.remove('fadeOut');
+				buttonElement.classList.remove('fadeIn1');
+				
+				void buttonElement.offsetWidth;
+
+				buttonElement.classList.add('fadeIn1');
+				
+				const delay = !mainMenu ? 6700 : 8000;
+
+				galleryTimeout = setTimeout(function() {
+					buttonElement.classList.remove('fadeIn1');
+					buttonElement.classList.remove('fadeOut');
+					
+					void buttonElement.offsetWidth;
+
+					buttonElement.classList.add('fadeOut');
+				}, delay);
 			}
 			
             card1nameElement.style.display = 'block';
