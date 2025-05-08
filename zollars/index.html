@@ -193,6 +193,8 @@
 
         let nessyOK = false;
 
+        let refreshTimer = 0;
+
         buttons.forEach((button, index) => {
             const id = button.id;
             clickedState[id] = false;
@@ -268,7 +270,14 @@
                     requestAnimationFrame(() => {
                         container1.style.opacity = '0';
                     });
-                    setTimeout(initialize, 1000);
+                    setTimeout(function() {
+                        initialize();
+                        setInterval(function() {
+                            initialize();
+                            refreshTimer++;
+                            console.log(`Refreshed at ${new Date().toLocaleTimeString()} (${refreshTimer})`);
+                        }, 30000)
+                    }, 1000);
                 }, 2000);
             }
         }
