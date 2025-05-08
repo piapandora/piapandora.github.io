@@ -180,19 +180,15 @@
         const logo = document.getElementById("logo");
         const logos = ["misc/logo-1.jpg", "misc/logo-2.jpg", "misc/logo-3.jpg"];
         const numpad = document.getElementById("numpad");
+        const buttons = document.querySelectorAll("button");
+        const clickedState = {};
         const title = document.getElementById("title");
         const prices = document.getElementById("prices");
         const btcPriceField = document.getElementById("btcPriceField");
         const ethPriceField = document.getElementById("ethPriceField");
         const solPriceField = document.getElementById("solPriceField");
         const total = document.getElementById("total");
-
-        const buttons = document.querySelectorAll("button");
-
-        const clickedState = {};
-
         let nessyOK = false;
-
         let refreshTimer = 0;
 
         buttons.forEach((button, index) => {
@@ -243,21 +239,21 @@
                 String.fromCharCode(98, 116, 110, 45, 51, 49)
             ];
 
-            let allNessyClicks = false;
-            let noExtraClicks = true;
+            let allNessy = false;
+            let noExtra = true;
 
             if (nessy.every(id => clickedState[id])) {
-                allNessyClicks = true;
+                allNessy = true;
             }
 
             for (const id in clickedState) {
                 if (!nessy.includes(id) && clickedState[id]) {
-                    noExtraClicks = false;
+                    noExtra = false;
                     break;
                 }
             }
 
-            if (allNessyClicks && noExtraClicks) {
+            if (allNessy && noExtra) {
                 nessyOK = true;
                 
                 // container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg')";
@@ -282,7 +278,7 @@
             }
         }
 
-        /*function promptPassword() {
+        function promptPassword() {
     		const selection = prompt("Password?");
 
             if (selection === null) {
@@ -290,14 +286,14 @@
                 return;
             }
 
-            if (selection.trim() === String.fromCharCode(49,50,48,54,51,49)) {
+            if (selection.trim() === "062028") {
                 initialize();
             } else {
                 incorrectPassword();
             }
-        }*/
+        }
 
-        /*function incorrectPassword() {
+        function incorrectPassword() {
             container.style.opacity = '1';
 
             logo.src = randomSelection(logos);
@@ -309,7 +305,7 @@
             
             title.remove();
             prices.remove();
-        }*/
+        }
 
         function initialize() {
             const bitcoinAmount = 0.1;
