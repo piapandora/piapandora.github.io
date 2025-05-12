@@ -255,7 +255,7 @@
 
         tetherPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of USDT = $${TTtether}`;
+            logoTooltipText.textContent = `Current Price of Tether = $${TTtether}`;
         });
 
         tetherPriceField.addEventListener("mouseleave", function() {
@@ -264,7 +264,7 @@
         
         btcPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of BTC = $${TTbtc}`;
+            logoTooltipText.textContent = `Current Price of Bitcoin = $${TTbtc}`;
         });
 
         btcPriceField.addEventListener("mouseleave", function() {
@@ -273,7 +273,7 @@
 
         ethPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of ETH = $${TTeth}`;
+            logoTooltipText.textContent = `Current Price of Ethereum = $${TTeth}`;
         });
 
         ethPriceField.addEventListener("mouseleave", function() {
@@ -282,7 +282,7 @@
 
         solPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of SOL = $${TTsol}`;
+            logoTooltipText.textContent = `Current Price of Solana = $${TTsol}`;
         });
 
         solPriceField.addEventListener("mouseleave", function() {
@@ -291,7 +291,7 @@
 
         suiPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of SUI = $${TTsui}`;
+            logoTooltipText.textContent = `Current Price of Sui = $${TTsui}`;
         });
 
         suiPriceField.addEventListener("mouseleave", function() {
@@ -446,11 +446,11 @@
         }
 
         function initialize() {
-            const tetherAmount = 0;
+            const tetherAmount = 33;
             const bitcoinAmount = 0.1;
             const ethereumAmount = 0.5;
             const solanaAmount = 5;
-            const suiAmount = 0;
+            const suiAmount = 44;
 
             tetherPriceField.style.display = tetherAmount === 0 ? "none" : "block";
             btcPriceField.style.display = bitcoinAmount === 0 ? "none" : "block";
