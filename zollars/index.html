@@ -59,7 +59,7 @@
             opacity: 0;
             transition: opacity 1s ease-in-out;
         }
-
+        
         img {
             border-radius: 50%;
             margin-top: 27px;
@@ -115,6 +115,29 @@
             opacity: 0;
             transition: opacity 2s 3s ease-in-out;
         }
+
+        .tooltip {
+            position: relative;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .tooltip .tooltip-text {
+            display: none;
+            opacity: 1;
+            position: absolute;
+            background-color: black;
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            transition: opacity 0.3s;
+            z-index: 1;
+            bottom: 120.5%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        
     </style>
 </head>
 
@@ -165,7 +188,10 @@
             </div>
         </section>
         <section class="container2">
-            <img id="logo" src="" alt="App Logo">
+            <div id="logo-tooltip" class="tooltip">
+                <img id="logo" src="" alt="App Logo">
+                <span id="logo-tooltip-text" class="tooltip-text"></span>
+            </div>
             <h1 id="title"><span class="hyphen">-</span> ZOLLARS <span class="hyphen">-</span></h1>
             <div id="prices">
                 <p id="tetherPriceField" class="price">...</p>
@@ -196,10 +222,112 @@
         const suiPriceField = document.getElementById("suiPriceField");
         const total = document.getElementById("total");
         const totalInBtc = document.getElementById("total-in-btc");
+        const totalTooltips = document.getElementById("total-tooltips");
+
         let nessyOK = false;
         let refreshTimer = 0;
         let showTotalInUsd = true;
         let legolas = 0;
+
+        let TTtether = 0;
+        let TTbtc = 0;
+        let TTeth = 0;
+        let TTsol = 0;
+        let TTsui = 0;
+
+        const logoTooltipElement = document.getElementById('logo-tooltip');
+        const logoTooltipText = document.getElementById('logo-tooltip-text');
+        const tetherTooltipText = document.getElementById('tether-tooltip-text');
+        const btcTooltipText = document.getElementById('btc-tooltip-text');
+        const ethTooltipText = document.getElementById('eth-tooltip-text');
+        const solTooltipText = document.getElementById('sol-tooltip-text');
+        const suiTooltipText = document.getElementById('sui-tooltip-text');
+        const totalTooltipText = document.getElementById('total-tooltip-text');
+
+        title.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = '- Zollars Risk-Managed Crypto Fund -';
+        });
+
+        title.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+
+        tetherPriceField.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = `Current Price of USDT = $${TTtether}`;
+        });
+
+        tetherPriceField.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+        
+        btcPriceField.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = `Current Price of BTC = $${TTbtc}`;
+        });
+
+        btcPriceField.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+
+        ethPriceField.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = `Current Price of ETH = $${TTeth}`;
+        });
+
+        ethPriceField.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+
+        solPriceField.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = `Current Price of SOL = $${TTsol}`;
+        });
+
+        solPriceField.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+
+        suiPriceField.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = `Current Price of SUI = $${TTsui}`;
+        });
+
+        suiPriceField.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+
+        total.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = "Grand Total in USD";
+        });
+
+        total.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+
+        totalInBtc.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = "Grand Total in BTC";
+        });
+
+        totalInBtc.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+
+        logo.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            if (showTotalInUsd) {
+                logoTooltipText.textContent = "Show Total in BTC?";
+            } else {
+                logoTooltipText.textContent = "Show Total in USD?";
+            }
+        });
+
+        logo.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
 
         buttons.forEach((button, index) => {
             const id = button.id;
@@ -374,14 +502,21 @@
                     total.innerText = `$${grandTotal.toLocaleString()}`;
                     totalInBtc.innerText = `${grandTotalInBtc.toLocaleString()} BTC`;
 
+                    TTtether = data.tether.usd;
+                    TTbtc = data.bitcoin.usd;
+                    TTeth = data.ethereum.usd;
+                    TTsol = data.solana.usd;
+                    TTsui = data.sui.usd;
                 } catch (error) {
                     console.error('Error fetching the crypto prices:', error);
                     errorCount++;
+
                     tetherPriceField.innerText = 'Error fetching data';
                     btcPriceField.innerText = 'Error fetching data';
                     ethPriceField.innerText = 'Error fetching data';
                     solPriceField.innerText = 'Error fetching data';
                     suiPriceField.innerText = 'Error fetching data';
+
                     if (errorCount < 3) {
                         setTimeout(fetchCryptoPrices, 2000);
                     }
@@ -396,19 +531,21 @@
                 total.style.display = "none";
                 totalInBtc.style.display = "block";
                 showTotalInUsd = false;
-                console.log("Show Total in BTC")
+                logoTooltipText.textContent = "Show Total in USD?";
+                console.log("Showing Total in BTC")
             } else {
                 totalInBtc.style.display = "none";
                 total.style.display = "block";
                 showTotalInUsd = true;
-                console.log("Show Total in USD");
+                logoTooltipText.textContent = "Show Total in BTC?";
+                console.log("Showing Total in USD");
             }
         }
 
         logo.addEventListener('click', function() {
             legolas++;
             // console.log(`Legolas: ${legolas}`);
-            if (legolas % 3 === 0) {
+            if (legolas % 1 === 0) {
                 toggleUnitOfTotal();
             }
         });
@@ -420,7 +557,8 @@
         //     }
         // }, { passive: false });
 
-        showNumpad();
+        const devMode = false;
+        devMode ? initialize() : showNumpad();
     </script>
 </body>
 </html>
