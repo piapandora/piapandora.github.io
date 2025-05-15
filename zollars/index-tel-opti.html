@@ -7,6 +7,23 @@
     <title>Zollars</title>
     <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
     <style>
+        @media (max-width: 500px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            button {
+                font-size: 1em;
+                padding: 0.75rem;
+                
+                touch-action: manipulation;
+            }
+        }
+
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -19,7 +36,7 @@
             margin: 0 auto;
         }
 
-        button {
+        /* button {
             background-color: #F1E1B3;
             color: #000;
             font-size: 1em;
@@ -28,16 +45,37 @@
             padding: 0.5rem;
             border-radius: 10px;
             box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+        } */
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            background-color: #F1E1B3;
+            color: #000;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
         }
 
-        #numpad {
+        /* #numpad {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 0.33rem;
             padding: 5.09rem 4rem;
             opacity: 0;
             transition: opacity 2s ease-in-out;
+        } */
+
+        #numpad {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+            gap: 10px;
+            padding: 2.5rem;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
         }
+
 
         .container1 {
             background-color: #202030;
@@ -200,6 +238,7 @@
                 <p id="solPriceField" class="price">...</p>
                 <p id="suiPriceField" class="price">...</p>
                 <p id="total" class="total-price">...</p>
+                <p id="total-in-try" class="total-price">...</p>
                 <p id="total-in-btc" class="total-price">...</p>
             </div>
         </section>
@@ -221,12 +260,14 @@
         const solPriceField = document.getElementById("solPriceField");
         const suiPriceField = document.getElementById("suiPriceField");
         const total = document.getElementById("total");
+        const totalInTry = document.getElementById("total-in-try");
         const totalInBtc = document.getElementById("total-in-btc");
         const totalTooltips = document.getElementById("total-tooltips");
 
         let nessyOK = false;
         let refreshTimer = 0;
-        let showTotalInUsd = true;
+        // let showTotalInUsd = true;
+        let showingCurrency = 0;
         let legolas = 0;
 
         let TTtether = 0;
@@ -255,7 +296,7 @@
 
         tetherPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of Tether = $${TTtether}`;
+            logoTooltipText.textContent = `Current Price of Tether = $${TTtether.toLocaleString()}`;
         });
 
         tetherPriceField.addEventListener("mouseleave", function() {
@@ -264,7 +305,7 @@
         
         btcPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of Bitcoin = $${TTbtc}`;
+            logoTooltipText.textContent = `Current Price of Bitcoin = $${TTbtc.toLocaleString()}`;
         });
 
         btcPriceField.addEventListener("mouseleave", function() {
@@ -273,7 +314,7 @@
 
         ethPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of Ethereum = $${TTeth}`;
+            logoTooltipText.textContent = `Current Price of Ethereum = $${TTeth.toLocaleString()}`;
         });
 
         ethPriceField.addEventListener("mouseleave", function() {
@@ -282,7 +323,7 @@
 
         solPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of Solana = $${TTsol}`;
+            logoTooltipText.textContent = `Current Price of Solana = $${TTsol.toLocaleString()}`;
         });
 
         solPriceField.addEventListener("mouseleave", function() {
@@ -291,7 +332,7 @@
 
         suiPriceField.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of Sui = $${TTsui}`;
+            logoTooltipText.textContent = `Current Price of Sui = $${TTsui.toLocaleString()}`;
         });
 
         suiPriceField.addEventListener("mouseleave", function() {
@@ -307,6 +348,15 @@
             logoTooltipText.style.display = "none";
         });
 
+        totalInTry.addEventListener("mouseover", function() {
+            logoTooltipText.style.display = "block";
+            logoTooltipText.textContent = "Grand Total in TL";
+        });
+
+        totalInTry.addEventListener("mouseleave", function() {
+            logoTooltipText.style.display = "none";
+        });
+
         totalInBtc.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
             logoTooltipText.textContent = "Grand Total in BTC";
@@ -318,9 +368,16 @@
 
         logo.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            if (showTotalInUsd) {
+            // if (showTotalInUsd) {
+            //     logoTooltipText.textContent = "Show Total in BTC?";
+            // } else {
+            //     logoTooltipText.textContent = "Show Total in USD?";
+            // }
+            if (showingCurrency % 3 === 0) {
+                logoTooltipText.textContent = "Show Total in TL?";
+            } else if (showingCurrency % 3 === 1){
                 logoTooltipText.textContent = "Show Total in BTC?";
-            } else {
+            } else if (showingCurrency % 3 === 2){
                 logoTooltipText.textContent = "Show Total in USD?";
             }
         });
@@ -458,12 +515,19 @@
             solPriceField.style.display = solanaAmount === 0 ? "none" : "block";
             suiPriceField.style.display = suiAmount === 0 ? "none" : "block";
 
-            total.style.display = showTotalInUsd ? "block" : "none";
-            totalInBtc.style.display = showTotalInUsd ? "none" : "block";
+            // total.style.display = showTotalInUsd ? "block" : "none";
+            // totalInTry.style.display = showTotalInUsd ? "none" : "block";
+            // totalInBtc.style.display = showTotalInUsd ? "none" : "block";
+
+            total.style.display = "block";
+            totalInTry.style.display = "none";
+            totalInBtc.style.display = "none";
 
             let errorCount = 0;
 
             const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,solana,sui&vs_currencies=usd';
+            const tryApiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=try'
+
             async function fetchCryptoPrices() {
                 container1.style.display = "none";
                 container2.style.display = "block";
@@ -484,28 +548,41 @@
 
                 try {
                     const response = await fetch(apiUrl);
+                    const responseTry = await fetch(tryApiUrl);
+
                     const data = await response.json();
+                    const dataTry = await responseTry.json();
 
                     const tetherPrice = data.tether.usd * tetherAmount;
                     const btcPrice = data.bitcoin.usd * bitcoinAmount;
                     const ethPrice = data.ethereum.usd * ethereumAmount;
                     const solPrice = data.solana.usd * solanaAmount;
                     const suiPrice = data.sui.usd * suiAmount;
+                    
                     const grandTotal = tetherPrice + btcPrice + ethPrice + solPrice + suiPrice;
+                    const grandTotalInTry = grandTotal * dataTry.tether.try;
                     const grandTotalInBtc = grandTotal / data.bitcoin.usd;
+                    
+                    const tetherAlloc = Math.round((tetherPrice * 100) / grandTotal);
+                    const btcAlloc = Math.round((btcPrice * 100) / grandTotal);
+                    const ethAlloc = Math.round((ethPrice * 100) / grandTotal);
+                    const solAlloc = Math.round((solPrice * 100) / grandTotal);
+                    const suiAlloc = Math.round((suiPrice * 100) / grandTotal);
 
-                    tetherPriceField.innerText = `${tetherAmount} USDT - $${tetherPrice.toLocaleString()}`;
-                    btcPriceField.innerText = `${bitcoinAmount} BTC - $${btcPrice.toLocaleString()}`;
-                    ethPriceField.innerText = `${ethereumAmount} ETH - $${ethPrice.toLocaleString()}`;
-                    solPriceField.innerText = `${solanaAmount} SOL - $${solPrice.toLocaleString()}`;
-                    suiPriceField.innerText = `${suiAmount} SUI - $${suiPrice.toLocaleString()}`;
-                    total.innerText = `$${grandTotal.toLocaleString()}`;
+                    tetherPriceField.innerText = `${tetherAmount} USDT - $${Math.round(tetherPrice).toLocaleString()} - ${tetherAlloc}%`;
+                    btcPriceField.innerText = `${bitcoinAmount} BTC - $${Math.round(btcPrice).toLocaleString()} - ${btcAlloc}%`;
+                    ethPriceField.innerText = `${ethereumAmount} ETH - $${Math.round(ethPrice).toLocaleString()} - ${ethAlloc}%`;
+                    solPriceField.innerText = `${solanaAmount} SOL - $${Math.round(solPrice).toLocaleString()} - ${solAlloc}%`;
+                    suiPriceField.innerText = `${suiAmount} SUI - $${Math.round(suiPrice).toLocaleString()} - ${suiAlloc}%`;
+                    
+                    total.innerText = `$${Math.round(grandTotal).toLocaleString()}`;
+                    totalInTry.innerText = `${Math.round(grandTotalInTry).toLocaleString()} TL`;
                     totalInBtc.innerText = `${grandTotalInBtc.toLocaleString()} BTC`;
 
                     TTtether = data.tether.usd;
-                    TTbtc = data.bitcoin.usd;
-                    TTeth = data.ethereum.usd;
-                    TTsol = data.solana.usd;
+                    TTbtc = Math.round(data.bitcoin.usd);
+                    TTeth = Math.round(data.ethereum.usd);
+                    TTsol = Math.round(data.solana.usd);
                     TTsui = data.sui.usd;
                 } catch (error) {
                     console.error('Error fetching the crypto prices:', error);
@@ -527,17 +604,29 @@
         }
 
         function toggleUnitOfTotal() {
-            if (showTotalInUsd) {
+            if (showingCurrency % 3 === 0) {
                 total.style.display = "none";
-                totalInBtc.style.display = "block";
-                showTotalInUsd = false;
-                logoTooltipText.textContent = "Show Total in USD?";
-                console.log("Showing Total in BTC")
-            } else {
+                totalInTry.style.display = "block";
                 totalInBtc.style.display = "none";
-                total.style.display = "block";
-                showTotalInUsd = true;
+                // showTotalInUsd = false;
+                showingCurrency++;
                 logoTooltipText.textContent = "Show Total in BTC?";
+                console.log("Showing Total in TL");
+            } else if (showingCurrency % 3 === 1){
+                total.style.display = "none";
+                totalInTry.style.display = "none";
+                totalInBtc.style.display = "block";
+                showingCurrency++;
+                // showTotalInUsd = true;
+                logoTooltipText.textContent = "Show Total in USD?";
+                console.log("Showing Total in BTC");
+            } else if (showingCurrency % 3 === 2){
+                total.style.display = "block";
+                totalInTry.style.display = "none";
+                totalInBtc.style.display = "none";
+                showingCurrency = 0;
+                // showTotalInUsd = true;
+                logoTooltipText.textContent = "Show Total in TL?";
                 console.log("Showing Total in USD");
             }
         }
