@@ -139,13 +139,13 @@
             white-space: nowrap;
         }
 
-        @media (max-width: 500px) {
+        @media (max-width: 720px) {
             body {
-                padding: 4rem 1rem 1rem 1rem;
+                padding: 4rem 1.5rem 2rem 1.5rem;
             }
 
             main {
-                max-width: 333px;
+                max-width: 600px;
             }
 
             h1 {
@@ -153,16 +153,15 @@
             }
 
             #numpad {
-                grid-template-columns: repeat(5, minmax(50px, 1fr));
+                grid-template-columns: repeat(5, minmax(40px, 1fr));
                 padding: 1rem;
                 opacity: 0;
                 transition: opacity 2s ease-in-out;
             }
 
             button {
-                font-size: 1em;
-                padding: 0.66rem;
-                
+                font-size: 1.1em;
+                padding: 0.5rem;
                 /* touch-action: manipulation; */
             }
 
@@ -172,6 +171,21 @@
 
             .total-price {
                 font-size: 1.66em;
+            }
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 4rem 1rem 1rem 1rem;
+            }
+
+            main {
+                max-width: 400px;
+            }
+
+            button {
+                padding: 0.66rem;
+                /* touch-action: manipulation; */
             }
         }
     </style>
@@ -557,11 +571,11 @@
                     const solAlloc = Math.round((solPrice * 100) / grandTotal);
                     const suiAlloc = Math.round((suiPrice * 100) / grandTotal);
 
-                    tetherPriceField.innerText = `${tetherAmount} USD ∙ ∙ ∙ $${Math.round(tetherPrice).toLocaleString()} ∙ ∙ ∙ ${tetherAlloc}%`;
-                    btcPriceField.innerText = `${bitcoinAmount} BTC ∙ ∙ ∙ $${Math.round(btcPrice).toLocaleString()} ∙ ∙ ∙ ${btcAlloc}%`;
-                    ethPriceField.innerText = `${ethereumAmount} ETH ∙ ∙ ∙ $${Math.round(ethPrice).toLocaleString()} ∙ ∙ ∙ ${ethAlloc}%`;
-                    solPriceField.innerText = `${solanaAmount} SOL ∙ ∙ ∙ $${Math.round(solPrice).toLocaleString()} ∙ ∙ ∙ ${solAlloc}%`;
-                    suiPriceField.innerText = `${suiAmount} SUI ∙ ∙ ∙ $${Math.round(suiPrice).toLocaleString()} ∙ ∙ ∙ ${suiAlloc}%`;
+                    tetherPriceField.innerText = `${tetherAmount} USD ∙ ∙ $${Math.round(tetherPrice).toLocaleString()} ∙ ∙ ${tetherAlloc}%`;
+                    btcPriceField.innerText = `${bitcoinAmount} BTC ∙ ∙ $${Math.round(btcPrice).toLocaleString()} ∙ ∙ ${btcAlloc}%`;
+                    ethPriceField.innerText = `${ethereumAmount} ETH ∙ ∙ $${Math.round(ethPrice).toLocaleString()} ∙ ∙ ${ethAlloc}%`;
+                    solPriceField.innerText = `${solanaAmount} SOL ∙ ∙ $${Math.round(solPrice).toLocaleString()} ∙ ∙ ${solAlloc}%`;
+                    suiPriceField.innerText = `${suiAmount} SUI ∙ ∙ $${Math.round(suiPrice).toLocaleString()} ∙ ∙ ${suiAlloc}%`;
                     
                     total.innerText = `$${Math.round(grandTotal).toLocaleString()}`;
                     totalInTry.innerText = `${Math.round(grandTotalInTry).toLocaleString()} TL`;
