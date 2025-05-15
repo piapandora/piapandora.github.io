@@ -36,17 +36,6 @@
             margin: 0 auto;
         }
 
-        /* button {
-            background-color: #F1E1B3;
-            color: #000;
-            font-size: 1em;
-            font-weight: normal;
-            margin: 7px;
-            padding: 0.5rem;
-            border-radius: 10px;
-            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
-        } */
-
         button {
             width: 100%;
             padding: 0.5rem;
@@ -58,18 +47,8 @@
             box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
         }
 
-        /* #numpad {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 0.33rem;
-            padding: 5.09rem 4rem;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
-        } */
-
         #numpad {
             display: grid;
-            /* grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); */
             grid-template-columns: repeat(5, minmax(50px, 1fr));
             gap: 10px;
             padding: 2rem;
@@ -224,8 +203,6 @@
                 <button id="btn-38">38</button>
                 <button id="btn-39">39</button>
                 <button id="btn-40">40</button>
-                <!-- <button id="btn-41">41</button>
-                <button id="btn-42">42</button> -->
             </div>
         </section>
         <section class="container2">
@@ -269,7 +246,6 @@
 
         let nessyOK = false;
         let refreshTimer = 0;
-        // let showTotalInUsd = true;
         let showingCurrency = 0;
         let legolas = 0;
 
@@ -371,11 +347,6 @@
 
         logo.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
-            // if (showTotalInUsd) {
-            //     logoTooltipText.textContent = "Show Total in BTC?";
-            // } else {
-            //     logoTooltipText.textContent = "Show Total in USD?";
-            // }
             if (showingCurrency % 3 === 0) {
                 logoTooltipText.textContent = "Show Total in TL?";
             } else if (showingCurrency % 3 === 1){
@@ -506,21 +477,17 @@
         }
 
         function initialize() {
-            const tetherAmount = 1000;
+            const tetherAmount = 0;
             const bitcoinAmount = 0.1;
             const ethereumAmount = 0.5;
             const solanaAmount = 5;
-            const suiAmount = 50;
+            const suiAmount = 0;
 
             tetherPriceField.style.display = tetherAmount === 0 ? "none" : "block";
             btcPriceField.style.display = bitcoinAmount === 0 ? "none" : "block";
             ethPriceField.style.display = ethereumAmount === 0 ? "none" : "block";
             solPriceField.style.display = solanaAmount === 0 ? "none" : "block";
             suiPriceField.style.display = suiAmount === 0 ? "none" : "block";
-
-            // total.style.display = showTotalInUsd ? "block" : "none";
-            // totalInTry.style.display = showTotalInUsd ? "none" : "block";
-            // totalInBtc.style.display = showTotalInUsd ? "none" : "block";
 
             total.style.display = "block";
             totalInTry.style.display = "none";
@@ -572,11 +539,11 @@
                     const solAlloc = Math.round((solPrice * 100) / grandTotal);
                     const suiAlloc = Math.round((suiPrice * 100) / grandTotal);
 
-                    tetherPriceField.innerText = `• ${tetherAmount} USD ∙ ∙ ∙ $${Math.round(tetherPrice).toLocaleString()} ∙ ∙ ∙ ${tetherAlloc}% •`;
-                    btcPriceField.innerText = `• ${bitcoinAmount} BTC ∙ ∙ ∙ $${Math.round(btcPrice).toLocaleString()} ∙ ∙ ∙ ${btcAlloc}% •`;
-                    ethPriceField.innerText = `• ${ethereumAmount} ETH ∙ ∙ ∙ $${Math.round(ethPrice).toLocaleString()} ∙ ∙ ∙ ${ethAlloc}% •`;
-                    solPriceField.innerText = `• ${solanaAmount} SOL ∙ ∙ ∙ $${Math.round(solPrice).toLocaleString()} ∙ ∙ ∙ ${solAlloc}% •`;
-                    suiPriceField.innerText = `• ${suiAmount} SUI ∙ ∙ ∙ $${Math.round(suiPrice).toLocaleString()} ∙ ∙ ∙ ${suiAlloc}% •`;
+                    tetherPriceField.innerText = `${tetherAmount} USD ∙ ∙ ∙ $${Math.round(tetherPrice).toLocaleString()} ∙ ∙ ∙ ${tetherAlloc}%`;
+                    btcPriceField.innerText = `${bitcoinAmount} BTC ∙ ∙ ∙ $${Math.round(btcPrice).toLocaleString()} ∙ ∙ ∙ ${btcAlloc}%`;
+                    ethPriceField.innerText = `${ethereumAmount} ETH ∙ ∙ ∙ $${Math.round(ethPrice).toLocaleString()} ∙ ∙ ∙ ${ethAlloc}%`;
+                    solPriceField.innerText = `${solanaAmount} SOL ∙ ∙ ∙ $${Math.round(solPrice).toLocaleString()} ∙ ∙ ∙ ${solAlloc}%`;
+                    suiPriceField.innerText = `${suiAmount} SUI ∙ ∙ ∙ $${Math.round(suiPrice).toLocaleString()} ∙ ∙ ∙ ${suiAlloc}%`;
                     
                     total.innerText = `$${Math.round(grandTotal).toLocaleString()}`;
                     totalInTry.innerText = `${Math.round(grandTotalInTry).toLocaleString()} TL`;
@@ -611,7 +578,6 @@
                 total.style.display = "none";
                 totalInTry.style.display = "block";
                 totalInBtc.style.display = "none";
-                // showTotalInUsd = false;
                 showingCurrency++;
                 logoTooltipText.textContent = "Show Total in BTC?";
                 console.log("Showing Total in TL");
@@ -620,7 +586,6 @@
                 totalInTry.style.display = "none";
                 totalInBtc.style.display = "block";
                 showingCurrency++;
-                // showTotalInUsd = true;
                 logoTooltipText.textContent = "Show Total in USD?";
                 console.log("Showing Total in BTC");
             } else if (showingCurrency % 3 === 2){
@@ -628,7 +593,6 @@
                 totalInTry.style.display = "none";
                 totalInBtc.style.display = "none";
                 showingCurrency = 0;
-                // showTotalInUsd = true;
                 logoTooltipText.textContent = "Show Total in TL?";
                 console.log("Showing Total in USD");
             }
@@ -649,7 +613,7 @@
         //     }
         // }, { passive: false });
 
-        const devMode = false;
+        const devMode = true;
         devMode ? initialize() : showNumpad();
     </script>
 </body>
