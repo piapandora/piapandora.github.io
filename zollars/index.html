@@ -39,7 +39,6 @@
             transition: opacity 2s ease-in-out;
         }
 
-
         .container1 {
             background-color: #202030;
             background-image: linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg');
@@ -139,6 +138,7 @@
             white-space: nowrap;
         }
 
+        /* @media (max-width: 45em) { */
         @media (max-width: 720px) {
             body {
                 padding: 4rem 1rem 1rem 1rem;
@@ -161,10 +161,10 @@
             }
 
             button {
-                margin: 0px;
+                margin: 0;
                 font-size: 1.1em;
                 padding: 0.5rem;
-                /* touch-action: manipulation; */
+                touch-action: manipulation;
             }
 
             .price {
@@ -179,10 +179,6 @@
         @media (max-width: 500px) {
             body {
                 padding: 4rem 1rem 1rem 1rem;
-            }
-
-            main {
-                max-width: 400px;
             }
         }
 
@@ -277,7 +273,7 @@
         let nessyOK = false;
         let refreshTimer = 0;
         let showingCurrency = 0;
-        let legolas = 0;
+        let tooltipFlag = true;
 
         let TTtether = 0;
         let TTbtc = 0;
@@ -378,11 +374,11 @@
         logo.addEventListener("mouseover", function() {
             logoTooltipText.style.display = "block";
             if (showingCurrency % 3 === 0) {
-                logoTooltipText.textContent = "Show Total in TL?";
-            } else if (showingCurrency % 3 === 1){
-                logoTooltipText.textContent = "Show Total in BTC?";
-            } else if (showingCurrency % 3 === 2){
                 logoTooltipText.textContent = "Show Total in USD?";
+            } else if (showingCurrency % 3 === 1){
+                logoTooltipText.textContent = "Show Total in TL?";
+            } else if (showingCurrency % 3 === 2){
+                logoTooltipText.textContent = "Show Total in BTC?";
             }
         });
 
@@ -394,7 +390,7 @@
             const id = button.id;
             clickedState[id] = false;
 
-            button.addEventListener("click", function () {
+            button.addEventListener("click", function() {
                 if (nessyOK) return;
 
                 if (!clickedState[id]) {
@@ -518,10 +514,11 @@
             ethPriceField.style.display = ethereumAmount === 0 ? "none" : "block";
             solPriceField.style.display = solanaAmount === 0 ? "none" : "block";
             suiPriceField.style.display = suiAmount === 0 ? "none" : "block";
-
-            total.style.display = "block";
-            totalInTry.style.display = "none";
-            totalInBtc.style.display = "none";
+            
+            if (tooltipFlag) {
+                toggleUnitOfTotal();
+                tooltipFlag = false;
+            }
 
             let errorCount = 0;
 
@@ -570,7 +567,7 @@
                     const suiAlloc = Math.round((suiPrice * 100) / grandTotal);
 
                     tetherPriceField.innerText = `${tetherAmount} USD ∙ ∙ $${Math.round(tetherPrice).toLocaleString()} ∙ ∙ ${tetherAlloc}%`;
-                    btcPriceField.innerText = `${bitcoinAmount} BTC ∙ ∙ $${Math.round(btcPrice).toLocaleString()} ∙ ∙ ${btcAlloc}%`;
+                    btcPriceField.innerText = `${bitcoinAmount} BTC ∙ ∙ $${Math.round(btcPrice).toLocaleString()} ∙ ∙ ${btcAlloc}% `;
                     ethPriceField.innerText = `${ethereumAmount} ETH ∙ ∙ $${Math.round(ethPrice).toLocaleString()} ∙ ∙ ${ethAlloc}%`;
                     solPriceField.innerText = `${solanaAmount} SOL ∙ ∙ $${Math.round(solPrice).toLocaleString()} ∙ ∙ ${solAlloc}%`;
                     suiPriceField.innerText = `${suiAmount} SUI ∙ ∙ $${Math.round(suiPrice).toLocaleString()} ∙ ∙ ${suiAlloc}%`;
@@ -605,35 +602,31 @@
 
         function toggleUnitOfTotal() {
             if (showingCurrency % 3 === 0) {
-                total.style.display = "none";
-                totalInTry.style.display = "block";
-                totalInBtc.style.display = "none";
-                showingCurrency++;
-                logoTooltipText.textContent = "Show Total in BTC?";
-                console.log("Showing Total in TL");
-            } else if (showingCurrency % 3 === 1){
-                total.style.display = "none";
-                totalInTry.style.display = "none";
-                totalInBtc.style.display = "block";
-                showingCurrency++;
-                logoTooltipText.textContent = "Show Total in USD?";
-                console.log("Showing Total in BTC");
-            } else if (showingCurrency % 3 === 2){
                 total.style.display = "block";
                 totalInTry.style.display = "none";
                 totalInBtc.style.display = "none";
-                showingCurrency = 0;
                 logoTooltipText.textContent = "Show Total in TL?";
                 console.log("Showing Total in USD");
+                showingCurrency++;
+            } else if (showingCurrency % 3 === 1){
+                total.style.display = "none";
+                totalInTry.style.display = "block";
+                totalInBtc.style.display = "none";
+                logoTooltipText.textContent = "Show Total in BTC?";
+                console.log("Showing Total in TL");
+                showingCurrency++;
+            } else if (showingCurrency % 3 === 2){
+                total.style.display = "none";
+                totalInTry.style.display = "none";
+                totalInBtc.style.display = "block";
+                logoTooltipText.textContent = "Show Total in USD?";
+                console.log("Showing Total in BTC");
+                showingCurrency = 0;
             }
         }
 
         logo.addEventListener('click', function() {
-            legolas++;
-            // console.log(`Legolas: ${legolas}`);
-            if (legolas % 1 === 0) {
-                toggleUnitOfTotal();
-            }
+            toggleUnitOfTotal();
         });
 
         // document.addEventListener('keydown', (event) => {
