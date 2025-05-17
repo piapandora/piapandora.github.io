@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hypno Ball</title>
+    <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+    <style>
+        body {
+            background: #111;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        .ball {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: orange;
+            position: absolute;
+            top: 66%;
+            transform: translateY(-50%);
+            animation: swing 2.2s cubic-bezier(0.44, 0, 0.56, 1) infinite alternate;
+        }
+
+        @keyframes swing {
+            0% {
+                left: 22%;
+            }
+
+            100% {
+                left: 78%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ball"></div>
+</body>
+
+</html>
