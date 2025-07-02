@@ -138,7 +138,6 @@
             white-space: nowrap;
         }
 
-        /* @media (max-width: 45em) { */
         @media (max-width: 720px) {
             body {
                 padding: 4rem 1rem 1rem 1rem;
@@ -464,8 +463,6 @@
             if (allNessy && noExtra) {
                 nessyOK = true;
 
-                // container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg')";
-
                 requestAnimationFrame(() => {
                     numpad.style.opacity = '0';
                 });
@@ -521,7 +518,8 @@
             const ethereumAmount = 0;
             const solanaAmount = 0;
             const suiAmount = 0;
-            const paxgAmount = 1.71443202;
+            const paxgAmount = 1.71;
+            // const paxgAmount = 1.71443202;
 
             tetherPriceField.style.display = tetherAmount === 0 ? "none" : "block";
             btcPriceField.style.display = bitcoinAmount === 0 ? "none" : "block";
@@ -649,15 +647,8 @@
             toggleUnitOfTotal();
         });
 
-        // document.addEventListener('keydown', (event) => {
-        //     if (event.code === 'Space') {
-        //         event.preventDefault();
-        //         toggleUnitOfTotal();
-        //     }
-        // }, { passive: false });
-
-        const devMode = false;
-        devMode ? initialize() : showNumpad();
+        const lightMode = false;
+        lightMode ? initialize() : showNumpad();
     </script>
 </body>
 </html>
