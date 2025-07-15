@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aromatic Oracle - Bitcoin Price</title>
+    <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+    <style>
+        /* Dark theme base */
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #121224;
+            color: #eee;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* Container with three columns */
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Each panel styling */
+        .panel {
+            background: #1e1e3a;
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1 1 0;
+            box-shadow: 0 0 15px #2244ff66;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #79aaff;
+            margin-bottom: 12px;
+            font-weight: 700;
+            user-select: none;
+            text-shadow: 0 0 8px #4477ffaa;
+        }
+
+        h2 {
+            color: #79aaff;
+            margin-bottom: 42px;
+            font-weight: 700;
+            user-select: none;
+            text-shadow: 0 0 8px #4477ffaa;
+        }
+
+        /* Oracle UI styles */
+        #oracleUI {
+            text-align: center;
+            color: #fffae6;
+        }
+
+        button {
+            background: #4a90e2;
+            border: none;
+            padding: 12px 24px;
+            margin: 20px 10px 0 10px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            transition: background 0.3s ease;
+            user-select: none;
+            min-width: 200px;
+        }
+
+        button:hover {
+            background: #3572c4;
+        }
+
+        .result {
+            margin-top: 6px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffaa;
+            min-height: 1.2em;
+            user-select: text;
+        }
+
+        .label {
+            font-weight: 600;
+            margin-top: 24px;
+            margin-bottom: 6px;
+            color: #b0d7ff;
+            text-transform: uppercase;
+            letter-spacing: 1.1px;
+        }
+
+        /* Chart styling */
+        canvas {
+            max-width: 100%;
+            height: 300px;
+            background: #222244;
+            border-radius: 12px;
+            box-shadow: 0 0 10px #2255ff55;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Price Probability Chart Panel -->
+        <div class="panel">
+            <h2>Price Probability</h2>
+            <canvas id="priceChart"></canvas>
+        </div>
+
+        <!-- Oracle UI Panel -->
+        <div class="panel" id="oracleUI">
+            <h1>Aromatic Oracle</h1>
+
+            <div>
+                <div class="label">Market Top Price</div>
+                <div id="priceResult" class="result">$165,000</div>
+            </div>
+
+            <div>
+                <div class="label">Market Top Date</div>
+                <div id="dateResult" class="result">01 NOV 2025</div>
+            </div>
+
+            <button id="btnPredictAll">Time The Top</button>
+        </div>
+
+        <!-- Date Probability Chart Panel -->
+        <div class="panel">
+            <h2>Date Probability</h2>
+            <canvas id="dateChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Data sets
+        const quarters = [
+            "2025 - Q3", "2025 - Q4",
+            "2026 - Q1", "2026 - Q2", "2026 - Q3", "2026 - Q4",
+            "2027 - Q1", "2027 - Q2", "2027 - Q3", "2027 - Q4",
+            "2028 - Q1", "2028 - Q2", "2028 - Q3", "2028 - Q4"
+        ];
+        const quarterProbabilities = [
+            11, 18,
+            15, 13, 10, 7,
+            6, 5, 4, 3,
+            3, 2, 2, 1
+        ];
+
+        const priceRanges = [
+            "120k - 135k", "135k - 150k", "150k - 165k",
+            "165k - 180k", "180k - 200k", "200k - 250k", "250k - 300k",
+            "300k - 400k", "400k - 500k", "500k +"
+        ];
+        const priceProbabilities = [
+            9, 14, 21,
+            17, 14, 9, 6,
+            5, 3, 2
+        ];
+
+        // Weighted random helper
+        function weightedRandomIndex(weights) {
+            const total = weights.reduce((a, b) => a + b, 0);
+            let r = Math.random() * total;
+            for (let i = 0; i < weights.length; i++) {
+                if (r < weights[i]) return i;
+                r -= weights[i];
+            }
+            return weights.length - 1;
+        }
+
+        // Combined prediction button event
+        document.getElementById("btnPredictAll").addEventListener("click", () => {
+            // Predict Price
+            const priceIdx = weightedRandomIndex(priceProbabilities);
+            const chosenPrice = priceRanges[priceIdx];
+            document.getElementById("priceResult").textContent = chosenPrice;
+
+            // Predict Date
+            const dateIdx = weightedRandomIndex(quarterProbabilities);
+            const chosenDate = quarters[dateIdx];
+            document.getElementById("dateResult").textContent = chosenDate;
+        });
+
+        // Create Price Probability Bar Chart
+        const priceCtx = document.getElementById('priceChart').getContext('2d');
+        const priceChart = new Chart(priceCtx, {
+            type: 'bar',
+            data: {
+                labels: priceRanges,
+                datasets: [{
+                    label: 'Probability (%)',
+                    data: priceProbabilities,
+                    backgroundColor: '#4a90e2',
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    hoverBackgroundColor: '#3572c4'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 25,
+                        grid: { color: '#444466' },
+                        ticks: { color: '#aabbff' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#aabbff' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#aabbff' }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#3355bb',
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
+                }
+            }
+        });
+
+        // Create Date Probability Bar Chart
+        const dateCtx = document.getElementById('dateChart').getContext('2d');
+        const dateChart = new Chart(dateCtx, {
+            type: 'bar',
+            data: {
+                labels: quarters,
+                datasets: [{
+                    label: 'Probability (%)',
+                    data: quarterProbabilities,
+                    backgroundColor: '#a1caff',
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    hoverBackgroundColor: '#4477cc'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 25,
+                        grid: { color: '#444466' },
+                        ticks: { color: '#aabbff' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#aabbff',
+                            maxRotation: 90,
+                            minRotation: 45
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#aabbff' }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#3355bb',
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
