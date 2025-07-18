@@ -138,6 +138,7 @@
             white-space: nowrap;
         }
 
+        /* @media (max-width: 45em) { */
         @media (max-width: 720px) {
             body {
                 padding: 4rem 1rem 1rem 1rem;
@@ -242,8 +243,6 @@
                 <p id="ethPriceField" class="price">...</p>
                 <p id="solPriceField" class="price">...</p>
                 <p id="suiPriceField" class="price">...</p>
-                <p id="paxgPriceField" class="price">...</p>
-                <p id="futuresPriceField" class="price">...</p>
                 <p id="total" class="total-price">...</p>
                 <p id="total-in-try" class="total-price">...</p>
                 <p id="total-in-btc" class="total-price">...</p>
@@ -266,8 +265,6 @@
         const ethPriceField = document.getElementById("ethPriceField");
         const solPriceField = document.getElementById("solPriceField");
         const suiPriceField = document.getElementById("suiPriceField");
-        const paxgPriceField = document.getElementById("paxgPriceField");
-        const futuresPriceField = document.getElementById("futuresPriceField");
         const total = document.getElementById("total");
         const totalInTry = document.getElementById("total-in-try");
         const totalInBtc = document.getElementById("total-in-btc");
@@ -283,9 +280,7 @@
         let TTeth = 0;
         let TTsol = 0;
         let TTsui = 0;
-        let TTpaxg = 0;
-        let TTfutures = 0;
-        
+
         const logoTooltipElement = document.getElementById('logo-tooltip');
         const logoTooltipText = document.getElementById('logo-tooltip-text');
         const tetherTooltipText = document.getElementById('tether-tooltip-text');
@@ -293,8 +288,6 @@
         const ethTooltipText = document.getElementById('eth-tooltip-text');
         const solTooltipText = document.getElementById('sol-tooltip-text');
         const suiTooltipText = document.getElementById('sui-tooltip-text');
-        const paxgTooltipText = document.getElementById('paxg-tooltip-text');
-        const futuresTooltipText = document.getElementById('futures-tooltip-text');
         const totalTooltipText = document.getElementById('total-tooltip-text');
 
         title.addEventListener("mouseover", function() {
@@ -348,24 +341,6 @@
         });
 
         suiPriceField.addEventListener("mouseleave", function() {
-            logoTooltipText.style.display = "none";
-        });
-
-        paxgPriceField.addEventListener("mouseover", function() {
-            logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Current Price of PAX Gold = $${TTpaxg.toLocaleString()}`;
-        });
-
-        paxgPriceField.addEventListener("mouseleave", function() {
-            logoTooltipText.style.display = "none";
-        });
-
-        futuresPriceField.addEventListener("mouseover", function() {
-            logoTooltipText.style.display = "block";
-            logoTooltipText.textContent = `Funds in Binance Futures = ~$${TTfutures.toLocaleString()}`;
-        });
-
-        futuresPriceField.addEventListener("mouseleave", function() {
             logoTooltipText.style.display = "none";
         });
 
@@ -476,6 +451,8 @@
             if (allNessy && noExtra) {
                 nessyOK = true;
 
+                // container1.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.33), rgba(0, 0, 0, 0.33)), url('misc/logo-1.jpg')";
+
                 requestAnimationFrame(() => {
                     numpad.style.opacity = '0';
                 });
@@ -528,19 +505,15 @@
         function initialize() {
             const tetherAmount = 0;
             const bitcoinAmount = 0.1;
-            const ethereumAmount = 0;
-            const solanaAmount = 0;
+            const ethereumAmount = 0.5;
+            const solanaAmount = 5;
             const suiAmount = 0;
-            const paxgAmount = 0;
-            const futuresAmount = 1250;
 
             tetherPriceField.style.display = tetherAmount === 0 ? "none" : "block";
             btcPriceField.style.display = bitcoinAmount === 0 ? "none" : "block";
             ethPriceField.style.display = ethereumAmount === 0 ? "none" : "block";
             solPriceField.style.display = solanaAmount === 0 ? "none" : "block";
             suiPriceField.style.display = suiAmount === 0 ? "none" : "block";
-            paxgPriceField.style.display = paxgAmount === 0 ? "none" : "block";
-            futuresPriceField.style.display = futuresAmount === 0 ? "none" : "block";
             
             if (tooltipFlag) {
                 toggleUnitOfTotal();
@@ -549,7 +522,7 @@
 
             let errorCount = 0;
 
-            const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,solana,sui,pax-gold&vs_currencies=usd';
+            const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,solana,sui&vs_currencies=usd';
             const tryApiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=try'
 
             async function fetchCryptoPrices() {
@@ -582,10 +555,8 @@
                     const ethPrice = data.ethereum.usd * ethereumAmount;
                     const solPrice = data.solana.usd * solanaAmount;
                     const suiPrice = data.sui.usd * suiAmount;
-                    const paxgPrice = data["pax-gold"].usd * paxgAmount;
-                    const futuresPrice = futuresAmount;
                     
-                    const grandTotal = tetherPrice + btcPrice + ethPrice + solPrice + suiPrice + paxgPrice + futuresAmount;
+                    const grandTotal = tetherPrice + btcPrice + ethPrice + solPrice + suiPrice;
                     const grandTotalInTry = grandTotal * dataTry.tether.try;
                     const grandTotalInBtc = grandTotal / data.bitcoin.usd;
                     
@@ -594,16 +565,12 @@
                     const ethAlloc = Math.round((ethPrice * 100) / grandTotal);
                     const solAlloc = Math.round((solPrice * 100) / grandTotal);
                     const suiAlloc = Math.round((suiPrice * 100) / grandTotal);
-                    const paxgAlloc = Math.round((paxgPrice * 100) / grandTotal);
-                    const futuresAlloc = Math.round((futuresPrice * 100) / grandTotal);
 
-                    tetherPriceField.innerText = `${tetherAmount} USDT ∙ ∙ $${Math.round(tetherPrice).toLocaleString()} ∙ ∙ ${tetherAlloc}%`;
+                    tetherPriceField.innerText = `${tetherAmount} USD ∙ ∙ $${Math.round(tetherPrice).toLocaleString()} ∙ ∙ ${tetherAlloc}%`;
                     btcPriceField.innerText = `${bitcoinAmount} BTC ∙ ∙ $${Math.round(btcPrice).toLocaleString()} ∙ ∙ ${btcAlloc}% `;
                     ethPriceField.innerText = `${ethereumAmount} ETH ∙ ∙ $${Math.round(ethPrice).toLocaleString()} ∙ ∙ ${ethAlloc}%`;
                     solPriceField.innerText = `${solanaAmount} SOL ∙ ∙ $${Math.round(solPrice).toLocaleString()} ∙ ∙ ${solAlloc}%`;
                     suiPriceField.innerText = `${suiAmount} SUI ∙ ∙ $${Math.round(suiPrice).toLocaleString()} ∙ ∙ ${suiAlloc}%`;
-                    paxgPriceField.innerText = `${paxgAmount} PAXG ∙ ∙ $${Math.round(paxgPrice).toLocaleString()} ∙ ∙ ${paxgAlloc}%`;
-                    futuresPriceField.innerText = `FUTURES ∙ ∙ $${futuresPrice} ∙ ∙ ${futuresAlloc}%`;
                     
                     total.innerText = `$${Math.round(grandTotal).toLocaleString()}`;
                     totalInTry.innerText = `${Math.round(grandTotalInTry).toLocaleString()} TL`;
@@ -614,8 +581,6 @@
                     TTeth = Math.round(data.ethereum.usd);
                     TTsol = Math.round(data.solana.usd);
                     TTsui = data.sui.usd;
-                    TTpaxg = data["pax-gold"].usd;
-                    TTfutures = futuresPrice;
                 } catch (error) {
                     console.error('Error fetching the crypto prices:', error);
                     errorCount++;
@@ -625,8 +590,6 @@
                     ethPriceField.innerText = 'Error fetching data';
                     solPriceField.innerText = 'Error fetching data';
                     suiPriceField.innerText = 'Error fetching data';
-                    paxgPriceField.innerText = 'Error fetching data';
-                    futuresPriceField.innerText = 'Error fetching data';
 
                     if (errorCount < 3) {
                         setTimeout(fetchCryptoPrices, 2000);
@@ -666,8 +629,15 @@
             toggleUnitOfTotal();
         });
 
-        const lightMode = false;
-        lightMode ? initialize() : showNumpad();
+        // document.addEventListener('keydown', (event) => {
+        //     if (event.code === 'Space') {
+        //         event.preventDefault();
+        //         toggleUnitOfTotal();
+        //     }
+        // }, { passive: false });
+
+        const devMode = false;
+        devMode ? initialize() : showNumpad();
     </script>
 </body>
 </html>
