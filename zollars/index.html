@@ -607,7 +607,9 @@
                     
                     total.innerText = `$${Math.round(grandTotal).toLocaleString()}`;
                     totalInTry.innerText = `${Math.round(grandTotalInTry).toLocaleString()} TL`;
-                    totalInBtc.innerText = `${grandTotalInBtc.toLocaleString()} BTC`;
+                    // totalInBtc.innerText = `${grandTotalInBtc.toLocaleString()} BTC`;
+					totalInBtc.innerText = `${grandTotalInBtc.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 4 })} BTC`;
+
 
                     TTtether = data.tether.usd;
                     TTbtc = Math.round(data.bitcoin.usd);
