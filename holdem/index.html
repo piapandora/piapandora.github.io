@@ -22,18 +22,15 @@
 
 		main {
 			color: #eee;
-			font-size: 1.25rem;
+			font-size: 1.35rem;
 			font-style: italic;
 			display: flex;
 			justify-content: space-evenly;
 		}
 		
 		img {
-			/*width: 345px;
-			height: 460px;*/
 			width: 360px;
 			height: 480px;
-			/* border: 15px solid rgba(0, 0, 0, 1); */
 			border: 12px solid rgba(0, 0, 0, 1);
 			border-radius: 10px;
         }
@@ -80,8 +77,6 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			/* margin-left: 19.5px;
-			margin-right: 19.5px; */
 			margin-left: 16px;
 			margin-right: 16px;
 		}
@@ -257,7 +252,7 @@
 			'- RIVER -'
 		];
 
-		let devMode = true;
+		let devMode = false;
 		/*let devMode = false;*/
 		let mainMenu = true;
 		let offline = false;
@@ -630,9 +625,9 @@
 			let two5PadUrls = generate5PadUrls(1, 130, 'two/pia-comfy', 'PIA');
 			let three5PadUrls = generate5PadUrls(1, 130, 'three/luna-comfy', 'LUNA');
 
-			let one5Pad2Urls= generate5PadUrls(957, 982, 'one/petra-one', 'ONE');
-			let two5Pad2Urls = generate5PadUrls(957, 982, 'two/pia-two', 'TWO');
-			let three5Pad2Urls = generate5PadUrls(957, 982, 'three/luna-three', 'THREE');
+			let one5Pad2Urls= generate5PadUrls(1, 1186, 'one/petra-one', 'ONE');
+			let two5Pad2Urls = generate5PadUrls(1, 1186, 'two/pia-two', 'TWO');
+			let three5Pad2Urls = generate5PadUrls(1, 1186, 'three/luna-three', 'THREE');
 
 			let one5Pad3Urls = generate5PadUrls(1, 183, 'one/petra-new', 'PETRA');
 			let two5Pad3Urls = generate5PadUrls(1, 167, 'two/pia-new', 'PIA');
@@ -653,16 +648,16 @@
 				"- LUNA -"
 				];
 
-				if (!maxiNova) {
+				if (maxiNova) {
 					oneUrls = [...one3PadUrls, ...one5PadUrls, ...one5Pad2Urls, ...one5Pad3Urls, ...pony5PadUrls];
 					twoUrls = [...two3PadUrls, ...two5PadUrls, ...two5Pad2Urls, ...two5Pad3Urls, ...pony5PadUrls];
 					threeUrls = [...three3PadUrls, ...three5PadUrls, ...three5Pad2Urls, ...three5Pad3Urls, ...pony5PadUrls];
-					quotes = [...newQuotes, ...newQuotesOff];
+					quotes = [...newQuotesOff];
 				} else {
 					oneUrls = [...one5Pad2Urls];
 					twoUrls = [...two5Pad2Urls];
 					threeUrls = [...three5Pad2Urls];
-					quotes = [...newQuotesOff];
+					quotes = [...newQuotes];
 				}
 			} else {
 				document.title = String.fromCharCode(
