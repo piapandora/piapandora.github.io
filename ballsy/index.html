@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ballsy Bet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #000066;
+        }
+
+        .game-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.33);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .payouts-table {
+            max-width: 300px;
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px auto;
+            font-size: 14px;
+        }
+        
+        .payouts-table th, .payouts-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .payouts-table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        .ball-display {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            min-height: 80px;
+        }
+
+        .ball {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 50px;
+            transition: background-color 0.5s ease;
+            border: 2px solid #aaa;
+        }
+
+        .ball.yellow { background-color: #FFD700; border-color: #E5C100; }
+        .ball.red { background-color: #FF4500; border-color: #E53E00; }
+        .ball.black { background-color: #333; border-color: #000; }
+
+        .controls-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background-color: #eee;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-box p {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-box span {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .message-area {
+            margin: 20px 0;
+            min-height: 40px;
+        }
+
+        #message {
+            font-size: 18px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        #play-button {
+            padding: 24px 24px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #play-button:hover {
+            background-color: #0056b3;
+        }
+
+        #play-button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <table class="payouts-table">
+            <thead>
+                <tr>
+                    <th>Winning Combos</th>
+                    <th>Payouts</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>All Different Colors</td>
+                    <td>$50</td>
+                </tr>
+                <tr>
+                    <td>Three Blacks</td>
+                    <td>$100</td>
+                </tr>
+                <tr>
+                    <td>Three Yellows</td>
+                    <td>$150</td>
+                </tr>
+                <tr>
+                    <td>Three Reds</td>
+                    <td>$200</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ball-display">
+            <div id="ball1" class="ball">?</div>
+            <div id="ball2" class="ball">?</div>
+            <div id="ball3" class="ball">?</div>
+        </div>
+
+        <div class="message-area">
+            <p id="message">Win $1000 to complete the game!</p>
+        </div>
+        
+        <div class="controls-area">
+            <div class="stat-box">
+                <p>Your Money</p>
+                <span id="player-coins">$20</span>
+            </div>
+            <button id="play-button">Draw ($10)</button>
+            <div class="stat-box">
+                <p>House Bank</p>
+                <span id="house-coins">$150</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const playerCoinsDisplay = document.getElementById('player-coins');
+            const houseCoinsDisplay = document.getElementById('house-coins');
+            const playButton = document.getElementById('play-button');
+            const messageDisplay = document.getElementById('message');
+            const balls = [
+                document.getElementById('ball1'),
+                document.getElementById('ball2'),
+                document.getElementById('ball3')
+            ];
+
+            let playerCoins = 50;
+            let houseCoins = 950;
+            const costToPlay = 10;
+
+            const ballBag = [];
+            // Ball distribution: 10 of each color
+            for (let i = 0; i < 10; i++) {
+                ballBag.push('black');
+                ballBag.push('yellow');
+                ballBag.push('red');
+            }
+
+            function updateStatsDisplay() {
+                playerCoinsDisplay.textContent = `$${playerCoins}`;
+                houseCoinsDisplay.textContent = `$${houseCoins}`;
+            }
+
+            function checkGameOver() {
+                if (playerCoins < costToPlay) {
+                    messageDisplay.textContent = "Game Over! You've run out of money!";
+                    playButton.textContent = "Restart Game";
+                } else if (houseCoins <= 0) {
+                    messageDisplay.textContent = "Congratulations! You've won the game!";
+                    playButton.textContent = "Restart Game";
+                }
+            }
+
+            function resetGame() {
+                playerCoins = 20;
+                houseCoins = 150;
+                resetBallDisplay();
+                updateStatsDisplay();
+                playButton.textContent = "Draw ($10)";
+                playButton.disabled = false;
+                messageDisplay.textContent = "Win $1000 to complete the game!";
+            }
+
+            function resetBallDisplay() {
+                balls.forEach(ball => {
+                    ball.textContent = '?';
+                    ball.className = 'ball';
+                });
+            }
+
+            function drawBalls() {
+                const shuffledBag = [...ballBag].sort(() => 0.5 - Math.random());
+                const drawnBalls = [
+                    shuffledBag.pop(),
+                    shuffledBag.pop(),
+                    shuffledBag.pop()
+                ];
+                return drawnBalls;
+            }
+
+            function checkResult(drawnBalls) {
+                const counts = { 'yellow': 0, 'red': 0, 'black': 0 };
+                drawnBalls.forEach(color => {
+                    counts[color]++;
+                });
+
+                const uniqueColors = Object.values(counts).filter(count => count > 0).length;
+                let payout = 0;
+                let resultText = "";
+
+                if (uniqueColors === 3) {
+                    payout = 50;
+                    resultText = "All different colors! You win 50 coins.";
+                } else if (counts['black'] === 3) {
+                    payout = 100;
+                    resultText = "Three Blacks! You win 100 coins.";
+                } else if (counts['yellow'] === 3) {
+                    payout = 150;
+                    resultText = "Three Yellows! You win 150 coins.";
+                } else if (counts['red'] === 3) {
+                    payout = 200;
+                    resultText = "Three Reds! You win 200 coins.";
+                } else {
+                    resultText = "Better luck next time!";
+                }
+
+                return { payout, resultText };
+            }
+
+            function playGame() {
+                resetBallDisplay();
+                
+                playerCoins -= costToPlay;
+                houseCoins += costToPlay;
+                updateStatsDisplay();
+
+                playButton.disabled = true;
+                messageDisplay.textContent = "Drawing balls...";
+
+                const drawnBalls = drawBalls();
+
+                setTimeout(() => {
+                    balls[0].textContent = '';
+                    balls[0].className = `ball ${drawnBalls[0]}`;
+                }, 1000);
+
+                setTimeout(() => {
+                    balls[1].textContent = '';
+                    balls[1].className = `ball ${drawnBalls[1]}`;
+                }, 2250);
+
+                setTimeout(() => {
+                    balls[2].textContent = '';
+                    balls[2].className = `ball ${drawnBalls[2]}`;
+                    
+                    const { payout, resultText } = checkResult(drawnBalls);
+
+                    if (payout > 0) {
+                        playerCoins += payout;
+                        houseCoins = Math.max(0, houseCoins - payout);
+                    }
+
+                    setTimeout(() => {
+                        messageDisplay.textContent = resultText;
+                        updateStatsDisplay();
+                        checkGameOver();
+                    }, 1000);
+                    
+                    setTimeout(() => {
+                        playButton.disabled = false;
+                    }, 2000);
+                }, 3500);
+            }
+
+            playButton.addEventListener('click', () => {
+                if (playButton.textContent === "Restart Game") {
+                    resetGame();
+                } else {
+                    playGame();
+                }
+            });
+
+            updateStatsDisplay();
+        });
+    </script>
+</body>
+</html>
