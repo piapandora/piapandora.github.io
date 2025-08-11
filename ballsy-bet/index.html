@@ -146,15 +146,15 @@
                     <td>$50</td>
                 </tr>
                 <tr>
-                    <td>Blacks x 3</td>
+                    <td>Black x 3</td>
                     <td>$100</td>
                 </tr>
                 <tr>
-                    <td>Yellows x 3</td>
+                    <td>Yellow x 3</td>
                     <td>$150</td>
                 </tr>
                 <tr>
-                    <td>Reds x 3</td>
+                    <td>Red x 3</td>
                     <td>$200</td>
                 </tr>
             </tbody>
@@ -198,11 +198,9 @@
             let playerCoins = 50;
             let houseCoins = 950;
             const costToPlay = 10;
-            // The new maxPlayerCoins is the sum of the initial player and house money
             const maxPlayerCoins = playerCoins + houseCoins; 
 
             const ballBag = [];
-            // Ball distribution: 10 of each color
             for (let i = 0; i < 10; i++) {
                 ballBag.push('black');
                 ballBag.push('yellow');
@@ -210,18 +208,15 @@
             }
 
             function updateStatsDisplay() {
-                // This function now only updates the UI, it does not check for game-over.
                 playerCoinsDisplay.textContent = `$${playerCoins}`;
                 houseCoinsDisplay.textContent = `$${houseCoins}`;
             }
 
             function checkGameOver() {
-                // This function now handles the game over logic.
                 if (playerCoins < costToPlay) {
                     messageDisplay.textContent = "Game Over! You've run out of money!";
                     playButton.textContent = "Restart Game";
                     playButton.disabled = true;
-                    // Delay for 3 seconds before enabling restart button
                     setTimeout(() => {
                         playButton.disabled = false;
                     }, 3000);
@@ -229,7 +224,6 @@
                     messageDisplay.textContent = "Congratulations! You've won the game!";
                     playButton.textContent = "Restart Game";
                     playButton.disabled = true;
-                    // Delay for 3 seconds before enabling restart button
                     setTimeout(() => {
                         playButton.disabled = false;
                     }, 3000);
@@ -295,13 +289,12 @@
             function playGame() {
                 resetBallDisplay();
                 
-                // The cost of the spin is deducted and the display is updated immediately.
                 playerCoins -= costToPlay;
                 houseCoins += costToPlay;
                 updateStatsDisplay();
 
                 playButton.disabled = true;
-                messageDisplay.textContent = "Drawing one, two, three...";
+                messageDisplay.textContent = "Drawing... One, two, three...";
 
                 const drawnBalls = drawBalls();
 
@@ -325,17 +318,15 @@
                         const oldPlayerCoins = playerCoins;
                         playerCoins = Math.min(playerCoins + payout, maxPlayerCoins);
                         const actualWinnings = playerCoins - oldPlayerCoins;
-                        // The house's money will not fall below 0
                         houseCoins = Math.max(0, houseCoins - actualWinnings);
                         messageDisplay.textContent = resultText;
                     } else {
                         messageDisplay.textContent = resultText;
                     }
 
-                    updateStatsDisplay(); // Update the display with the final result
-                    checkGameOver(); // Check for game over conditions after everything is settled
+                    updateStatsDisplay();
+                    checkGameOver();
                     
-                    // Shorter delay to re-enable button on a losing spin
                     const reEnableDelay = (payout > 0) ? 1000 : 500;
                     if (playButton.textContent !== "Restart Game") {
                       setTimeout(() => {
