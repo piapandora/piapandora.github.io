@@ -237,8 +237,8 @@
             }
 
             function resetGame() {
-                playerCoins = 20;
-                houseCoins = 150;
+                playerCoins = 50;
+                houseCoins = 950;
                 resetBallDisplay();
                 updateStatsDisplay();
                 playButton.textContent = "Draw ($10)";
@@ -301,7 +301,7 @@
                 updateStatsDisplay();
 
                 playButton.disabled = true;
-                messageDisplay.textContent = "Drawing three balls...";
+                messageDisplay.textContent = "Drawing one, two, three...";
 
                 const drawnBalls = drawBalls();
 
