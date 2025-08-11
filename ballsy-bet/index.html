@@ -142,19 +142,19 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>All Different Colors</td>
+                    <td>Different Colors</td>
                     <td>$50</td>
                 </tr>
                 <tr>
-                    <td>Three Blacks</td>
+                    <td>Blacks x 3</td>
                     <td>$100</td>
                 </tr>
                 <tr>
-                    <td>Three Yellows</td>
+                    <td>Yellows x 3</td>
                     <td>$150</td>
                 </tr>
                 <tr>
-                    <td>Three Reds</td>
+                    <td>Reds x 3</td>
                     <td>$200</td>
                 </tr>
             </tbody>
@@ -341,7 +341,7 @@
                     checkGameOver(); // Check for game over conditions after everything is settled
                     
                     // Shorter delay to re-enable button on a losing spin
-                    const reEnableDelay = (payout > 0) ? 2000 : 500;
+                    const reEnableDelay = (payout > 0) ? 1000 : 500;
                     if (playButton.textContent !== "Restart Game") {
                       setTimeout(() => {
                         playButton.disabled = false;
