@@ -327,12 +327,7 @@
                         const actualWinnings = playerCoins - oldPlayerCoins;
                         // The house's money will not fall below 0
                         houseCoins = Math.max(0, houseCoins - actualWinnings);
-
-                        if (actualWinnings < payout) {
-                            messageDisplay.textContent = `${resultText} (Winnings capped at $${maxPlayerCoins})`;
-                        } else {
-                            messageDisplay.textContent = resultText;
-                        }
+                        messageDisplay.textContent = resultText;
                     } else {
                         messageDisplay.textContent = resultText;
                     }
