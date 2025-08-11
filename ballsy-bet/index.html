@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Ballsy Bet</title>
+    <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -172,12 +173,12 @@
         <div class="controls-area">
             <div class="stat-box">
                 <p>Your Money</p>
-                <span id="player-coins">$20</span>
+                <span id="player-coins"></span>
             </div>
             <button id="play-button">Draw ($10)</button>
             <div class="stat-box">
                 <p>House Bank</p>
-                <span id="house-coins">$150</span>
+                <span id="house-coins"></span>
             </div>
         </div>
     </div>
@@ -194,8 +195,8 @@
                 document.getElementById('ball3')
             ];
 
-            let playerCoins = 20;
-            let houseCoins = 150;
+            let playerCoins = 50;
+            let houseCoins = 950;
             const costToPlay = 10;
             // The new maxPlayerCoins is the sum of the initial player and house money
             const maxPlayerCoins = playerCoins + houseCoins; 
@@ -274,16 +275,16 @@
 
                 if (uniqueColors === 3) {
                     payout = 50;
-                    resultText = "All different colors! You win 50 coins.";
+                    resultText = "All different colors! You win $50.";
                 } else if (counts['black'] === 3) {
                     payout = 100;
-                    resultText = "Three Blacks! You win 100 coins.";
+                    resultText = "Three Blacks! You win $100.";
                 } else if (counts['yellow'] === 3) {
                     payout = 150;
-                    resultText = "Three Yellows! You win 150 coins.";
+                    resultText = "Three Yellows! You win $150.";
                 } else if (counts['red'] === 3) {
                     payout = 200;
-                    resultText = "Three Reds! You win 200 coins.";
+                    resultText = "Three Reds! You win $200.";
                 } else {
                     resultText = "Better luck next time!";
                 }
@@ -300,7 +301,7 @@
                 updateStatsDisplay();
 
                 playButton.disabled = true;
-                messageDisplay.textContent = "Drawing balls...";
+                messageDisplay.textContent = "Drawing three balls...";
 
                 const drawnBalls = drawBalls();
 
