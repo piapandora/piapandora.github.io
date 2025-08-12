@@ -80,9 +80,9 @@
             opacity: 1;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
             /* Use a CSS custom property for the transition duration */
-            transition: opacity var(--fade-duration, 1s) ease-in-out;
+            transition: opacity var(--fade-duration, 1s) ease-in-out, border-color 0.5s ease-in-out;
         }
-        
+
         .controls-area {
             display: flex;
             justify-content: center;
@@ -117,6 +117,10 @@
             font-weight: bold;
             transition: opacity 0.5s ease-in-out;
             opacity: 0; /* Initially hidden for the fade-in effect on load */
+        }
+        
+        .message-win {
+            color: #ffff00;
         }
 
         #play-button {
@@ -251,6 +255,7 @@
         let messageTimer1, messageTimer2;
         let portraitTimer1, portraitTimer2, portraitTimer3;
         let resultTimer;
+        let borderTimer;
 
 
         // This object maps hair color categories to arrays of image filenames.
@@ -299,11 +304,13 @@
         function checkGameOver() {
             if (playerCoins < costToPlay) {
                 messageDisplay.textContent = "Game Over! You've run out of money!";
+                messageDisplay.style.color = 'white';
                 playButton.textContent = "Restart Game";
                 playButton.disabled = true;
                 setTimeout(() => { playButton.disabled = false; }, 2500);
             } else if (houseCoins <= 0) {
                 messageDisplay.textContent = "Congratulations! You've won the game!";
+                messageDisplay.style.color = 'white';
                 playButton.textContent = "Restart Game";
                 playButton.disabled = true;
                 setTimeout(() => { playButton.disabled = false; }, 2500);
@@ -318,9 +325,12 @@
             clearTimeout(portraitTimer2);
             clearTimeout(portraitTimer3);
             clearTimeout(resultTimer);
+            clearTimeout(borderTimer);
             portraits.forEach(p => {
                 p.classList.remove('win-animation');
                 p.classList.remove('lose-animation');
+                // Reset the border color
+                p.style.borderColor = 'rgba(0, 0, 0, 1)';
             });
         }
 
@@ -336,8 +346,11 @@
             // Clear the images and make them fade out
             portraits.forEach(portrait => {
                 portrait.style.opacity = '0';
+                // Reset border color
+                portrait.style.borderColor = 'rgba(0, 0, 0, 1)';
             });
-			
+            
+
             setTimeout(() => {
                 // Reset the custom property for the standard fade-in
                 portraits.forEach(p => p.style.setProperty('--fade-duration', '1s'));
@@ -356,6 +369,8 @@
             
             // Wait for the fade-out to complete (0.5s) before fading in the new message.
             setTimeout(() => {
+                // Reset the color to white
+                messageDisplay.style.color = 'white';
                 messageDisplay.textContent = `Win $${maxPlayerCoins} to complete the game!`;
                 messageDisplay.style.opacity = '1';
             }, 500);
@@ -385,6 +400,7 @@
             const uniqueColors = Object.values(counts).filter(count => count > 0).length;
             let payout = 0;
             let resultText = "";
+            let winType = null; // Variable to store the type of win
 
             if (uniqueColors === 3) {
                 payout = 50;
@@ -392,17 +408,20 @@
             } else if (counts['dark'] === 3) {
                 payout = 100;
                 resultText = "Three dark-haired beauties. You win $100!";
+                winType = 'dark';
             } else if (counts['blonde'] === 3) {
                 payout = 150;
                 resultText = "Three blonde beauties. You win $150!";
+                winType = 'blonde';
             } else if (counts['red'] === 3) {
                 payout = 200;
                 resultText = "Three red-haired beauties. You win $200!";
+                winType = 'red';
             } else {
                 resultText = "Better luck next time!";
             }
 
-            return { payout, resultText };
+            return { payout, resultText, winType };
         }
 
 		function playGame() {
@@ -410,6 +429,7 @@
             portraits.forEach(p => {
                 p.classList.remove('win-animation');
                 p.classList.remove('lose-animation');
+                p.style.borderColor = 'rgba(0, 0, 0, 1)';
             });
 
 			playerCoins -= costToPlay;
@@ -420,6 +440,7 @@
 
 			// Fade out the previous message
 			messageDisplay.style.opacity = '0';
+            messageDisplay.innerHTML = ""; // Clear the content to avoid flicker
 
 			// First, fade out all current portraits
 			portraits.forEach(p => p.style.setProperty('--fade-duration', '0.5s'));
@@ -462,23 +483,28 @@
 				portraitTimer3 = setTimeout(() => {
 					portraits[2].style.opacity = '1';
 
-					const { payout, resultText } = checkResult(drawnPortraitPaths);
+					const { payout, resultText, winType } = checkResult(drawnPortraitPaths);
+                    const [winMessage, winAmount] = resultText.split('. ');
 
 					// Delay the result message by 500ms after the last portrait appears
 					resultTimer = setTimeout(() => {
 						// Handle color for the winning message
-						if (payout > 0) {
-							// The first part of the string ("Three...") is yellow
-							messageDisplay.style.color = 'yellow';
-							const winText = resultText.substring(0, resultText.indexOf("You win"));
-							const payoutText = resultText.substring(resultText.indexOf("You win"));
-							// The "You win..." part is white
-							messageDisplay.innerHTML = `${winText}<span style="color: white;">${payoutText}</span>`;
-
+                        if (payout > 0) {
+                            // This part now handles both types of wins
+                            messageDisplay.style.color = 'white'; 
+                            messageDisplay.innerHTML = `<span style="color: yellow;">${winMessage}.</span> ${winAmount}`;
+                            portraits.forEach(p => p.classList.add('win-animation'));
+                            
+                            // ONLY apply the border change if it's an "all-match" win
+                            if (winType !== null) {
+                                portraits.forEach(p => p.style.borderColor = 'yellow');
+                                borderTimer = setTimeout(() => {
+                                    portraits.forEach(p => p.style.borderColor = 'rgba(0, 0, 0, 1)');
+                                }, 1000);
+                            }
 							playerCoins = Math.min(playerCoins + payout, maxPlayerCoins);
 							houseCoins = Math.max(0, houseCoins - payout);
-                            portraits.forEach(p => p.classList.add('win-animation'));
-						} else {
+                        } else {
 							// Losing message is entirely white
 							messageDisplay.style.color = 'white';
 							messageDisplay.textContent = resultText;
