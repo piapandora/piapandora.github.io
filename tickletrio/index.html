@@ -373,80 +373,81 @@
             return { payout, resultText };
         }
 
-        function playGame() {
-            playerCoins -= costToPlay;
-            houseCoins += costToPlay;
-            updateStatsDisplay();
+		function playGame() {
+			playerCoins -= costToPlay;
+			houseCoins += costToPlay;
+			updateStatsDisplay();
 
-            playButton.disabled = true;
-            
-            // Fade out the previous message
-            messageDisplay.style.opacity = '0';
-            
-            // First, fade out all current portraits
-            portraits.forEach(p => p.style.setProperty('--fade-duration', '0.5s'));
-            portraits.forEach(portrait => {
-                portrait.style.opacity = '0';
-            });
-            
-            // After the old message fades out, change the text and fade in "Tickling..."
+			playButton.disabled = true;
+
+			// Fade out the previous message
+			messageDisplay.style.opacity = '0';
+
+			// First, fade out all current portraits
+			portraits.forEach(p => p.style.setProperty('--fade-duration', '0.5s'));
+			portraits.forEach(portrait => {
+				portrait.style.opacity = '0';
+			});
+
+			// Generate the paths for the new portraits and **load them immediately**
+			const drawnPortraitPaths = drawUniquePortraits();
+			portraits.forEach((portrait, index) => {
+				portrait.src = drawnPortraitPaths[index];
+			});
+
+			// After the old message fades out, change the text and fade in "Tickling..."
 			messageDisplay.textContent = "Tickling...";
 			messageDisplay.style.opacity = '1';
-			
+
 			// After 1 second, fade out the "Tickling..." message
 			messageTimer2 = setTimeout(() => {
 				messageDisplay.style.opacity = '0';
 			}, 2800);
 
-            // Start the staggered fade-in of new portraits after both message transitions
-            portraitTimer1 = setTimeout(() => {
-                // Reset the custom property for the standard fade-in of portraits
-                portraits.forEach(p => p.style.setProperty('--fade-duration', '1s'));
+			// Start the staggered fade-in of new portraits after both message transitions
+			portraitTimer1 = setTimeout(() => {
+				// Reset the custom property for the standard fade-in of portraits
+				portraits.forEach(p => p.style.setProperty('--fade-duration', '1s'));
 
-                const drawnPortraitPaths = drawUniquePortraits();
+				// Fade in the first portrait
+				portraitTimer1 = setTimeout(() => {
+					portraits[0].style.opacity = '1';
+				}, 300);
 
-                // Draw the first portrait
-                portraitTimer1 = setTimeout(() => {
-                    portraits[0].src = drawnPortraitPaths[0];
-                    portraits[0].style.opacity = '1';
-                }, 300);
+				// Fade in the second portrait
+				portraitTimer2 = setTimeout(() => {
+					portraits[1].style.opacity = '1';
+				}, 1300);
 
-                // Draw the second portrait
-                portraitTimer2 = setTimeout(() => {
-                    portraits[1].src = drawnPortraitPaths[1];
-                    portraits[1].style.opacity = '1';
-                }, 1300);
+				// Fade in the third portrait and check result
+				portraitTimer3 = setTimeout(() => {
+					portraits[2].style.opacity = '1';
 
-                // Draw the third portrait and check result
-                portraitTimer3 = setTimeout(() => {
-                    portraits[2].src = drawnPortraitPaths[2];
-                    portraits[2].style.opacity = '1';
-                    
-                    const { payout, resultText } = checkResult(drawnPortraitPaths);
-                    
-                    // Delay the result message by 500ms after the last portrait appears
-                    resultTimer = setTimeout(() => {
-                        if (payout > 0) {
-                            playerCoins = Math.min(playerCoins + payout, maxPlayerCoins);
-                            houseCoins = Math.max(0, houseCoins - payout);
-                            messageDisplay.textContent = resultText;
-                        } else {
-                            messageDisplay.textContent = resultText;
-                        }
-                        updateStatsDisplay();
-                        checkGameOver();
-                        
-                        // This is where we fade in the result message by setting opacity to 1
-                        messageDisplay.style.opacity = '1';
-                        
-                        const reEnableDelay = (payout > 0) ? 1000 : 500;
-                        if (playButton.textContent !== "Restart Game") {
-                            setTimeout(() => { playButton.disabled = false; }, reEnableDelay);
-                        }
-                    }, 500);
-                }, 2300);
-            }, 500); // This delay is the sum of all message transitions (0.5s + 0.5s + 1s + 0.5s)
-        }
+					const { payout, resultText } = checkResult(drawnPortraitPaths);
+
+					// Delay the result message by 500ms after the last portrait appears
+					resultTimer = setTimeout(() => {
+						if (payout > 0) {
+							playerCoins = Math.min(playerCoins + payout, maxPlayerCoins);
+							houseCoins = Math.max(0, houseCoins - payout);
+							messageDisplay.textContent = resultText;
+						} else {
+							messageDisplay.textContent = resultText;
+						}
+						updateStatsDisplay();
+						checkGameOver();
+						
+						// Fade in the result message by setting opacity to 1
+						messageDisplay.style.opacity = '1';
+						
+						const reEnableDelay = (payout > 0) ? 1000 : 500;
+						if (playButton.textContent !== "Restart Game") {
+							setTimeout(() => { playButton.disabled = false; }, reEnableDelay);
+						}
+					}, 500);
+				}, 2300);
+			}, 500);
+		}
 
         playButton.addEventListener('click', () => {
             if (playButton.textContent === "Restart Game") {
