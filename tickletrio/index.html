@@ -183,9 +183,9 @@
 
     <main>
         <div class="portrait-display">
-            <img id="portrait1" class="portrait" src="images/misc/placeholder.png" alt="Portrait 1">
-            <img id="portrait2" class="portrait" src="images/misc/placeholder.png" alt="Portrait 2">
-            <img id="portrait3" class="portrait" src="images/misc/placeholder.png" alt="Portrait 3">
+            <img id="portrait1" class="portrait" src="misc/card-back.png" alt="Portrait 1">
+            <img id="portrait2" class="portrait" src="misc/card-back.png" alt="Portrait 2">
+            <img id="portrait3" class="portrait" src="misc/card-back.png" alt="Portrait 3">
         </div>
     </main>
     
@@ -235,7 +235,7 @@
 
         // This object maps hair color categories to arrays of image filenames.
         const portraitPool = {
-            'black': ['black1.png', 'black2.png', 'black3.png', 'black4.png', 'black5.png'],
+            'dark': ['dark1.png', 'dark2.png', 'dark3.png', 'dark4.png', 'dark5.png'],
             'blonde': ['blonde1.png', 'blonde2.png', 'blonde3.png', 'blonde4.png', 'blonde5.png'],
             'red': ['red1.png', 'red2.png', 'red3.png', 'red4.png', 'red5.png']
         };
@@ -250,7 +250,7 @@
 
         // A helper function to get the hair color from the image path
         function getHairColorFromPath(path) {
-            // Extracts the hair color from the path, e.g., "images/black/black1.png" -> "black"
+            // Extracts the hair color from the path, e.g., "images/dark/dark1.png" -> "dark"
             return path.split('/')[1];
         }
 
@@ -300,7 +300,7 @@
                 // Reset the custom property for the standard fade-in
                 portraits.forEach(p => p.style.setProperty('--fade-duration', '1s'));
                 portraits.forEach(portrait => {
-                    portrait.src = 'images/misc/placeholder.png';
+                    portrait.src = 'misc/card-back.png';
                     portrait.style.opacity = '1';
                 });
             }, 500);
@@ -334,7 +334,7 @@
         }
 
         function checkResult(drawnPortraitPaths) {
-            const counts = { 'black': 0, 'blonde': 0, 'red': 0 };
+            const counts = { 'dark': 0, 'blonde': 0, 'red': 0 };
             drawnPortraitPaths.forEach(path => {
                 const color = getHairColorFromPath(path);
                 counts[color]++;
@@ -347,7 +347,7 @@
             if (uniqueColors === 3) {
                 payout = 50;
                 resultText = "All different hair colors: You win $50!";
-            } else if (counts['black'] === 3) {
+            } else if (counts['dark'] === 3) {
                 payout = 100;
                 resultText = "Three Dark-Haired Lunas! You win $100.";
             } else if (counts['blonde'] === 3) {
