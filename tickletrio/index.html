@@ -389,11 +389,7 @@
 				portrait.style.opacity = '0';
 			});
 
-			// Generate the paths for the new portraits and **load them immediately**
-			const drawnPortraitPaths = drawUniquePortraits();
-			portraits.forEach((portrait, index) => {
-				portrait.src = drawnPortraitPaths[index];
-			});
+
 
 			// After the old message fades out, change the text and fade in "Tickling..."
 			messageDisplay.textContent = "Tickling...";
@@ -408,6 +404,11 @@
 			portraitTimer1 = setTimeout(() => {
 				// Reset the custom property for the standard fade-in of portraits
 				portraits.forEach(p => p.style.setProperty('--fade-duration', '1s'));
+				
+				const drawnPortraitPaths = drawUniquePortraits();
+				portraits.forEach((portrait, index) => {
+					portrait.src = drawnPortraitPaths[index];
+				});
 
 				// Fade in the first portrait
 				portraitTimer1 = setTimeout(() => {
