@@ -236,16 +236,16 @@
         // This object maps hair color categories to arrays of image filenames.
 		const portraitPool = {
 			'dark': [
-				'dark01.png', 'dark02.png', 'dark03.png', 'dark04.png', 'dark05.png',
-				'dark06.png', 'dark07.png', 'dark08.png', 'dark09.png', 'dark10.png'
+				'dark01.jpg', 'dark02.jpg', 'dark03.jpg', 'dark04.jpg', 'dark05.jpg',
+				'dark06.jpg', 'dark07.jpg', 'dark08.jpg', 'dark09.jpg', 'dark10.jpg'
 			],
 			'blonde': [
-				'blonde01.png', 'blonde02.png', 'blonde03.png', 'blonde04.png', 'blonde05.png',
-				'blonde06.png', 'blonde07.png', 'blonde08.png', 'blonde09.png', 'blonde10.png'
+				'blonde01.jpg', 'blonde02.jpg', 'blonde03.jpg', 'blonde04.jpg', 'blonde05.jpg',
+				'blonde06.jpg', 'blonde07.jpg', 'blonde08.jpg', 'blonde09.jpg', 'blonde10.jpg'
 			],
 			'red': [
-				'red01.png', 'red02.png', 'red03.png', 'red04.png', 'red05.png',
-				'red06.png', 'red07.png', 'red08.png', 'red09.png', 'red10.png'
+				'red01.jpg', 'red02.jpg', 'red03.jpg', 'red04.jpg', 'red05.jpg',
+				'red06.jpg', 'red07.jpg', 'red08.jpg', 'red09.jpg', 'red10.jpg'
 			]
 		};
 
@@ -259,7 +259,7 @@
 
         // A helper function to get the hair color from the image path
         function getHairColorFromPath(path) {
-            // Extracts the hair color from the path, e.g., "images/dark/dark1.png" -> "dark"
+            // Extracts the hair color from the path, e.g., "images/dark/dark1.jpg" -> "dark"
             return path.split('/')[1];
         }
 
