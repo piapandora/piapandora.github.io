@@ -160,12 +160,31 @@
         
 		@keyframes fadeIn {
 			0% { opacity: 0 }
-		//	20% { opacity: 0 }
 			100% { opacity: 1 }
 		}
         
         .fadeIn {
             animation: fadeIn 1s ease-in-out forwards;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.01); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-2px); }
+            40%, 80% { transform: translateX(2px); }
+        }
+
+        .win-animation {
+            animation: pulse 0.333s ease-in-out 3;
+        }
+
+        .lose-animation {
+            animation: shake 0.5s ease-in-out;
         }
     </style>
 </head>
@@ -250,6 +269,14 @@
 			]
 		};
 
+        // Preload the images immediately after they are defined.
+		Object.entries(portraitPool).forEach(([color, files]) => {
+			files.forEach(file => {
+				const img = new Image();
+				img.src = `images/${color}/${file}`;
+			});
+		});
+
         // A helper function to shuffle an array
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -274,27 +301,31 @@
                 messageDisplay.textContent = "Game Over! You've run out of money!";
                 playButton.textContent = "Restart Game";
                 playButton.disabled = true;
-                setTimeout(() => { playButton.disabled = false; }, 3000);
+                setTimeout(() => { playButton.disabled = false; }, 2500);
             } else if (houseCoins <= 0) {
                 messageDisplay.textContent = "Congratulations! You've won the game!";
                 playButton.textContent = "Restart Game";
                 playButton.disabled = true;
-                setTimeout(() => { playButton.disabled = false; }, 3000);
+                setTimeout(() => { playButton.disabled = false; }, 2500);
             }
         }
         
-        // This function will clear any pending timers to stop animations.
-        function clearAllTimers() {
+        // This function will clear any pending timers and animations
+        function clearAllTimersAndAnimations() {
             clearTimeout(messageTimer1);
             clearTimeout(messageTimer2);
             clearTimeout(portraitTimer1);
             clearTimeout(portraitTimer2);
             clearTimeout(portraitTimer3);
             clearTimeout(resultTimer);
+            portraits.forEach(p => {
+                p.classList.remove('win-animation');
+                p.classList.remove('lose-animation');
+            });
         }
 
         function resetGame() {
-            clearAllTimers();
+            clearAllTimersAndAnimations();
 
             playerCoins = 50;
             houseCoins = 950;
@@ -356,16 +387,16 @@
 
             if (uniqueColors === 3) {
                 payout = 50;
-                resultText = "All different hair colors - You win $50!";
+                resultText = "Three different hair colors. You win $50!";
             } else if (counts['dark'] === 3) {
                 payout = 100;
-                resultText = "Three dark-haired beauties - You win $100!";
+                resultText = "Three dark-haired beauties. You win $100!";
             } else if (counts['blonde'] === 3) {
                 payout = 150;
-                resultText = "Three blonde beauties - You win $150!";
+                resultText = "Three blonde beauties. You win $150!";
             } else if (counts['red'] === 3) {
                 payout = 200;
-                resultText = "Three red-haired beauties - You win $200!";
+                resultText = "Three red-haired beauties. You win $200!";
             } else {
                 resultText = "Better luck next time!";
             }
@@ -374,6 +405,12 @@
         }
 
 		function playGame() {
+            // First, clear any old animations before starting the new round
+            portraits.forEach(p => {
+                p.classList.remove('win-animation');
+                p.classList.remove('lose-animation');
+            });
+
 			playerCoins -= costToPlay;
 			houseCoins += costToPlay;
 			updateStatsDisplay();
@@ -430,8 +467,10 @@
 							playerCoins = Math.min(playerCoins + payout, maxPlayerCoins);
 							houseCoins = Math.max(0, houseCoins - payout);
 							messageDisplay.textContent = resultText;
+                            portraits.forEach(p => p.classList.add('win-animation'));
 						} else {
 							messageDisplay.textContent = resultText;
+                            portraits.forEach(p => p.classList.add('lose-animation'));
 						}
 						updateStatsDisplay();
 						checkGameOver();
