@@ -329,7 +329,6 @@
             portraits.forEach(p => {
                 p.classList.remove('win-animation');
                 p.classList.remove('lose-animation');
-                // Reset the border color
                 p.style.borderColor = 'rgba(0, 0, 0, 1)';
             });
         }
@@ -346,7 +345,6 @@
             // Clear the images and make them fade out
             portraits.forEach(portrait => {
                 portrait.style.opacity = '0';
-                // Reset border color
                 portrait.style.borderColor = 'rgba(0, 0, 0, 1)';
             });
             
@@ -497,10 +495,16 @@
                             
                             // ONLY apply the border change if it's an "all-match" win
                             if (winType !== null) {
+                                // Temporarily disable the border-color transition for an immediate change
+                                portraits.forEach(p => p.style.transitionProperty = 'opacity');
+                                // Set the border color directly for an immediate change
                                 portraits.forEach(p => p.style.borderColor = 'yellow');
                                 borderTimer = setTimeout(() => {
+                                    // Re-enable the border-color transition so it can fade out smoothly
+                                    portraits.forEach(p => p.style.transitionProperty = 'opacity, border-color');
+                                    // Let the CSS transition handle the fade-out after the delay
                                     portraits.forEach(p => p.style.borderColor = 'rgba(0, 0, 0, 1)');
-                                }, 1000);
+                                }, 1000); // 1-second delay before fading out
                             }
 							playerCoins = Math.min(playerCoins + payout, maxPlayerCoins);
 							houseCoins = Math.max(0, houseCoins - payout);
