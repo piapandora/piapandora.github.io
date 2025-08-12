@@ -184,9 +184,9 @@
 
     <main>
         <div class="portrait-display">
-            <img id="portrait1" class="portrait" src="misc/card-back.png" alt="Portrait 1">
-            <img id="portrait2" class="portrait" src="misc/card-back.png" alt="Portrait 2">
-            <img id="portrait3" class="portrait" src="misc/card-back.png" alt="Portrait 3">
+            <img id="portrait1" class="portrait" src="misc/card-back.jpg" alt="Portrait 1">
+            <img id="portrait2" class="portrait" src="misc/card-back.jpg" alt="Portrait 2">
+            <img id="portrait3" class="portrait" src="misc/card-back.jpg" alt="Portrait 3">
         </div>
     </main>
     
@@ -310,7 +310,7 @@
                 // Reset the custom property for the standard fade-in
                 portraits.forEach(p => p.style.setProperty('--fade-duration', '1s'));
                 portraits.forEach(portrait => {
-                    portrait.src = 'misc/card-back.png';
+                    portrait.src = 'misc/card-back.jpg';
                     portrait.style.opacity = '1';
                 });
             }, 500);
