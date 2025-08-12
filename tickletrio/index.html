@@ -193,10 +193,10 @@
     <div class="menu-bar">
         <span id="game-title">The Tickle Trio</span>
         <div class="payouts-header">
-            <span>All Different <span class="payout-amount">$50</span></span>
-            <span>All Dark <span class="payout-amount">$100</span></span>
-            <span>All Blonde <span class="payout-amount">$150</span></span>
-            <span>All Red <span class="payout-amount">$200</span></span>
+            <span>All Different: <span class="payout-amount">$50</span></span>
+            <span>All Dark: <span class="payout-amount">$100</span></span>
+            <span>All Blonde: <span class="payout-amount">$150</span></span>
+            <span>All Red: <span class="payout-amount">$200</span></span>
         </div>
         <img src="misc/icons8-fullscreen-32.png" class="menu-btn" id="full-btn" alt="Fullscreen">
     </div>
@@ -220,7 +220,7 @@
             </div>
             <button id="play-button">Tickle ($10)</button>
             <div class="stat-box">
-                <p>House Bank</p>
+                <p>Pandora Bank</p>
                 <span id="house-coins"></span>
             </div>
         </div>
@@ -337,6 +337,7 @@
             portraits.forEach(portrait => {
                 portrait.style.opacity = '0';
             });
+			
             setTimeout(() => {
                 // Reset the custom property for the standard fade-in
                 portraits.forEach(p => p.style.setProperty('--fade-duration', '1s'));
@@ -427,6 +428,8 @@
 			});
 
 			// After the old message fades out, change the text and fade in "Tickling..."
+            // "Tickling..." message should be white.
+			messageDisplay.style.color = 'white'; 
 			messageDisplay.textContent = "Tickling...";
 			messageDisplay.style.opacity = '1';
 
@@ -463,15 +466,25 @@
 
 					// Delay the result message by 500ms after the last portrait appears
 					resultTimer = setTimeout(() => {
+						// Handle color for the winning message
 						if (payout > 0) {
+							// The first part of the string ("Three...") is yellow
+							messageDisplay.style.color = 'yellow';
+							const winText = resultText.substring(0, resultText.indexOf("You win"));
+							const payoutText = resultText.substring(resultText.indexOf("You win"));
+							// The "You win..." part is white
+							messageDisplay.innerHTML = `${winText}<span style="color: white;">${payoutText}</span>`;
+
 							playerCoins = Math.min(playerCoins + payout, maxPlayerCoins);
 							houseCoins = Math.max(0, houseCoins - payout);
-							messageDisplay.textContent = resultText;
                             portraits.forEach(p => p.classList.add('win-animation'));
 						} else {
+							// Losing message is entirely white
+							messageDisplay.style.color = 'white';
 							messageDisplay.textContent = resultText;
                             portraits.forEach(p => p.classList.add('lose-animation'));
 						}
+						
 						updateStatsDisplay();
 						checkGameOver();
 						
