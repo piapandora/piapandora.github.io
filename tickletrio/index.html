@@ -395,7 +395,7 @@
 			// After 1 second, fade out the "Tickling..." message
 			messageTimer2 = setTimeout(() => {
 				messageDisplay.style.opacity = '0';
-			}, 2800);
+			}, 3300);
 
             // Start the staggered fade-in of new portraits after both message transitions
             portraitTimer1 = setTimeout(() => {
@@ -444,7 +444,7 @@
                         }
                     }, 500);
                 }, 2300);
-            }, 500); // This delay is the sum of all message transitions (0.5s + 0.5s + 1s + 0.5s)
+            }, 1000); // This delay is the sum of all message transitions (0.5s + 0.5s + 1s + 0.5s)
         }
 
         playButton.addEventListener('click', () => {
