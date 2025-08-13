@@ -116,7 +116,7 @@
             color: #eee;
             font-weight: bold;
             transition: opacity 0.5s ease-in-out;
-            opacity: 0; /* Initially hidden for the fade-in effect on load */
+            opacity: 0;
         }
         
         .message-win {
@@ -137,7 +137,7 @@
 
         #play-button:hover {
             background-color: #333;
-            color: #ffff00;
+            color: #ffffff;
         }
         
         #play-button:disabled {
@@ -172,21 +172,47 @@
         }
         
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.01); }
-            100% { transform: scale(1); }
+            0% { transform: scale(1) }
+            50% { transform: scale(1.015) }
+            100% { transform: scale(1) }
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-2px); }
-            40%, 80% { transform: translateX(2px); }
+            0%, 100% { transform: translateX(0) }
+            20%, 60% { transform: translateX(-2px) }
+            40%, 80% { transform: translateX(2px) }
+        }
+		
+		@keyframes wiggle {
+		  0%, 100% { transform: rotate(0deg); }
+		  25% { transform: rotate(3deg); }
+		  50% { transform: rotate(-3deg); }
+		  75% { transform: rotate(2deg); }
+		}
+		
+		@keyframes glow {
+		  0%, 100% { box-shadow: 0 0 5px #ffff00; }
+		  50% { box-shadow: 0 0 25px #ffff00; }
+		}
+		
+		
+        .win-different-anim {
+            animation: wiggle 1s ease-in-out 1,
+			glow 0.5s ease-in-out 2;
         }
 
-        .win-animation {
+        .win-dark-anim {
             animation: pulse 0.333s ease-in-out 3;
         }
 
+        .win-blonde-anim {
+            animation: pulse 0.333s ease-in-out 3;
+        }
+
+        .win-red-anim {
+            animation: pulse 0.333s ease-in-out 3;
+        }
+        
         .lose-animation {
             animation: shake 0.5s ease-in-out;
         }
@@ -245,7 +271,6 @@
         const fullBtn = document.getElementById('full-btn');
         const gameTitle = document.getElementById('game-title');
 
-
         let playerCoins = 50;
         let houseCoins = 950;
         const costToPlay = 10;
@@ -256,23 +281,22 @@
         let portraitTimer1, portraitTimer2, portraitTimer3;
         let resultTimer;
         let borderTimer;
-
-
+        
         // This object maps hair color categories to arrays of image filenames.
-		const portraitPool = {
-			'dark': [
-				'dark01.jpg', 'dark02.jpg', 'dark03.jpg', 'dark04.jpg', 'dark05.jpg',
-				'dark06.jpg', 'dark07.jpg', 'dark08.jpg', 'dark09.jpg', 'dark10.jpg'
-			],
-			'blonde': [
-				'blonde01.jpg', 'blonde02.jpg', 'blonde03.jpg', 'blonde04.jpg', 'blonde05.jpg',
-				'blonde06.jpg', 'blonde07.jpg', 'blonde08.jpg', 'blonde09.jpg', 'blonde10.jpg'
-			],
-			'red': [
-				'red01.jpg', 'red02.jpg', 'red03.jpg', 'red04.jpg', 'red05.jpg',
-				'red06.jpg', 'red07.jpg', 'red08.jpg', 'red09.jpg', 'red10.jpg'
-			]
-		};
+        const portraitPool = {
+            'dark': [
+                'dark01.jpg', 'dark02.jpg', 'dark03.jpg', 'dark04.jpg', 'dark05.jpg',
+                'dark06.jpg', 'dark07.jpg', 'dark08.jpg', 'dark09.jpg', 'dark10.jpg'
+            ],
+            'blonde': [
+                'blonde01.jpg', 'blonde02.jpg', 'blonde03.jpg', 'blonde04.jpg', 'blonde05.jpg',
+                'blonde06.jpg', 'blonde07.jpg', 'blonde08.jpg', 'blonde09.jpg', 'blonde10.jpg'
+            ],
+            'red': [
+                'red01.jpg', 'red02.jpg', 'red03.jpg', 'red04.jpg', 'red05.jpg',
+                'red06.jpg', 'red07.jpg', 'red08.jpg', 'red09.jpg', 'red10.jpg'
+            ]
+        };
 
         // Preload the images immediately after they are defined.
 		Object.entries(portraitPool).forEach(([color, files]) => {
@@ -327,7 +351,10 @@
             clearTimeout(resultTimer);
             clearTimeout(borderTimer);
             portraits.forEach(p => {
-                p.classList.remove('win-animation');
+                p.classList.remove('win-different-anim');
+                p.classList.remove('win-dark-anim');
+                p.classList.remove('win-blonde-anim');
+                p.classList.remove('win-red-anim');
                 p.classList.remove('lose-animation');
                 p.style.borderColor = 'rgba(0, 0, 0, 1)';
             });
@@ -338,7 +365,7 @@
 
             playerCoins = 50;
             houseCoins = 950;
-            
+
             // Set the custom property for a quick fade-out
             portraits.forEach(p => p.style.setProperty('--fade-duration', '0.5s'));
             
@@ -425,7 +452,10 @@
 		function playGame() {
             // First, clear any old animations before starting the new round
             portraits.forEach(p => {
-                p.classList.remove('win-animation');
+                p.classList.remove('win-different-anim');
+                p.classList.remove('win-dark-anim');
+                p.classList.remove('win-blonde-anim');
+                p.classList.remove('win-red-anim');
                 p.classList.remove('lose-animation');
                 p.style.borderColor = 'rgba(0, 0, 0, 1)';
             });
@@ -488,17 +518,32 @@
 					resultTimer = setTimeout(() => {
 						// Handle color for the winning message
                         if (payout > 0) {
-                            // This part now handles both types of wins
                             messageDisplay.style.color = 'white'; 
                             messageDisplay.innerHTML = `<span style="color: yellow;">${winMessage}.</span> ${winAmount}`;
-                            portraits.forEach(p => p.classList.add('win-animation'));
+                            
+                            // Apply specific animation class based on winType and set border color
+                            let borderColor = '';
+                            if (winType === 'dark') {
+                                portraits.forEach(p => p.classList.add('win-dark-anim'));
+                                borderColor = '#ddd';
+                            } else if (winType === 'blonde') {
+                                portraits.forEach(p => p.classList.add('win-blonde-anim'));
+                                borderColor = 'yellow';
+                            } else if (winType === 'red') {
+                                portraits.forEach(p => p.classList.add('win-red-anim'));
+                                borderColor = 'red';
+                            } else {
+                                // Default animation for "All Different"
+                                portraits.forEach(p => p.classList.add('win-different-anim'));
+                                borderColor = 'black';
+                            }
                             
                             // ONLY apply the border change if it's an "all-match" win
-                            if (winType !== null) {
+                            if (winType !== null || (winType === null && payout > 0)) {
                                 // Temporarily disable the border-color transition for an immediate change
                                 portraits.forEach(p => p.style.transitionProperty = 'opacity');
                                 // Set the border color directly for an immediate change
-                                portraits.forEach(p => p.style.borderColor = 'yellow');
+                                portraits.forEach(p => p.style.borderColor = borderColor);
                                 borderTimer = setTimeout(() => {
                                     // Re-enable the border-color transition so it can fade out smoothly
                                     portraits.forEach(p => p.style.transitionProperty = 'opacity, border-color');
