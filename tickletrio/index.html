@@ -156,7 +156,7 @@
             background-color: #1F2020;
             color: #eee;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 5fr 3fr;
             align-items: center;
             padding: 0 15px;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
@@ -196,7 +196,7 @@
 		}
 		
 		
-        .win-different-anim {
+        .win-diff-anim {
             animation: wiggle 1s ease-in-out 1,
 			glow 0.5s ease-in-out 2;
         }
@@ -245,12 +245,12 @@
         </div>
         <div class="controls-area">
             <div class="stat-box">
-                <p>Your Money</p>
+                <p>My Funds</p>
                 <span id="player-coins"></span>
             </div>
             <button id="play-button">Tickle ($10)</button>
             <div class="stat-box">
-                <p>Pandora Bank</p>
+                <p>Trio Bank</p>
                 <span id="house-coins"></span>
             </div>
         </div>
@@ -351,7 +351,7 @@
             clearTimeout(resultTimer);
             clearTimeout(borderTimer);
             portraits.forEach(p => {
-                p.classList.remove('win-different-anim');
+                p.classList.remove('win-diff-anim');
                 p.classList.remove('win-dark-anim');
                 p.classList.remove('win-blonde-anim');
                 p.classList.remove('win-red-anim');
@@ -452,7 +452,7 @@
 		function playGame() {
             // First, clear any old animations before starting the new round
             portraits.forEach(p => {
-                p.classList.remove('win-different-anim');
+                p.classList.remove('win-diff-anim');
                 p.classList.remove('win-dark-anim');
                 p.classList.remove('win-blonde-anim');
                 p.classList.remove('win-red-anim');
@@ -534,7 +534,7 @@
                                 borderColor = 'red';
                             } else {
                                 // Default animation for "All Different"
-                                portraits.forEach(p => p.classList.add('win-different-anim'));
+                                portraits.forEach(p => p.classList.add('win-diff-anim'));
                                 borderColor = 'black';
                             }
                             
