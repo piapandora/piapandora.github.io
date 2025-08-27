@@ -1,1 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fun Jar 🎲</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #fdfcfb, #e2d1c3);
+      color: #333;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      color: #37474f;
+    }
+    .card {
+      width: 320px;
+      min-height: 100px;
+      background: #ffffffcc;
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 20px;
+      transition: transform 0.25s ease;
+    }
+    .card.show {
+      transform: scale(1.03);
+    }
+    button {
+      background: #90caf9;
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      background: #64b5f6;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎲 Fun Jar</h1>
+  <div id="card" class="card">Pick something fun!</div>
+  <button onclick="pickRandom()">Pick One</button>
 
+  <script>
+    const items = [
+        "Take a silly selfie",
+        "Drink water with a fancy straw",
+        "Go for a 5-min walk",
+        "Dance to one song",
+        "Draw a doodle",
+        "Compliment yourself in the mirror",
+        "Stretch your arms up high",
+        "Listen to birds for 2 minutes",
+        "Write one kind thought",
+        "Smile at yourself",
+        "Hum your favorite tune",
+        "Pretend you’re a superhero for 30 sec",
+        "Look out the window and notice 3 things",
+        "Pet an animal (or imagine one if none nearby)",
+        "Say your name with pride",
+        "Whistle randomly",
+        "Balance on one foot for 10 sec",
+        "Clap loudly 5 times",
+        "Pretend to be a robot for a minute",
+        "Make the silliest face possible",
+        "Stand tall like a tree",
+        "Pretend to yawn big and stretch",
+        "Think of one thing you’re grateful for",
+        "Snap your fingers to a rhythm",
+        "High-five yourself",
+        "Wiggle your toes",
+        "Spin slowly in a circle",
+        "Act like your favorite animal",
+        "Pretend you’re walking on the moon",
+        "Say something nice about a friend",
+        "Draw a star",
+        "Make up a nonsense word",
+        "Say the alphabet backwards (or try!)",
+        "Jump up and down 5 times",
+        "Look for something shaped like a heart",
+        "Wave at your reflection",
+        "Count backwards from 20",
+        "Pretend you’re swimming",
+        "Imagine a rainbow above you",
+        "Send a kind text",
+        "Make a paper airplane",
+        "Pretend to juggle",
+        "Take 3 deep breaths",
+        "Sit with eyes closed for 30 sec",
+        "Think of a favorite food",
+        "Do a silly walk",
+        "Shake your hands fast",
+        "Do a superhero pose",
+        "Say thank you out loud",
+        "Snap a random photo",
+        "Write your name in fancy letters",
+        "Do 5 jumping jacks",
+        "Pretend you’re on stage",
+        "Make a wish",
+        "Wink at yourself",
+        "Blow an imaginary bubble",
+        "Draw a quick smiley face",
+        "Think of a funny memory",
+        "Act like a penguin",
+        "Point at something blue",
+        "Stretch side to side",
+        "Say your favorite color",
+        "Spin a coin or object",
+        "Count to 10 in another language",
+        "Make a drumbeat on the table",
+        "Pretend to be a statue",
+        "Hop on one foot",
+        "Make a triangle with your hands",
+        "Imagine you are flying",
+        "Tell yourself a joke",
+        "Pretend to catch a butterfly",
+        "Do a slow twirl",
+        "Pretend you’re invisible",
+        "Count all the doors in the room",
+        "Draw a zigzag",
+        "Say a word backwards",
+        "Pretend to lift something heavy",
+        "March in place",
+        "Snap 10 times",
+        "Look for something round",
+        "Close your eyes and listen",
+        "Imagine an ocean wave",
+        "Pretend you’re tiny",
+        "Say hello in a funny voice",
+        "Pretend to wear a crown",
+        "Look for something shiny",
+        "Draw a quick star",
+        "Give yourself a pat on the back",
+        "Pretend you’re climbing",
+        "Say your favorite number",
+        "Think of a favorite movie",
+        "Point to the sky",
+        "Stretch like a cat",
+        "Pretend to drive a car",
+        "Do a gentle spin",
+        "Count all the windows",
+        "Imagine a balloon floating up",
+        "Smile big for 10 sec",
+        "Whisper your favorite word",
+        "Pretend to ride a bike",
+        "Say one thing you like about today"
+    ];
+
+    let remaining = [...items];
+
+    function pickRandom() {
+      const card = document.getElementById("card");
+
+      if (remaining.length === 0) {
+        remaining = [...items];
+      }
+
+      const idx = Math.floor(Math.random() * remaining.length);
+      const choice = remaining[idx];
+      remaining.splice(idx, 1);
+
+      card.textContent = choice;
+      card.classList.remove("show");
+      void card.offsetWidth; // restart animation
+      card.classList.add("show");
+    }
+  </script>
+</body>
+</html>
