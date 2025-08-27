@@ -38,11 +38,18 @@
       font-weight: 500;
       color: #444;
       margin-bottom: 20px;
-      transition: transform 0.25s ease;
     }
-    .card.show {
-      transform: scale(1.03);
+
+    .card.animate {
+      animation: pop 0.25s ease forwards;
     }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
     button {
       background: #90caf9;
       color: #fff;
@@ -185,9 +192,10 @@
       remaining.splice(idx, 1);
 
       card.textContent = choice;
-      card.classList.remove("show");
-      void card.offsetWidth; // restart animation
-      card.classList.add("show");
+
+      card.classList.remove("animate");
+      void card.offsetWidth;
+      card.classList.add("animate");
     }
   </script>
 </body>
