@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Impressivo 🌟</title>
+  <link rel="icon" type="image/png" href="misc/icons8-glowing-star-48.png">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #fdfcfb, #e2d1c3);
+      color: #333;
+    }
+
+    h1 {
+      font-family: 'Baloo 2', cursive; /* playful, friendly, readable */
+      font-size: 3rem;
+      margin-bottom: 1.2rem;
+      color: #1a237e; /* dark navy */
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.15);
+    }
+    
+    .card {
+      width: 320px;
+      min-height: 100px;
+      background: #ffffffcc;
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    .card.animate {
+      animation: slidePop 0.5s ease forwards;
+    }
+
+    @keyframes slidePop {
+      0%   { transform: translate(50px, 0px) scale(1); opacity: 0.7; }
+      50%  { transform: translate(0,0) scale(1.05); opacity: 1; }
+      100% { transform: translate(0,0) scale(1); opacity: 1; }
+    }
+
+    button {
+      background: #90caf9;
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      background: #64b5f6;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <h1>🌟 Impressivo</h1>
+  <div id="card" class="card">Get ready to shine!</div>
+  <button onclick="pickRandom()">Impress Yourself</button>
+
+  <script>
+    const items = [
+      "Write one honest sentence in your journal.",
+      "Do one knee/strength exercise.",
+      "Learn one new word or fact.",
+      "Declutter one item.",
+      "Send one kind message.",
+      "Add one new spice/herb to cooking.",
+      "Water one plant with intention.",
+      "Stand tall for 30 seconds.",
+      "Name one value & how you lived it today.",
+      "Stretch for 2 minutes (arms overhead, side bends).",
+      "Wash one dish with full awareness (turning it into a meditation).",
+      "Read one page of a book.",
+      "Practice saying a new English word out loud 5 times.",
+      "Write down one thing you want to forgive yourself for.",
+      "Set aside 5 coins in a “tiny abundance” box.",
+      "Practice one deep breath (inhale 4, hold 2, exhale 6).",
+      "Choose one corner of a room and tidy it for 3 minutes.",
+      "Sit quietly with your dog for a moment and simply be.",
+      "Say out loud: “I am proud of myself for surviving this far.”",
+      "Try standing outside for 1 minute barefoot (if safe).",
+      "Write your name in big letters and decorate it.",
+      "Look in the mirror and smile, even if it feels awkward.",
+      "Light a candle or turn on a lamp just for the mood.",
+      "Note one skill you’ve gained in life (big or small) and give yourself credit.",
+      "Drink a glass of water mindfully, as if it’s medicine for your bones.",
+      "Fold one piece of clothing neatly.",
+      "Do 5 ankle circles for joint health.",
+      "Write down one boundary you kept today.",
+      "Translate one Turkish word into English (or vice versa) and write it.",
+      "Read one news headline and reflect on your opinion.",
+      "Write one sentence starting with: “I value freedom because…”",
+      "Put aside one lira into your savings jar.",
+      "Sweep or wipe one small surface.",
+      "Hold eye contact with yourself in the mirror for 10 seconds.",
+      "Open a window and take 3 deep breaths of fresh air.",
+      "Compliment your husband sincerely on one thing.",
+      "Say one kind sentence to yourself out loud.",
+      "Research one tip for bone health.",
+      "Stroke Gölge’s fur slowly for one minute, as a mindful act.",
+      "Stand with shoulders back and say: “I am enough.”",
+      "Write down one goal for tomorrow (small).",
+      "Delete one useless file or message from your phone.",
+      "Light incense/candle and enjoy the atmosphere for 2 minutes.",
+      "Read one proverb or quote and reflect on it.",
+      "Name one moment in the past week you survived well.",
+      "Massage your hands for 1 minute.",
+      "Write down one thing you’re curious about right now.",
+      "Tidy your shoes or bag as a small act of order.",
+      "Write a thank-you note to “future me.”",
+      "Stand in sunlight (or near a window) for 2 minutes.",
+      "Say one sentence fully in English and enjoy it.",
+      "Write one sentence beginning: “Today I survived by…”",
+      "Do one wall push-up.",
+      "Spend 1 minute noticing your breath without changing it.",
+      "Pick up one fallen leaf or object outside as an act of care.",
+      "Wipe one mirror or window.",
+      "Write a compliment about yourself (even small).",
+      "Sort one corner of your bookshelf or table.",
+      "Read a single inspiring quote online.",
+      "Drink one cup of tea with zero distractions.",
+      "Imagine your bones growing stronger as you stretch.",
+      "Write down one memory you’re grateful for.",
+      "Take a short walk and notice 3 sounds.",
+      "Practice saying “no” aloud with confidence.",
+      "Write down one thing you want to protect about yourself.",
+      "Learn the meaning of one new proverb.",
+      "Give yourself permission for 10 minutes of total rest.",
+      "Massage your shoulders for 1 minute.",
+      "Write a sentence about what freedom means to you.",
+      "Notice your posture and adjust gently.",
+      "Brush your hair slowly as self-care.",
+      "Place one positive note somewhere you’ll find it later.",
+      "Look at yourself kindly in the mirror for 10 seconds.",
+      "Do 5 gentle squats or stretches.",
+      "Choose one object you own and appreciate it.",
+      "Write down a worry and put it aside in a box.",
+      "Count slowly to 20 as a calming ritual.",
+      "Wash your face with intention, like a fresh start.",
+      "Speak one of your values out loud.",
+      "List three things you’ve survived in life.",
+      "Put on music and sway for one minute.",
+      "Write down a future wish, however small.",
+      "Make one tiny donation (money, food, kindness).",
+      "Breathe in and imagine filling with light; breathe out tension.",
+      "Choose one task and do it with full attention for 2 minutes.",
+      "Note one thing you did today that past-you would be proud of.",
+      "Sit silently for 2 minutes and let your thoughts pass.",
+      "Look at your hands and thank them for all they do.",
+      "Straighten one part of your living space.",
+      "Write one affirmation: “I deserve gentleness.”",
+      "Recall one teacher, friend, or helper who shaped you.",
+      "Do a gentle ankle stretch.",
+      "Write your favorite word and decorate it.",
+      "Drink a glass of water slowly, as if it’s a gift.",
+      "Write a sentence about your integrity in action.",
+      "Smile at yourself in a reflection (window, mirror).",
+      "Put on clothes you feel comfortable and strong in.",
+      "Light a candle and watch the flame for 30 seconds.",
+      "End the day by saying: “I did enough.”"
+    ];
+
+    let remaining = [...items];
+    let lastPicked = null;
+
+    function pickRandom() {
+      const card = document.getElementById("card");
+
+      if (remaining.length === 0) {
+        remaining = [...items];
+      }
+
+      let idx = Math.floor(Math.random() * remaining.length);
+
+      // Avoid immediate repeat after array reset
+      if (remaining[idx] === lastPicked) {
+        idx = (idx + 1) % remaining.length;
+      }
+
+      const choice = remaining[idx];
+      remaining.splice(idx, 1);
+      lastPicked = choice;
+
+      card.textContent = choice;
+
+      card.classList.remove("animate");
+      void card.offsetWidth; // restart animation
+      card.classList.add("animate");
+    }
+  </script>
+</body>
+</html>
