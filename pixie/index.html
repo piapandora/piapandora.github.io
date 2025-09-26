@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>160x90 Grid - Blue Palette</title>
+<title>Pixie Squares - Blue Palette</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;width:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
@@ -38,14 +38,18 @@ const COLS = 160;
 const ROWS = 90;
 const TOTAL = COLS * ROWS;
 const grid = document.getElementById('grid');
+let lastImageArray = null;
 
+// Convert brightness to index
 function brightnessToIndex(r,g,b){
   const bright = (r+g+b)/3;   // 0-255
-  const step = Math.floor(bright / 26);  // 256/10 ≈ 25.6
-  return Math.min(step,9);     // clamp 0-9
+  const step = Math.floor(bright / 26);
+  return Math.min(step,9);
 }
 
+// Draw the grid
 function drawImage(imageArray){
+  lastImageArray = imageArray; // store for download
   grid.innerHTML='';
   const frag = document.createDocumentFragment();
   for(let i=0;i<TOTAL;i++){
@@ -56,6 +60,7 @@ function drawImage(imageArray){
   grid.appendChild(frag);
 }
 
+// Process dropped image
 function processImage(img){
   const canvas = document.createElement('canvas');
   canvas.width = COLS;
@@ -70,19 +75,31 @@ function processImage(img){
   return arr;
 }
 
-async function copyToClipboard(text){
-  try { await navigator.clipboard.writeText(text); console.log('JSON copied!'); }
-  catch(e){ console.warn('Clipboard copy failed:', e); }
+// Download JSON with timestamp
+function downloadJSON(arr){
+  if(!arr) return;
+  const dataStr = JSON.stringify({ data: arr.join('') });
+  const blob = new Blob([dataStr], { type: 'application/json' });
+
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[:T]/g,'-').split('.')[0];
+  const filename = `pixie-${timestamp}.json`;
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
+// Handle file drops
 function handleImage(file){
   const reader = new FileReader();
   reader.onload = e=>{
     const img = new Image();
-    img.onload = async ()=>{
+    img.onload = ()=>{
       const arr = processImage(img);
       drawImage(arr);
-      await copyToClipboard(JSON.stringify({ data: arr.join('') }));
     };
     img.src = e.target.result;
   };
@@ -97,7 +114,6 @@ function handleJSON(file){
       if(json.data && json.data.length===TOTAL){
         const arr = Array.from(json.data).map(c=>parseInt(c));
         drawImage(arr);
-        copyToClipboard(JSON.stringify({ data: arr.join('') }));
       } else { console.warn('Invalid JSON'); }
     } catch(err){ console.warn('Failed to parse JSON',err); }
   };
@@ -114,11 +130,25 @@ function handleFile(file){
   else console.warn('Unsupported file type:', file.type);
 }
 
-// Drag-and-drop anywhere
+// Drag-and-drop
 window.addEventListener('dragover',e=>e.preventDefault());
 window.addEventListener('drop',e=>{
   e.preventDefault();
   if(e.dataTransfer.files.length>0) handleFile(e.dataTransfer.files[0]);
+});
+
+// Download feature
+let xPressCount = 0;
+window.addEventListener('keydown', e=>{
+  if(e.key.toLowerCase()==='x'){
+    xPressCount++;
+    if(xPressCount===3){
+      downloadJSON(lastImageArray);
+      xPressCount = 0;
+    }
+  } else {
+    xPressCount = 0;
+  }
 });
 </script>
 
