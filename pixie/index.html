@@ -3,10 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pixie Squares - Blue Palette</title>
+<title>Pixie Squares</title>
+<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;width:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  html,body{
+    height:100%;width:100%;
+    background:#1a1a4d; /* initial dark blue */
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;position:relative;
+    color:white;font-family:sans-serif;font-size:1.5rem;
+  }
   #grid{
     display:grid;
     width:calc(min(100vw / 160, 100vh / 90) * 160);
@@ -17,39 +24,50 @@
   }
   .cell{width:100%;height:100%;}
 
-  .c-0 { background: #1a1a4d; }   /* darkest blue */
+  /* Blue palette */
+  .c-0 { background: #1a1a4d; }
   .c-1 { background: #1a1a4d; }
-  .c-2 { background: #2a2a66; }   /* slightly lighter */
+  .c-2 { background: #2a2a66; }
   .c-3 { background: #3b3b80; }
   .c-4 { background: #5555a0; }
   .c-5 { background: #7070b8; }
   .c-6 { background: #8c8cd0; }
   .c-7 { background: #a8a8e6; }
   .c-8 { background: #ccccff; }
-  .c-9 { background: #ccccff; }   /* lightest blue */
+  .c-9 { background: #ccccff; }
+
+  #message{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+  }
 </style>
 </head>
 <body>
 
 <div id="grid"></div>
+<div id="message">Drop Image or JSON</div>
 
 <script>
 const COLS = 160;
 const ROWS = 90;
 const TOTAL = COLS * ROWS;
 const grid = document.getElementById('grid');
+const message = document.getElementById('message');
 let lastImageArray = null;
 
 // Convert brightness to index
 function brightnessToIndex(r,g,b){
-  const bright = (r+g+b)/3;   // 0-255
+  const bright = (r+g+b)/3;
   const step = Math.floor(bright / 26);
   return Math.min(step,9);
 }
 
 // Draw the grid
 function drawImage(imageArray){
-  lastImageArray = imageArray; // store for download
+  lastImageArray = imageArray;
+  message.style.display='none'; // hide message
   grid.innerHTML='';
   const frag = document.createDocumentFragment();
   for(let i=0;i<TOTAL;i++){
@@ -60,7 +78,7 @@ function drawImage(imageArray){
   grid.appendChild(frag);
 }
 
-// Process dropped image
+// Process image
 function processImage(img){
   const canvas = document.createElement('canvas');
   canvas.width = COLS;
@@ -75,7 +93,7 @@ function processImage(img){
   return arr;
 }
 
-// Download JSON with timestamp
+// Download JSON
 function downloadJSON(arr){
   if(!arr) return;
   const dataStr = JSON.stringify({ data: arr.join('') });
@@ -92,7 +110,7 @@ function downloadJSON(arr){
   URL.revokeObjectURL(a.href);
 }
 
-// Handle file drops
+// Handle files
 function handleImage(file){
   const reader = new FileReader();
   reader.onload = e=>{
@@ -137,7 +155,7 @@ window.addEventListener('drop',e=>{
   if(e.dataTransfer.files.length>0) handleFile(e.dataTransfer.files[0]);
 });
 
-// Download feature
+// Download
 let xPressCount = 0;
 window.addEventListener('keydown', e=>{
   if(e.key.toLowerCase()==='x'){
