@@ -6,169 +6,77 @@
 <title>Pixie Squares</title>
 <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{
-    height:100%;width:100%;
-    background:#1a1a4d; /* initial dark blue */
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden;position:relative;
-    color:white;font-family:sans-serif;font-size:1.5rem;
-  }
-  #grid{
-    display:grid;
-    width:calc(min(100vw / 160, 100vh / 90) * 160);
-    height:calc(min(100vw / 160, 100vh / 90) * 90);
-    grid-template-columns:repeat(160,1fr);
-    grid-template-rows:repeat(90,1fr);
-    gap:0;
-  }
-  .cell{width:100%;height:100%;}
-
-  /* Blue palette */
-  .c-0 { background: #1a1a4d; }
-  .c-1 { background: #1a1a4d; }
-  .c-2 { background: #2a2a66; }
-  .c-3 { background: #3b3b80; }
-  .c-4 { background: #5555a0; }
-  .c-5 { background: #7070b8; }
-  .c-6 { background: #8c8cd0; }
-  .c-7 { background: #a8a8e6; }
-  .c-8 { background: #ccccff; }
-  .c-9 { background: #ccccff; }
-
-  #message{
-    position:absolute;
-    top:50%;left:50%;
-    transform:translate(-50%,-50%);
-    pointer-events:none;
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%;background:#1a1a4d;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;color:white;font-family:sans-serif;font-size:1.5rem}
+#grid{display:grid;width:calc(min(100vw/160,100vh/90)*160);height:calc(min(100vw/160,100vh/90)*90);grid-template-columns:repeat(160,1fr);grid-template-rows:repeat(90,1fr);gap:0}
+.cell{width:100%;height:100%}
+.c-0{background:#1a1a4d}.c-1{background:#1a1a4d}.c-2{background:#2a2a66}.c-3{background:#3b3b80}.c-4{background:#5555a0}.c-5{background:#7070b8}.c-6{background:#8c8cd0}.c-7{background:#a8a8e6}.c-8{background:#ccccff}.c-9{background:#ccccff}
+#message{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
 </style>
 </head>
 <body>
-
 <div id="grid"></div>
 <div id="message">Drop Image or JSON</div>
-
 <script>
-const COLS = 160;
-const ROWS = 90;
-const TOTAL = COLS * ROWS;
-const grid = document.getElementById('grid');
-const message = document.getElementById('message');
-let lastImageArray = null;
+const COLS=160,ROWS=90,TOTAL=COLS*ROWS;
+const grid=document.getElementById('grid');
+const message=document.getElementById('message');
+let lastImageArray=null;
 
-// Convert brightness to index
-function brightnessToIndex(r,g,b){
-  const bright = (r+g+b)/3;
-  const step = Math.floor(bright / 26);
-  return Math.min(step,9);
+const keyBase64 = "m1C2uiv3P4rS5W2Cw1X_j0m1mqm-K7Ah8SG9Q2WZ1mY=";
+
+function base64ToUint8(b64){const bin=atob(b64);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);return u8}
+function uint8ToBase64(u8){let s='';for(let i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return btoa(s)}
+
+let cryptoKeyPromise = (async ()=>{
+  const raw = base64ToUint8(keyBase64);
+  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt','decrypt']);
+})();
+
+async function encryptString(plaintext){
+  const key = await cryptoKeyPromise;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(plaintext);
+  const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, encoded);
+  const combined = new Uint8Array(iv.length + ct.byteLength);
+  combined.set(iv,0);
+  combined.set(new Uint8Array(ct), iv.length);
+  return uint8ToBase64(combined);
 }
 
-// Draw the grid
-function drawImage(imageArray){
-  lastImageArray = imageArray;
-  message.style.display='none'; // hide message
-  grid.innerHTML='';
-  const frag = document.createDocumentFragment();
-  for(let i=0;i<TOTAL;i++){
-    const div = document.createElement('div');
-    div.className='cell c-'+imageArray[i];
-    frag.appendChild(div);
-  }
-  grid.appendChild(frag);
+async function decryptString(b64){
+  const key = await cryptoKeyPromise;
+  const combined = base64ToUint8(b64);
+  const iv = combined.slice(0,12);
+  const data = combined.slice(12);
+  const plainBuf = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, data);
+  return new TextDecoder().decode(plainBuf);
 }
 
-// Process image
-function processImage(img){
-  const canvas = document.createElement('canvas');
-  canvas.width = COLS;
-  canvas.height = ROWS;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img,0,0,COLS,ROWS);
-  const data = ctx.getImageData(0,0,COLS,ROWS).data;
-  let arr = [];
-  for(let i=0;i<data.length;i+=4){
-    arr.push(brightnessToIndex(data[i],data[i+1],data[i+2]));
-  }
-  return arr;
-}
+function brightnessToIndex(r,g,b){return Math.min(Math.floor((r+g+b)/3/26),9)}
 
-// Download JSON
-function downloadJSON(arr){
+function drawImage(arr){lastImageArray=arr;message.style.display='none';grid.innerHTML='';const f=document.createDocumentFragment();for(let i=0;i<TOTAL;i++){const d=document.createElement('div');d.className='cell c-'+arr[i];f.appendChild(d)}grid.appendChild(f)}
+
+function processImage(img){const c=document.createElement('canvas');c.width=COLS;c.height=ROWS;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,COLS,ROWS);const data=ctx.getImageData(0,0,COLS,ROWS).data;let a=[];for(let i=0;i<data.length;i+=4)a.push(brightnessToIndex(data[i],data[i+1],data[i+2]));return a}
+
+async function downloadJSON(arr){
   if(!arr) return;
-  const dataStr = JSON.stringify({ data: arr.join('') });
-  const blob = new Blob([dataStr], { type: 'application/json' });
-
-  const now = new Date();
-  const timestamp = now.toISOString().replace(/[:T]/g,'-').split('.')[0];
-  const filename = `pixie-${timestamp}.json`;
-
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const plain = arr.join('');
+  const encrypted = await encryptString(plain);
+  const s = JSON.stringify({ pixie: encrypted });
+  const blob = new Blob([s], { type: 'application/json' });
+  const t = new Date();
+  const fname = `pixie-${t.toISOString().replace(/[:T]/g,'-').split('.')[0]}.json`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();URL.revokeObjectURL(a.href);
 }
 
-// Handle files
-function handleImage(file){
-  const reader = new FileReader();
-  reader.onload = e=>{
-    const img = new Image();
-    img.onload = ()=>{
-      const arr = processImage(img);
-      drawImage(arr);
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
+function handleImage(file){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{drawImage(processImage(img))};img.src=e.target.result};r.readAsDataURL(file)}
+function handleJSON(file){const r=new FileReader();r.onload=async e=>{try{const j=JSON.parse(e.target.result);if(j.pixie){const plain=await decryptString(j.pixie);if(plain.length===TOTAL){drawImage(Array.from(plain).map(c=>parseInt(c)))}else console.warn('Invalid JSON content length')}else console.warn('Invalid JSON')}catch(err){console.warn('Failed to parse or decrypt JSON',err)}};r.readAsText(file)}
+function handleFile(f){const s=['image/png','image/jpeg','image/jpg','image/bmp','image/webp','image/gif','image/avif'];if(s.includes(f.type))handleImage(f);else if(f.type==='application/json')handleJSON(f);else console.warn('Unsupported file type:',f.type)}
 
-function handleJSON(file){
-  const reader = new FileReader();
-  reader.onload = e=>{
-    try{
-      const json = JSON.parse(e.target.result);
-      if(json.data && json.data.length===TOTAL){
-        const arr = Array.from(json.data).map(c=>parseInt(c));
-        drawImage(arr);
-      } else { console.warn('Invalid JSON'); }
-    } catch(err){ console.warn('Failed to parse JSON',err); }
-  };
-  reader.readAsText(file);
-}
+window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length>0)handleFile(e.dataTransfer.files[0])})
 
-function handleFile(file){
-  const supportedTypes = [
-    'image/png','image/jpeg','image/jpg',
-    'image/bmp','image/webp','image/gif','image/avif'
-  ];
-  if(supportedTypes.includes(file.type)) handleImage(file);
-  else if(file.type==='application/json') handleJSON(file);
-  else console.warn('Unsupported file type:', file.type);
-}
-
-// Drag-and-drop
-window.addEventListener('dragover',e=>e.preventDefault());
-window.addEventListener('drop',e=>{
-  e.preventDefault();
-  if(e.dataTransfer.files.length>0) handleFile(e.dataTransfer.files[0]);
-});
-
-// Download
-let xPressCount = 0;
-window.addEventListener('keydown', e=>{
-  if(e.key.toLowerCase()==='x'){
-    xPressCount++;
-    if(xPressCount===3){
-      downloadJSON(lastImageArray);
-      xPressCount = 0;
-    }
-  } else {
-    xPressCount = 0;
-  }
-});
+let xPressCount=0;window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='x'){xPressCount++;if(xPressCount===3){downloadJSON(lastImageArray);xPressCount=0}}else xPressCount=0})
 </script>
-
 </body>
 </html>
