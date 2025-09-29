@@ -9,7 +9,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{
     height:100%;width:100%;
-    background:linear-gradient(135deg,#111,#222); /* 80% gray/black gradient */
+    background:#222;
     display:flex;align-items:center;justify-content:center;
     overflow:hidden;position:relative;
     color:white;font-family:sans-serif;font-size:1.2rem;
@@ -100,7 +100,6 @@ function drawImage(imageArray, cols, rows, offsetX=0, offsetY=0){
 }
 
 function processImage(img){
-  // Image scaling without letterbox for display
   let cols, rows;
   if(blackMode){
     if(img.width>=img.height){ cols=MAX_COLS; rows=Math.round(img.height*(MAX_COLS/img.width)); }
@@ -141,7 +140,7 @@ function saveCanvasFile(canvas, label){
 
 function savePNGs(){
   if(!lastImageArray) return;
-  // Small PNG (image's natural resolution)
+  // Small PNG
   hiddenCanvas.width = currentCols;
   hiddenCanvas.height = currentRows;
   let ctx = hiddenCanvas.getContext('2d');
@@ -155,7 +154,7 @@ function savePNGs(){
   }
   saveCanvasFile(hiddenCanvas,'');
   
-  // Upscaled PNG (always 1920x1080 max)
+  // Upscaled PNG
   const scale=Math.min(1920/currentCols,1080/currentRows);
   const bigW=Math.max(1,Math.round(currentCols*scale));
   const bigH=Math.max(1,Math.round(currentRows*scale));
@@ -182,7 +181,7 @@ function handleImage(file){
     img.onload=()=>{
       lastImage=img;
       const {arr,cols,rows}=processImage(img);
-      drawImage(arr,cols,rows); // no letterbox for images
+      drawImage(arr,cols,rows);
     };
     img.src=e.target.result;
   };
@@ -244,7 +243,7 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keydown',e=>{
   if(e.code==='Space'){
     blackMode=!blackMode;
-    document.body.style.background=blackMode?'linear-gradient(135deg,#111,#222)':'#1a1a4d';
+    document.body.style.background=blackMode?'#222':'#1a1a4d';
     if(lastImage){
       const {arr,cols,rows}=processImage(lastImage);
       drawImage(arr,cols,rows);
