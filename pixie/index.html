@@ -72,6 +72,7 @@ let currentCols = MAX_COLS;
 let currentRows = MAX_ROWS;
 let blackMode = true;
 let lastDroppedJson = null;
+let toggleAllowed = true; // NEW: controls whether Spacebar works
 
 function brightnessToIndex(r,g,b){ return Math.min(Math.floor((r+g+b)/3 /26),9); }
 function getColor(i){ return ['#1a1a4d','#1a1a4d','#2a2a66','#3b3b80','#5555a0','#7070b8','#8c8cd0','#a8a8e6','#ccccff','#ccccff'][i]||'#000'; }
@@ -202,6 +203,23 @@ function handleImage(file){
     const img=new Image();
     img.onload=()=>{
       lastImage=img;
+
+      // check aspect ratio
+      const aspectImg = img.width / img.height;
+      const aspectGrid = MAX_COLS / MAX_ROWS;
+
+      if(Math.abs(aspectImg - aspectGrid) < 0.01){
+        // force blue mode for 16:9
+        blackMode = false;
+        toggleAllowed = false;
+        document.body.style.background = '#1a1a4d';
+      } else {
+        // allow toggle for non 16:9
+        blackMode = true;
+        toggleAllowed = true;
+        document.body.style.background = '#222';
+      }
+
       const {arr,cols,rows}=processImage(img);
       drawImage(arr,cols,rows);
     };
@@ -216,6 +234,12 @@ function handleJSON(file){
     try{
       const j=JSON.parse(e.target.result);
       lastDroppedJson=j;
+
+      // JSONs are always 16:9 -> force blue mode
+      blackMode = false;
+      toggleAllowed = false;
+      document.body.style.background = '#1a1a4d';
+
       if(j.data && j.data.length){
         let nativeCols=Math.round(Math.sqrt(j.data.length*MAX_COLS/MAX_ROWS));
         let nativeRows=Math.round(j.data.length/nativeCols);
@@ -263,7 +287,7 @@ window.addEventListener('keydown',e=>{
 });
 
 window.addEventListener('keydown',e=>{
-  if(e.code==='Space'){
+  if(e.code==='Space' && toggleAllowed){
     blackMode=!blackMode;
     document.body.style.background=blackMode?'#222':'#1a1a4d';
     if(lastImage){
