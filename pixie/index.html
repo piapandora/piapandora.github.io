@@ -98,22 +98,6 @@ function drawImage(imageArray, cols, rows, offsetX=0, offsetY=0){
   grid.appendChild(frag);
 }
 
-function processImage(img){
-  let cols, rows;
-  if(blackMode){
-    if(img.width>=img.height){ cols=MAX_COLS; rows=Math.round(img.height*(MAX_COLS/img.width)); }
-    else { rows=MAX_ROWS; cols=Math.round(img.width*(MAX_ROWS/img.height)); }
-    cols=Math.max(1,Math.min(MAX_COLS,cols|0));
-    rows=Math.max(1,Math.min(MAX_ROWS,rows|0));
-  } else { cols=MAX_COLS; rows=MAX_ROWS; }
-  const cv=document.createElement('canvas'); cv.width=cols; cv.height=rows;
-  const ctx=cv.getContext('2d'); ctx.drawImage(img,0,0,cols,rows);
-  const data=ctx.getImageData(0,0,cols,rows).data;
-  const arr=[];
-  for(let i=0;i<data.length;i+=4) arr.push(brightnessToIndex(data[i],data[i+1],data[i+2]));
-  return { arr, cols, rows };
-}
-
 function padTo160x90(arr,nativeCols,nativeRows){
   const fullArray=Array(MAX_COLS*MAX_ROWS).fill(0);
   const offsetX=Math.floor((MAX_COLS-nativeCols)/2);
@@ -124,6 +108,47 @@ function padTo160x90(arr,nativeCols,nativeRows){
     }
   }
   return { arr: fullArray, offsetX, offsetY };
+}
+
+function processImage(img){
+  let cols, rows;
+  if(blackMode){
+    const aspectImg = img.width / img.height;
+    const aspectGrid = MAX_COLS / MAX_ROWS;
+
+    if(Math.abs(aspectImg - aspectGrid) < 0.01){
+      cols = MAX_COLS;
+      rows = MAX_ROWS;
+    } else {
+      if(aspectImg > aspectGrid){
+        cols = MAX_COLS;
+        rows = Math.round(MAX_COLS / aspectImg);
+      } else {
+        rows = MAX_ROWS;
+        cols = Math.round(MAX_ROWS * aspectImg);
+      }
+    }
+    cols=Math.max(1,Math.min(MAX_COLS,cols|0));
+    rows=Math.max(1,Math.min(MAX_ROWS,rows|0));
+  } else {
+    cols = MAX_COLS;
+    rows = MAX_ROWS;
+  }
+
+  const cv=document.createElement('canvas'); 
+  cv.width=cols; cv.height=rows;
+  const ctx=cv.getContext('2d');
+  ctx.drawImage(img,0,0,cols,rows);
+  const data=ctx.getImageData(0,0,cols,rows).data;
+  const arr=[];
+  for(let i=0;i<data.length;i+=4) arr.push(brightnessToIndex(data[i],data[i+1],data[i+2]));
+
+  if(blackMode && (cols!==MAX_COLS || rows!==MAX_ROWS)){
+    const {arr:fullArr}=padTo160x90(arr,cols,rows);
+    return {arr:fullArr, cols:MAX_COLS, rows:MAX_ROWS};
+  }
+
+  return {arr, cols, rows};
 }
 
 function saveCanvasFile(canvas, label){
@@ -139,7 +164,6 @@ function saveCanvasFile(canvas, label){
 
 function savePNGs(){
   if(!lastImageArray) return;
-  // Small PNG
   hiddenCanvas.width = currentCols;
   hiddenCanvas.height = currentRows;
   let ctx = hiddenCanvas.getContext('2d');
@@ -152,8 +176,6 @@ function savePNGs(){
     }
   }
   saveCanvasFile(hiddenCanvas,'');
-
-  // Upscaled PNG
   const scale=Math.min(1920/currentCols,1080/currentRows);
   const bigW=Math.max(1,Math.round(currentCols*scale));
   const bigH=Math.max(1,Math.round(currentRows*scale));
@@ -161,13 +183,14 @@ function savePNGs(){
   hiddenCanvas.height=bigH;
   ctx=hiddenCanvas.getContext('2d');
   ctx.clearRect(0,0,bigW,bigH);
+  ctx.imageSmoothingEnabled=false;
   const cellW=bigW/currentCols;
   const cellH=bigH/currentRows;
   for(let y=0;y<currentRows;y++){
     for(let x=0;x<currentCols;x++){
       const v=lastImageArray[y*currentCols+x];
       ctx.fillStyle=getColor(v);
-      ctx.fillRect(x*cellW,y*cellH,cellW,cellH);
+      ctx.fillRect(Math.round(x*cellW), Math.round(y*cellH), Math.round(cellW), Math.round(cellH));
     }
   }
   saveCanvasFile(hiddenCanvas,'upscaled');
@@ -197,7 +220,7 @@ function handleJSON(file){
         let nativeCols=Math.round(Math.sqrt(j.data.length*MAX_COLS/MAX_ROWS));
         let nativeRows=Math.round(j.data.length/nativeCols);
         const arr=Array.from(j.data).map(c=>parseInt(c));
-        const {arr:fullArr}=padTo160x90(arr,nativeCols,nativeRows); // JSON letterbox
+        const {arr:fullArr}=padTo160x90(arr,nativeCols,nativeRows);
         drawImage(fullArr,MAX_COLS,MAX_ROWS);
       }
     }catch(err){ console.warn('Failed to parse JSON',err); }
