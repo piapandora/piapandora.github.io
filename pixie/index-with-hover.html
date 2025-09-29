@@ -39,7 +39,13 @@
     border-radius:16px;
     padding:20px 30px;
     box-shadow:0 8px 20px rgba(0,0,0,0.7);
-    transition: background 0.3s ease;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  /* Noticeable hover effect */
+  #messageWrapper:hover {
+    transform: translate(-50%, -50%) scale(1.08);
+    box-shadow: 0 12px 30px rgba(255,221,85,0.6);
+    cursor: pointer;
   }
   #messageWrapper span{ font-size:0.9rem; opacity:0.85; }
   #messageWrapper b{ color:#ffdd55; text-shadow:0 0 6px rgba(255,221,85,0.6); }
