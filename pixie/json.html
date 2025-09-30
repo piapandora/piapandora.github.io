@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pixie JSON Viewer</title>
+<title>JSON Viewer</title>
+<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{
     height:100%;width:100%;
     display:flex;align-items:center;justify-content:center;
-    background:#000;
+    background:#1a1a4d;
   }
   #grid{display:grid;gap:0}
   .cell{width:100%;height:100%}
@@ -30,26 +31,15 @@
 <div id="grid"></div>
 
 <script>
-const MAX_COLS=160, MAX_ROWS=90, grid=document.getElementById('grid');
-
-function padTo160x90(arr,nativeCols,nativeRows){
-  const full=Array(MAX_COLS*MAX_ROWS).fill(0);
-  const offX=Math.floor((MAX_COLS-nativeCols)/2);
-  const offY=Math.floor((MAX_ROWS-nativeRows)/2);
-  for(let y=0;y<nativeRows;y++){
-    for(let x=0;x<nativeCols;x++){
-      full[(y+offY)*MAX_COLS+(x+offX)]=arr[y*nativeCols+x];
-    }
-  }
-  return full;
-}
+const COLS = 160, ROWS = 90;
+const grid = document.getElementById('grid');
 
 function drawImage(arr){
   grid.innerHTML='';
-  grid.style.gridTemplateColumns=`repeat(${MAX_COLS},1fr)`;
-  grid.style.gridTemplateRows=`repeat(${MAX_ROWS},1fr)`;
-  grid.style.width=`calc(min(100vw / ${MAX_COLS}, 100vh / ${MAX_ROWS}) * ${MAX_COLS})`;
-  grid.style.height=`calc(min(100vw / ${MAX_COLS}, 100vh / ${MAX_ROWS}) * ${MAX_ROWS})`;
+  grid.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
+  grid.style.gridTemplateRows=`repeat(${ROWS},1fr)`;
+  grid.style.width=`calc(min(100vw / ${COLS}, 100vh / ${ROWS}) * ${COLS})`;
+  grid.style.height=`calc(min(100vw / ${COLS}, 100vh / ${ROWS}) * ${ROWS})`;
   const frag=document.createDocumentFragment();
   arr.forEach(v=>{
     const d=document.createElement('div');
@@ -65,10 +55,11 @@ function handleJSON(file){
     try{
       const j=JSON.parse(e.target.result);
       const raw=Array.from(j.data).map(c=>parseInt(c));
-      let cols=Math.round(Math.sqrt(raw.length*MAX_COLS/MAX_ROWS));
-      let rows=Math.round(raw.length/cols);
-      const full=padTo160x90(raw,cols,rows);
-      drawImage(full);
+      if(raw.length !== COLS * ROWS){
+        console.warn("Unexpected data size, expected 160x90 =", COLS*ROWS);
+        return;
+      }
+      drawImage(raw);
     }catch(err){console.warn("Invalid JSON",err);}
   };
   reader.readAsText(file);
