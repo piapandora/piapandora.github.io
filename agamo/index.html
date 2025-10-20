@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Agamograph Maker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%; width: 100%;
+    background: #222;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: white; font-family: sans-serif;
+    overflow: hidden;
+  }
+  #dropzone {
+    border: 3px dashed #555;
+    border-radius: 16px;
+    width: 80%; max-width: 900px; height: 200px;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; color: #aaa;
+    transition: border 0.3s, color 0.3s; cursor: pointer;
+  }
+  #dropzone.dragover { border-color: #ffdd55; color: #ffdd55; }
+  #controls { margin: 20px 0; display: none; gap: 10px; align-items: center; }
+  #preview {
+    max-width: 90vw; max-height: 70vh;
+    border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+  button {
+    background: #444; border: none; color: white;
+    padding: 10px 20px; border-radius: 8px;
+    cursor: pointer; transition: background 0.3s;
+  }
+  button:hover { background: #666; }
+</style>
+</head>
+<body>
+
+<div id="dropzone">Drop or Click to Upload an Image</div>
+
+<div id="controls">
+  <label>Slices: <input type="number" id="slices" min="2" max="50" value="10" style="width:60px;"></label>
+  <button id="process">Make Agamograph</button>
+  <button id="download" style="display:none;">Download Result</button>
+</div>
+
+<canvas id="preview"></canvas>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const canvas = document.getElementById('preview');
+const ctx = canvas.getContext('2d');
+const slicesInput = document.getElementById('slices');
+const processBtn = document.getElementById('process');
+const downloadBtn = document.getElementById('download');
+
+let image = null;
+
+// === File handling ===
+dropzone.addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e => handleFile(e.target.files[0]);
+  input.click();
+});
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file) {
+  if (!file.type.startsWith('image/')) return alert('Please upload an image.');
+  const reader = new FileReader();
+  reader.onload = e => {
+    image = new Image();
+    image.onload = () => {
+      canvas.width = image.width;
+      canvas.height = image.height;
+      ctx.drawImage(image, 0, 0);
+      document.getElementById('controls').style.display = 'flex';
+      dropzone.style.display = 'none';
+    };
+    image.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// === Core processing ===
+processBtn.addEventListener('click', () => {
+  if (!image) return;
+  const n = parseInt(slicesInput.value);
+  const w = image.width / n;
+  const h = image.height;
+
+  // --- Generate the interleaved pattern correctly ---
+  const pattern = [];
+  const half = Math.ceil(n / 2);
+  for (let i = 0; i < half; i++) {
+    if (i + 1 <= n) pattern.push(i + 1);
+    if (i + half + 1 <= n) pattern.push(i + half + 1);
+  }
+  console.log('Pattern:', pattern.join('-'));
+
+  // Draw shuffled slices
+  const temp = document.createElement('canvas');
+  temp.width = image.width;
+  temp.height = image.height;
+  const tctx = temp.getContext('2d');
+
+  pattern.forEach((srcIndex, i) => {
+    const sx = (srcIndex - 1) * w;
+    tctx.drawImage(image, sx, 0, w, h, i * w, 0, w, h);
+  });
+
+  // Copy to visible canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(temp, 0, 0);
+
+  // === Overlay visual guides ===
+  ctx.save();
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = 'rgba(128,128,128,0.5)';
+  ctx.fillStyle = 'rgba(128,128,128,0.5)';
+
+  // Draw outer 10px border
+  ctx.beginPath();
+  ctx.rect(5, 5, canvas.width - 10, canvas.height - 10);
+  ctx.stroke();
+
+  // Draw divider lines
+  for (let i = 1; i < n; i++) {
+    const x = i * w;
+    ctx.fillRect(x - 5, 0, 10, canvas.height); // 10px wide line centered on slice edge
+  }
+
+  ctx.restore();
+
+  downloadBtn.style.display = 'inline-block';
+});
+
+// === Download ===
+downloadBtn.addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'agamograph.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+</script>
+</body>
+</html>
