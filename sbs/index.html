@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SBS to Crossview Player</title>
+<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html, body {
+    height:100%; width:100%;
+    background:#222;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; position:relative;
+    color:white; font-family:sans-serif; font-size:1.2rem;
+    text-align:center;
+    transition: background 0.3s ease;
+  }
+
+  .viewer {
+    display:flex;
+    width:1920px;
+    height:1080px;
+  }
+
+  .half {
+    width:960px;
+    height:1080px;
+    overflow:hidden;
+    position:relative;
+  }
+
+  video {
+    position:absolute;
+    top:0;
+    width:1920px;
+    height:100%;
+    object-fit:cover;
+  }
+
+  #left video { left:-960px; }
+  #right video { left:0; }
+
+  #messageWrapper {
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+    max-width:90%;
+    line-height:1.5;
+    background:rgba(0,0,0,0.7);
+    border-radius:16px;
+    padding:20px 30px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.7);
+    transition: background 0.3s ease;
+    z-index:15;
+  }
+
+  #messageWrapper span{ font-size:0.9rem; opacity:0.85; }
+  #messageWrapper b{ color:#ffdd55; text-shadow:0 0 6px rgba(255,221,85,0.6); }
+</style>
+</head>
+<body>
+
+<div id="messageWrapper">
+  <div>
+    Drop a Video to Start<br><br>
+    <span>
+      Press <b>M</b> to Toggle Audio<br>
+      Press <b>Spacebar</b> to Pause/Play
+    </span>
+  </div>
+</div>
+
+<div class="viewer">
+  <div class="half" id="left"><video autoplay muted playsinline></video></div>
+  <div class="half" id="right"><video autoplay muted playsinline></video></div>
+</div>
+
+<script>
+const leftVid = document.querySelector('#left video');
+const rightVid = document.querySelector('#right video');
+const messageWrapper = document.getElementById('messageWrapper');
+const body = document.body;
+
+let audioOn = false;
+let paused = false;
+
+function loadVideo(file){
+  if(!file) return;
+
+  messageWrapper.style.display='none';
+  body.style.background = '#000000';
+
+  try { document.documentElement.requestFullscreen(); }
+  catch(err){ console.warn('Fullscreen request failed', err); }
+
+  const url = URL.createObjectURL(file);
+  leftVid.src = rightVid.src = url;
+  leftVid.muted = true;
+  rightVid.muted = true;
+
+  leftVid.onloadedmetadata = () => {
+    rightVid.currentTime = leftVid.currentTime;
+    leftVid.play();
+    rightVid.play();
+  };
+
+  leftVid.ontimeupdate = () => {
+    if(Math.abs(leftVid.currentTime - rightVid.currentTime) > 0.05){
+      rightVid.currentTime = leftVid.currentTime;
+    }
+  };
+}
+
+// Drag & drop support (functionality only)
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length > 0) loadVideo(e.dataTransfer.files[0]);
+});
+
+// Keyboard controls
+window.addEventListener('keydown', e=>{
+  if(e.key.toLowerCase()==='m'){ // audio toggle
+    audioOn = !audioOn;
+    leftVid.muted = !audioOn;
+  }
+  if(e.code==='Space'){
+    e.preventDefault();
+    paused = !paused;
+    if(paused){ leftVid.pause(); rightVid.pause(); }
+    else { leftVid.play(); rightVid.play(); }
+  }
+});
+</script>
+</body>
+</html>
