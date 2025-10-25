@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulation of My Brain</title>
+<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+<style>
+  html, body { 
+    margin:0; padding:0; overflow:hidden; 
+    background:#000; color:#eee; font-family:monospace; 
+  }
+  canvas { display:block; image-rendering: pixelated; }
+  #hud { 
+    position:absolute; top:10px; left:10px; color:#eee; 
+    font-family:monospace; background: rgba(0,0,0,0.4); 
+    padding:5px; border-radius:5px; 
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  White: My Brain | Green: My Projects | Red: Rest of Life | Mode: <span id="state">-</span> | Satisfaction: <span id="satiation">-</span>%
+</div>
+<canvas id="sim"></canvas>
+<script>
+const canvas = document.getElementById('sim');
+const ctx = canvas.getContext('2d');
+const stateDisplay = document.getElementById('state');
+const satiationDisplay = document.getElementById('satiation');
+
+let width, height;
+const gridX = 160;
+const gridY = 90;
+let cellWidth, cellHeight;
+
+function resize(){
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+  cellWidth = width / gridX;
+  cellHeight = height / gridY;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Initialize food clusters
+const numFoodZones = 9;
+const foodZoneSize = 20;
+let food = [];
+for(let z=0; z<numFoodZones; z++){
+  const zx = Math.floor(Math.random()*(gridX-foodZoneSize));
+  const zy = Math.floor(Math.random()*(gridY-foodZoneSize));
+  for(let i=0;i<foodZoneSize;i++){
+    for(let j=0;j<foodZoneSize;j++){
+      if(Math.random()<0.15)
+        food.push({x: zx+i, y: zy+j});
+    }
+  }
+}
+
+// Initialize danger clusters as moving blocks
+const numDangerZones = 5;
+const dangerZoneSize = 15;
+let danger = [];
+for(let z=0; z<numDangerZones; z++){
+  const zx = Math.floor(Math.random()*(gridX-dangerZoneSize));
+  const zy = Math.floor(Math.random()*(gridY-dangerZoneSize));
+  const dx = (Math.random() < 0.5 ? -0.05 : 0.05);
+  const dy = (Math.random() < 0.5 ? -0.05 : 0.05);
+  danger.push({x: zx, y: zy, size: dangerZoneSize, dx: dx, dy: dy});
+}
+
+// Helper to check if agent touches a danger block
+function isDanger(x,y){
+  return danger.some(d => 
+    x >= d.x && x < d.x + d.size &&
+    y >= d.y && y < d.y + d.size
+  );
+}
+
+// Agent
+let agent = {
+  x: Math.floor(gridX/2),
+  y: Math.floor(gridY/2),
+  dx:1,
+  dy:0,
+  state:'Search(Adrenaline)',
+  satiation:0,
+  stateTimer:0,
+  foodTimer:Date.now(),
+  decayTimer:Date.now()
+};
+
+const states = {
+  'Search(Adrenaline)': {speed:0.5, turnChance:0.05, duration:null},
+  'Binge(Dopamine)': {speed:0.2, turnChance:0.1, duration:null},
+  'I Feel Good(Serotonin)': {speed:0, turnChance:0, duration:null} 
+};
+
+function clamp(val,min,max){ return Math.max(min, Math.min(max, val)); }
+
+function step(){
+  // Background color change based on state
+  if(agent.state === 'I Feel Good(Serotonin)'){
+    ctx.fillStyle = '#023020'; // dark green
+  } else {
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; // normal semi-transparent black
+  }
+  ctx.fillRect(0,0,width,height);
+
+  // Move danger blocks
+  for(let d of danger){
+    d.x += d.dx;
+    d.y += d.dy;
+
+    // Bounce off edges
+    if(d.x < 0){ d.x=0; d.dx*=-1; }
+    if(d.y < 0){ d.y=0; d.dy*=-1; }
+    if(d.x + d.size >= gridX){ d.x = gridX - d.size; d.dx*=-1; }
+    if(d.y + d.size >= gridY){ d.y = gridY - d.size; d.dy*=-1; }
+
+    // Occasionally randomize direction
+    if(Math.random() < 0.005){ d.dx = (Math.random() < 0.5 ? -0.05 : 0.05); }
+    if(Math.random() < 0.005){ d.dy = (Math.random() < 0.5 ? -0.05 : 0.05); }
+  }
+
+  // Draw food
+  ctx.fillStyle='green';
+  for(let f of food){
+    ctx.fillRect(f.x*cellWidth, f.y*cellHeight, cellWidth, cellHeight);
+  }
+
+  // Draw danger blocks
+  ctx.fillStyle='red';
+  for(let d of danger){
+    ctx.fillRect(d.x*cellWidth, d.y*cellHeight, d.size*cellWidth, d.size*cellHeight);
+  }
+
+  // Switch back to search if no food found in 5s
+  if(agent.state === 'Binge(Dopamine)' && (Date.now() - agent.foodTimer > 5000)){
+    agent.state='Search(Adrenaline)';
+  }
+
+  // Satiation decay every 3s (5x effect)
+  if(Date.now() - agent.decayTimer > 3000){
+    agent.satiation = clamp(agent.satiation - 5, 0, 100);
+    agent.decayTimer = Date.now();
+  }
+
+  let s = states[agent.state];
+
+  // Movement & turning
+  if(agent.state === 'Search(Adrenaline)'){
+    if(Math.random() < s.turnChance){
+      const turn = Math.floor(Math.random()*3);
+      const olddx=agent.dx, olddy=agent.dy;
+      switch(turn){
+        case 0: agent.dx = -olddy; agent.dy = olddx; break;
+        case 1: agent.dx = olddy; agent.dy = -olddx; break;
+      }
+    }
+  } else if(agent.state === 'Binge(Dopamine)'){
+    if(Math.random() < s.turnChance){
+      const dir = Math.floor(Math.random()*4);
+      switch(dir){
+        case 0: agent.dx=1; agent.dy=0; break;
+        case 1: agent.dx=-1; agent.dy=0; break;
+        case 2: agent.dx=0; agent.dy=1; break;
+        case 3: agent.dx=0; agent.dy=-1; break;
+      }
+    }
+  }
+
+  let nextX = agent.x + agent.dx * s.speed;
+  let nextY = agent.y + agent.dy * s.speed;
+
+  // Prevent entering danger
+  if(!isDanger(Math.floor(nextX), Math.floor(nextY))){
+    agent.x = nextX;
+    agent.y = nextY;
+  } else if(agent.state !== 'Search(Adrenaline)'){
+    agent.dx*=-1;
+    agent.dy*=-1;
+  }
+
+  // Wrap edges
+  if(agent.x<0) agent.x = gridX-1;
+  if(agent.y<0) agent.y = gridY-1;
+  if(agent.x>=gridX) agent.x = 0;
+  if(agent.y>=gridY) agent.y = 0;
+
+  // Eating food (5x effect)
+  for(let i=food.length-1;i>=0;i--){
+    if(Math.floor(agent.x)===food[i].x && Math.floor(agent.y)===food[i].y){
+      food.splice(i,1);
+      agent.satiation = clamp(agent.satiation + 5, 0, 100);
+      agent.foodTimer = Date.now();
+      if(agent.satiation >= 100){
+        agent.state='I Feel Good(Serotonin)';
+        agent.stateTimer=Date.now();
+      } else {
+        agent.state='Binge(Dopamine)';
+      }
+    }
+  }
+
+  // Serotonin rest: resume only when satiation <= 50
+  if(agent.state === 'I Feel Good(Serotonin)'){
+    if(agent.satiation <= 50){
+      agent.state='Search(Adrenaline)';
+      agent.foodTimer=Date.now();
+    }
+  }
+
+  // Draw agent 2x2 in white
+  ctx.fillStyle='white';
+  ctx.fillRect(agent.x*cellWidth, agent.y*cellHeight, cellWidth*2, cellHeight*2);
+
+  // Update HUD
+  stateDisplay.textContent = agent.state;
+  satiationDisplay.textContent = agent.satiation;
+
+  requestAnimationFrame(step);
+}
+step();
+</script>
+</body>
+</html>
