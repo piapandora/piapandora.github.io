@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pia Pong</title>
+<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #001100;
+    font-family: monospace;
+    height: 100%;
+    overflow: hidden;
+    cursor: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    image-rendering: pixelated;
+  }
+  #restartBtn {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    background: none;
+    border: 1px solid white;
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 20px;
+    cursor: pointer;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="pong"></canvas>
+<button id="restartBtn">Restart?</button>
+<script>
+const canvas = document.getElementById('pong');
+const ctx = canvas.getContext('2d');
+const restartBtn = document.getElementById('restartBtn');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Settings
+const paddleHeight = canvas.height / 5;
+const paddleWidth = 40;
+const ballSize = 24;
+let baseSpeed = 5;
+const paddleSpeed = 12;
+let aiSpeedFactor = 0.1;
+let gamePaused = false;
+let gameOver = false;
+let showBall = true;
+
+// Net settings
+let net = {
+  active: false,
+  x: canvas.width / 2 - paddleWidth / 2,
+  y: canvas.height / 2 - paddleHeight / 2,
+  vy: 2,
+  waitTime: 0,
+  lastHitTime: 0,
+  sizeMultiplier: 1
+};
+const netGrowthSchedule = [
+  { time: 2000, multiplier: 1 },
+  { time: 12000, multiplier: 2 },
+  { time: 22000, multiplier: 3 },
+  { time: 32000, multiplier: 4 }
+];
+
+// Serve timer
+let serveStartTime = performance.now();
+
+// Game objects
+let playerY = canvas.height/2 - paddleHeight/2;
+let aiY = playerY;
+let ballX = canvas.width/2;
+let ballY = canvas.height/2;
+let ballVX = baseSpeed * (Math.random() > 0.5 ? 1 : -1);
+let ballVY = baseSpeed * (Math.random() > 0.5 ? 1 : -1);
+let playerScore = 0, aiScore = 0;
+let serveSide = 'player';
+let lastSpeedIncreaseAt = 0;
+
+// Controls
+let up = false, down = false;
+document.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'w') up = true;
+  if (e.key.toLowerCase() === 's') down = true;
+  if (gameOver && e.key === 'Enter') restartGame();
+});
+document.addEventListener('keyup', e => {
+  if (e.key.toLowerCase() === 'w') up = false;
+  if (e.key.toLowerCase() === 's') down = false;
+});
+
+restartBtn.onclick = restartGame;
+
+function loop() {
+  if (!gamePaused && !gameOver) update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function update() {
+  const now = performance.now();
+
+  // Player movement
+  if (up && playerY > 0) playerY -= paddleSpeed;
+  if (down && playerY < canvas.height - paddleHeight) playerY += paddleSpeed;
+
+  // AI movement (bounded)
+  const target = ballY - (aiY + paddleHeight/2);
+  aiY += target * aiSpeedFactor;
+  if (aiY < 0) aiY = 0;
+  if (aiY > canvas.height - paddleHeight) aiY = canvas.height - paddleHeight;
+
+  // Net activation and growth
+  netGrowthSchedule.forEach(s => {
+    if (!net.active && now - serveStartTime >= s.time && s.multiplier === 1) {
+      net.active = true;
+      net.sizeMultiplier = 1;
+    } else if (net.active && now - serveStartTime >= s.time && net.sizeMultiplier < s.multiplier) {
+      net.sizeMultiplier = s.multiplier;
+    }
+  });
+
+  // Net movement
+  if (net.active) {
+    if (net.waitTime > 0) {
+      net.waitTime--;
+    } else {
+      net.y += net.vy;
+      if (net.y < 0) { net.y = 0; net.vy *= -1; net.waitTime = Math.random()*60; }
+      if (net.y + paddleHeight*net.sizeMultiplier > canvas.height) { net.y = canvas.height - paddleHeight*net.sizeMultiplier; net.vy *= -1; net.waitTime = Math.random()*60; }
+    }
+  }
+
+  // Ball movement
+  ballX += ballVX;
+  ballY += ballVY;
+
+  // Bounce off top/bottom
+  if (ballY - ballSize/2 < 0 || ballY + ballSize/2 > canvas.height) ballVY *= -1;
+
+  // Paddle collisions
+  if (ballX - ballSize/2 <= paddleWidth &&
+      ballY + ballSize/2 > playerY &&
+      ballY - ballSize/2 < playerY + paddleHeight) {
+    ballVX = Math.abs(ballVX);
+    const rel = (ballY - (playerY + paddleHeight/2)) / (paddleHeight/2);
+    if (Math.abs(rel) > 0.7) { ballVX *= 1.05; ballVY *= 1.05; }
+  }
+
+  if (ballX + ballSize/2 >= canvas.width - paddleWidth &&
+      ballY + ballSize/2 > aiY &&
+      ballY - ballSize/2 < aiY + paddleHeight) {
+    ballVX = -Math.abs(ballVX);
+    const rel = (ballY - (aiY + paddleHeight/2)) / (paddleHeight/2);
+    if (Math.abs(rel) > 0.7) { ballVX *= 1.05; ballVY *= 1.05; }
+  }
+
+  // Net collision with cooldown
+  const netCooldown = 200;
+  if (net.active &&
+      ballX + ballSize/2 > net.x &&
+      ballX - ballSize/2 < net.x + paddleWidth &&
+      ballY + ballSize/2 > net.y &&
+      ballY - ballSize/2 < net.y + paddleHeight*net.sizeMultiplier) {
+    if (!net.lastHitTime || now - net.lastHitTime > netCooldown) {
+      ballVX *= -1;
+      ballVX *= 1.05;
+      ballVY *= 1.05;
+      net.lastHitTime = now;
+    }
+  }
+
+  // Scoring
+  if (ballX + ballSize/2 < 0) { aiScore++; serveSide = 'ai'; scorePoint(); }
+  if (ballX - ballSize/2 > canvas.width) { playerScore++; serveSide = 'player'; scorePoint(); }
+
+  // Ball speed increase every 3 points
+  const totalScore = playerScore + aiScore;
+  if (totalScore > 0 && totalScore % 3 === 0 && totalScore !== lastSpeedIncreaseAt) {
+    baseSpeed *= 1.05;
+    lastSpeedIncreaseAt = totalScore;
+  }
+}
+
+function scorePoint() {
+  if (playerScore >= 11 || aiScore >= 11) { endGame(); return; }
+  gamePaused = true;
+  showBall = false;
+  resetBall();
+  setTimeout(() => { gamePaused = false; showBall = true; }, 1000);
+}
+
+function resetBall() {
+  const sideX = serveSide === 'player' ? canvas.width*0.25 : canvas.width*0.75;
+  ballX = sideX;
+  ballY = canvas.height/2;
+  ballVX = baseSpeed * (serveSide === 'player' ? 1 : -1);
+  ballVY = baseSpeed * (Math.random() > 0.5 ? 1 : -1);
+
+  net.active = false;
+  net.sizeMultiplier = 1;
+  net.y = canvas.height/2 - paddleHeight/2;
+  net.vy = 2;
+  net.waitTime = 0;
+  net.lastHitTime = 0;
+  serveStartTime = performance.now();
+}
+
+function endGame() {
+  gameOver = true;
+  gamePaused = true;
+  showBall = false;
+  document.body.style.cursor = 'default';
+  restartBtn.style.display = 'block';
+  
+  // Destroy net
+  net.active = false;
+  net.sizeMultiplier = 1;
+}
+
+function restartGame() {
+  playerScore = 0;
+  aiScore = 0;
+  baseSpeed = 5;
+  lastSpeedIncreaseAt = 0;
+  playerY = aiY = canvas.height/2 - paddleHeight/2;
+  serveSide = 'player';
+  showBall = true;
+  gameOver = false;
+  gamePaused = false;
+  restartBtn.style.display = 'none';
+  document.body.style.cursor = 'none';
+  resetBall();
+}
+
+function draw() {
+  ctx.fillStyle = '#001100';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // paddles
+  ctx.fillStyle = '#33ff33';
+  ctx.fillRect(0, playerY, paddleWidth, paddleHeight);
+  ctx.fillStyle = '#ff3333';
+  ctx.fillRect(canvas.width - paddleWidth, aiY, paddleWidth, paddleHeight);
+
+  // scores
+  ctx.font = '40px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#33ff33';
+  ctx.fillText(playerScore, canvas.width/2 - 60, 50);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('-', canvas.width/2, 50);
+  ctx.fillStyle = '#ff3333';
+  ctx.fillText(aiScore, canvas.width/2 + 60, 50);
+
+  // net
+  if (net.active) {
+    ctx.fillStyle = '#ffffff'; // NET COLOR FIXED
+    ctx.fillRect(net.x, net.y, paddleWidth, paddleHeight * net.sizeMultiplier);
+  }
+
+  // ball
+  if (showBall) ctx.fillStyle = '#ffffff', ctx.fillRect(ballX - ballSize/2, ballY - ballSize/2, ballSize, ballSize);
+
+  // end message
+  if (gameOver) {
+    ctx.textAlign = 'center';
+    ctx.font = '40px monospace';
+    const playerWon = playerScore > aiScore;
+    ctx.fillStyle = playerWon ? '#33ff33' : '#ff3333';
+    const winner = playerWon ? 'GREEN WINS' : 'RED WINS';
+    ctx.fillText(winner, canvas.width/2, canvas.height/2);
+    
+    // Position restart button under the message
+    restartBtn.style.top = canvas.height/2 + 30 + 'px';
+  }
+}
+
+loop();
+</script>
+</body>
+</html>
