@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pia Pong – Canonical</title>
+<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #001100;
+    font-family: monospace;
+    height: 100%;
+    overflow: hidden;
+    cursor: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    image-rendering: pixelated;
+  }
+  #restartBtn {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    background: none;
+    border: 1px solid white;
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 20px;
+    cursor: pointer;
+    display: none;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+<canvas id="pong"></canvas>
+<button id="restartBtn">Restart?</button>
+
+<script>
+const canvas = document.getElementById('pong');
+const ctx = canvas.getContext('2d');
+const restartBtn = document.getElementById('restartBtn');
+
+// --- Background Images & Fade ---
+let preloadedBGs = [];
+let bgIndex = 0;
+let bgImage = null;
+let nextBgImage = null;
+let bgFadeOpacity = 0;
+const bgFadeDuration = 60; // ~1s at 60fps
+const bgFadeStep = 1 / bgFadeDuration;
+
+// >>> NEW: separate first background fade-in control
+let firstBgOpacity = 0;
+let firstBgFadingIn = true;
+const firstBgFadeStep = 1 / 120; // 1s fade in
+// <<<
+
+function preloadBackgrounds(callback) {
+  preloadedBGs = [];
+  let loadedCount = 0;
+  for (let i = 0; i < 7; i++) {
+    const img = new Image();
+    img.src = 'https://picsum.photos/1920/1080?random=' + Date.now() + Math.random();
+    img.onload = () => {
+      loadedCount++;
+      if (loadedCount === 7 && callback) callback();
+    };
+    preloadedBGs.push(img);
+  }
+  bgIndex = 0;
+  bgImage = preloadedBGs[bgIndex];
+}
+
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// --- Core Variables ---
+let paddleWidth = 160;
+let paddleHeight = 32;
+const paddleSpeed = 12;
+const ballSize = 24;
+const originalBallSpeed = 6;
+let ballSpeed = originalBallSpeed;
+
+let gamePaused = false, gameOver = false, showBall = true;
+let waitingToServe = true;
+let waitStartTime = 0;
+
+// --- Players ---
+let playerX = canvas.width * 0.25 - paddleWidth / 2;
+let playerY = canvas.height - paddleHeight;
+let redX = canvas.width * 0.75 - paddleWidth / 2;
+let redY = canvas.height - paddleHeight;
+
+// --- Ball ---
+let ballX = canvas.width / 2;
+let ballY = canvas.height / 2;
+let ballVX = 0;
+let ballVY = 0;
+
+// --- Score ---
+let teamScore = 0;
+let ballScore = 0;
+
+// --- Last paddle touched ---
+let lastPaddleTouched = null;
+let lastPaddleTouchedReset = false;
+
+// --- Speedometer ---
+let showSpeedometer = false;
+
+// --- Controls ---
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (gameOver && e.key === 'Enter') restartGame();
+  if (e.key === 'p' || e.key === 'P') { gamePaused = !gamePaused; document.body.style.cursor = gamePaused || gameOver ? 'default' : 'none'; }
+  if (e.key === 'o' || e.key === 'O') showSpeedometer = !showSpeedometer;
+});
+document.addEventListener('keyup', e => keys[e.key] = false);
+restartBtn.onclick = restartGame;
+
+let gamepadIndex = null;
+window.addEventListener("gamepadconnected", e => { gamepadIndex = e.gamepad.index; });
+window.addEventListener("gamepaddisconnected", e => { if (e.gamepad.index === gamepadIndex) gamepadIndex = null; });
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function updateGamepad(){
+  if (gamepadIndex === null) return;
+  const gp = navigator.getGamepads()[gamepadIndex]; if (!gp) return;
+  playerX += gp.axes[0]*paddleSpeed; playerY += gp.axes[1]*paddleSpeed;
+  redX += gp.axes[2]*paddleSpeed; redY += gp.axes[3]*paddleSpeed;
+  if(gp.buttons[12]?.pressed) redY -= paddleSpeed;
+  if(gp.buttons[13]?.pressed) redY += paddleSpeed;
+  if(gp.buttons[14]?.pressed) redX -= paddleSpeed;
+  if(gp.buttons[15]?.pressed) redX += paddleSpeed;
+}
+
+function update(){
+  if(gamePaused) return;
+  if(waitingToServe){
+    if(Date.now() - waitStartTime >= 1000){
+      waitingToServe = false;
+      ballVX = (Math.random() > 0.5 ? 1 : -1) * ballSpeed;
+      ballVY = -ballSpeed;
+      showBall = true;
+    } else return;
+  }
+
+  if(keys['w']||keys['W']) playerY -= paddleSpeed;
+  if(keys['s']||keys['S']) playerY += paddleSpeed;
+  if(keys['a']||keys['A']) playerX -= paddleSpeed;
+  if(keys['d']||keys['D']) playerX += paddleSpeed;
+  if(keys['ArrowUp']) redY -= paddleSpeed;
+  if(keys['ArrowDown']) redY += paddleSpeed;
+  if(keys['ArrowLeft']) redX -= paddleSpeed;
+  if(keys['ArrowRight']) redX += paddleSpeed;
+  updateGamepad();
+
+  const minY = canvas.height * 0.25;
+  const maxY = canvas.height - paddleHeight;
+  playerX = clamp(playerX,0,canvas.width/2 - paddleWidth);
+  playerY = clamp(playerY,minY,maxY);
+  redX = clamp(redX,canvas.width/2,canvas.width - paddleWidth);
+  redY = clamp(redY,minY,maxY);
+
+  ballX += ballVX; ballY += ballVY;
+  if(ballX - ballSize/2 < 0 || ballX + ballSize/2 > canvas.width) ballVX*=-1;
+
+  if(ballY+ballSize/2 >= playerY && ballY-ballSize/2 <= playerY+paddleHeight &&
+     ballX+ballSize/2 > playerX && ballX-ballSize/2 < playerX+paddleWidth){
+    ballY = playerY - ballSize/2;
+    ballVY = -Math.abs(ballSpeed);
+    if(lastPaddleTouched!=="green"){ lastPaddleTouched="green"; lastPaddleTouchedReset=false; }
+  }
+
+  if(ballY+ballSize/2 >= redY && ballY-ballSize/2 <= redY+paddleHeight &&
+     ballX+ballSize/2 > redX && ballX-ballSize/2 < redX+paddleWidth){
+    ballY = redY - ballSize/2;
+    ballVY = -Math.abs(ballSpeed);
+    if(lastPaddleTouched!=="red"){ lastPaddleTouched="red"; lastPaddleTouchedReset=false; }
+  }
+
+  if(ballY-ballSize/2 <= 0){
+    if(!lastPaddleTouchedReset && lastPaddleTouched){
+      teamScore++;
+      ballSpeed *= 1.05;
+      lastPaddleTouchedReset=true;
+      if(teamScore % 3 === 0 && bgIndex < preloadedBGs.length - 1){
+          bgIndex++;
+          nextBgImage = preloadedBGs[bgIndex];
+          bgFadeOpacity = 0;
+      }
+    }
+    ballVY = Math.abs(ballSpeed);
+  }
+
+  if(ballY + ballSize/2 >= canvas.height){
+    ballScore = Math.min(ballScore + 5, 21);
+    switch(ballScore){
+        case 5: ballSpeed = originalBallSpeed * 1.1; break;
+        case 10: ballSpeed = originalBallSpeed * 1.25; break;
+        case 15: ballSpeed = originalBallSpeed * 1.33; break;
+        case 20: ballSpeed = originalBallSpeed * 1.5; break;
+        default: ballSpeed = originalBallSpeed;
+    }
+    waitingToServe = true;
+    waitStartTime = Date.now();
+    showBall = false;
+    resetBall();
+  }
+
+  if(teamScore>=21||ballScore>=21) endGame();
+}
+
+function resetBall(){
+  ballX=canvas.width/2; ballY=canvas.height/2; ballVX=0; ballVY=-ballSpeed;
+  lastPaddleTouched=null; lastPaddleTouchedReset=false;
+}
+function endGame(){
+  gameOver=true; gamePaused=true; showBall=false;
+  document.body.style.cursor='default';
+}
+function restartGame(){
+  teamScore=0; ballScore=0;
+  playerX=canvas.width*0.25-paddleWidth/2; redX=canvas.width*0.75-paddleWidth/2;
+  playerY=redY=canvas.height-paddleHeight;
+  lastPaddleTouched=null; lastPaddleTouchedReset=false;
+  waitingToServe=true; waitStartTime=Date.now(); showBall=false;
+  gameOver=false; gamePaused=false;
+  restartBtn.style.display='none'; document.body.style.cursor='none';
+  ballSpeed=originalBallSpeed;
+  resetBall();
+  preloadBackgrounds();
+  firstBgOpacity = 0; // restart first fade on new preload
+  firstBgFadingIn = true;
+}
+
+function draw(){
+  // Draw background with first fade-in + darkening + transitions
+  if(bgImage.complete){
+      if(firstBgFadingIn){
+          firstBgOpacity = Math.min(1, firstBgOpacity + firstBgFadeStep);
+          if (firstBgOpacity >= 1) firstBgFadingIn = false;
+          ctx.globalAlpha = firstBgOpacity;
+      }
+
+      ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 1;
+
+      if(nextBgImage){
+          ctx.globalAlpha = bgFadeOpacity;
+          ctx.drawImage(nextBgImage, 0, 0, canvas.width, canvas.height);
+          ctx.globalAlpha = 1;
+          bgFadeOpacity += bgFadeStep;
+          if(bgFadeOpacity >= 1){
+              bgImage = nextBgImage;
+              nextBgImage = null;
+          }
+      }
+      ctx.fillStyle = 'rgba(0,0,0,0.33)';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+  } else {
+      ctx.fillStyle='#001100';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+
+  ctx.fillStyle='#33ff33'; ctx.fillRect(playerX,playerY,paddleWidth,paddleHeight);
+  ctx.fillRect(redX,redY,paddleWidth,paddleHeight);
+  if(showBall){ ctx.fillStyle='#ffffff'; ctx.fillRect(ballX-ballSize/2,ballY-ballSize/2,ballSize,ballSize); }
+
+  ctx.font='40px monospace'; ctx.textAlign='center';
+  ctx.fillStyle='#33ff33'; ctx.fillText(teamScore,canvas.width/2 - 50,50);
+  ctx.fillStyle='#ff3333'; ctx.fillText(ballScore,canvas.width/2 + 50,50);
+  ctx.fillStyle='#ffffff'; ctx.fillText(' - ',canvas.width/2,50);
+
+  if(showSpeedometer){
+    ctx.fillStyle='#ffffff'; ctx.font='20px monospace';
+    ctx.fillText('Speed: '+ballSpeed.toFixed(2),canvas.width/2,80);
+  }
+
+  if(gameOver){
+    ctx.fillStyle=teamScore>ballScore?'#33ff33':'#ff3333';
+    ctx.font='40px monospace';
+    const winText = teamScore>ballScore?'TEAM GOZZY WINS!':'EVIL BALL WINS!';
+    ctx.fillText(winText, canvas.width/2, canvas.height/2);
+    const textHeight = 40; 
+    restartBtn.style.left = canvas.width/2 + 'px';
+    restartBtn.style.top = (canvas.height/2 + textHeight/2 + 10) + 'px';
+    restartBtn.style.display = 'block';
+  }
+}
+
+// --- Start the game loop only after preloading ---
+preloadBackgrounds(() => {
+  waitStartTime = Date.now();
+  loop();
+});
+
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+</script>
+</body>
+</html>

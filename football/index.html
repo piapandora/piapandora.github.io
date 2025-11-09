@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pia Pong</title>
+<link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #001100;
+    font-family: monospace;
+    height: 100%;
+    overflow: hidden;
+    cursor: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    image-rendering: pixelated;
+  }
+  #restartBtn {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    background: none;
+    border: 1px solid white;
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 20px;
+    cursor: pointer;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="pong"></canvas>
+<button id="restartBtn">Restart?</button>
+
+<script>
+const canvas = document.getElementById('pong');
+const ctx = canvas.getContext('2d');
+const restartBtn = document.getElementById('restartBtn');
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// --- Core Variables ---
+const paddleWidth = 40;
+let paddleHeight = canvas.height / 5;
+const ballSize = 24;
+const paddleSpeed = 12;
+const paddleHSpeed = 10;
+const ballSpeed = 6;
+
+let gamePaused = false, gameOver = false, showBall = true;
+
+// --- Players ---
+let playerX = 0;
+let playerY = canvas.height / 2 - paddleHeight / 2;
+let redX = canvas.width - paddleWidth;
+let redY = playerY;
+
+// --- Ball ---
+let ballX = canvas.width / 2;
+let ballY = canvas.height / 2;
+let ballVX = ballSpeed * (Math.random() > 0.5 ? 1 : -1);
+let ballVY = ballSpeed * (Math.random() > 0.5 ? 1 : -1);
+
+// --- Score ---
+let playerScore = 0, redScore = 0;
+let serveSide = 'player';
+
+// --- Controls ---
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (gameOver && e.key === 'Enter') restartGame();
+});
+document.addEventListener('keyup', e => keys[e.key] = false);
+restartBtn.onclick = restartGame;
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function update(){
+  // Move paddles
+  if (keys['w']||keys['W']) playerY -= paddleSpeed;
+  if (keys['s']||keys['S']) playerY += paddleSpeed;
+  if (keys['a']||keys['A']) playerX -= paddleHSpeed;
+  if (keys['d']||keys['D']) playerX += paddleHSpeed;
+  if (keys['ArrowUp']) redY -= paddleSpeed;
+  if (keys['ArrowDown']) redY += paddleSpeed;
+  if (keys['ArrowLeft']) redX -= paddleHSpeed;
+  if (keys['ArrowRight']) redX += paddleHSpeed;
+
+  playerY = clamp(playerY, 0, canvas.height - paddleHeight);
+  redY = clamp(redY, 0, canvas.height - paddleHeight);
+  playerX = clamp(playerX, 0, canvas.width / 2 - paddleWidth);
+  redX = clamp(redX, canvas.width / 2, canvas.width - paddleWidth);
+
+  // Ball movement
+  ballX += ballVX;
+  ballY += ballVY;
+  if (ballY - ballSize/2 < 0 || ballY + ballSize/2 > canvas.height) ballVY *= -1;
+
+  // Paddle collisions
+  if (ballX - ballSize/2 <= playerX + paddleWidth &&
+      ballX + ballSize/2 >= playerX &&
+      ballY + ballSize/2 > playerY &&
+      ballY - ballSize/2 < playerY + paddleHeight) {
+    ballX = playerX + paddleWidth + ballSize/2;
+    ballVX = Math.abs(ballSpeed);
+  }
+
+  if (ballX + ballSize/2 >= redX &&
+      ballX - ballSize/2 <= redX + paddleWidth &&
+      ballY + ballSize/2 > redY &&
+      ballY - ballSize/2 < redY + paddleHeight) {
+    ballX = redX - ballSize/2;
+    ballVX = -Math.abs(ballSpeed);
+  }
+
+  // Scoring
+  if (ballX + ballSize/2 < 0) { redScore++; serveSide='ai'; scorePoint(); }
+  if (ballX - ballSize/2 > canvas.width) { playerScore++; serveSide='player'; scorePoint(); }
+}
+
+function scorePoint(){
+  if (playerScore>=11 || redScore>=11){ endGame(); return; }
+  gamePaused=true; showBall=false;
+  resetBall();
+  setTimeout(()=>{ gamePaused=false; showBall=true; },1000);
+}
+
+function resetBall(){
+  const sideX = serveSide==='player'?canvas.width*0.25:canvas.width*0.75;
+  ballX = sideX; ballY = canvas.height/2;
+  ballVX = ballSpeed * (serveSide==='player'?1:-1);
+  ballVY = ballSpeed * (Math.random()>0.5?1:-1);
+  playerX=0; redX=canvas.width-paddleWidth;
+  playerY=redY=canvas.height/2-paddleHeight/2;
+}
+
+function endGame(){
+  gameOver=true; gamePaused=true; showBall=false;
+  restartBtn.style.display='block';
+  document.body.style.cursor='default';
+}
+
+function restartGame(){
+  playerScore=0; redScore=0;
+  playerX=0; redX=canvas.width-paddleWidth;
+  playerY=redY=canvas.height/2-paddleHeight/2;
+  serveSide='player'; showBall=true;
+  gameOver=false; gamePaused=false;
+  restartBtn.style.display='none';
+  document.body.style.cursor='none';
+  resetBall();
+}
+
+function draw(){
+  ctx.fillStyle='#001100';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#33ff33';
+  ctx.fillRect(playerX,playerY,paddleWidth,paddleHeight);
+  ctx.fillStyle='#ff3333';
+  ctx.fillRect(redX,redY,paddleWidth,paddleHeight);
+
+  if (showBall){
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(ballX-ballSize/2,ballY-ballSize/2,ballSize,ballSize);
+  }
+
+  ctx.font='40px monospace'; ctx.textAlign='center';
+  ctx.fillStyle='#33ff33'; ctx.fillText(playerScore,canvas.width/2-60,50);
+  ctx.fillStyle='#ffffff'; ctx.fillText('-',canvas.width/2,50);
+  ctx.fillStyle='#ff3333'; ctx.fillText(redScore,canvas.width/2+60,50);
+
+  if (gameOver){
+    ctx.fillStyle=playerScore>redScore?'#33ff33':'#ff3333';
+    ctx.fillText(playerScore>redScore?'GREEN WINS':'RED WINS',canvas.width/2,canvas.height/2);
+    restartBtn.style.top = (canvas.height/2 + 30) + 'px';
+  }
+}
+
+function loop(){
+  if(!gamePaused&&!gameOver)update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
