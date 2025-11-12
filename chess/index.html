@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pia's Chessboard</title>
+<link rel="icon" type="image/png" href="misc/icons8-chessboard-50.png">
+<style>
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#f0f0f0; }
+  canvas { display:block; cursor:grab; }
+  canvas:active { cursor:grabbing; }
+</style>
+</head>
+<body>
+<canvas id="chess"></canvas>
+<script>
+const canvas = document.getElementById("chess");
+const ctx = canvas.getContext("2d");
+
+const GRID_COLS = 12;
+const GRID_ROWS = 8;
+let gridWidth = 0, gridHeight = 0;
+const squares = [];
+const pieces = [];
+let dragging = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+
+// --- Capture zones
+const captureZone = {white:[], black:[]};
+function defineCaptureSquares(){
+  captureZone.white = []; captureZone.black = [];
+  for(let r=0;r<GRID_ROWS;r++){
+    for(let c=0;c<2;c++) captureZone.white.push({col:c, rank:r});
+    for(let c=10;c<12;c++) captureZone.black.push({col:c, rank:r});
+  }
+}
+
+// --- Calculate squares
+function calculateSquares(){
+  squares.length = 0;
+  for(let r=0;r<GRID_ROWS;r++){
+    for(let c=0;c<GRID_COLS;c++){
+      squares.push({col:c, rank:r, x:c*gridWidth + gridWidth/2, y:(GRID_ROWS-1-r)*gridHeight + gridHeight/2});
+    }
+  }
+}
+
+// --- Load piece image
+function loadPieceImage(p){
+  p.img = new Image();
+  p.img.src = `misc/${p.color}-${p.name}.png`;
+}
+
+// --- Setup pieces
+function setupPieces(){
+  pieces.length = 0;
+  const pieceNames = ["rook","knight","bishop","queen","king","bishop","knight","rook"];
+  const toLoad = [];
+
+  // Black pieces
+  for(let f=0; f<8; f++){
+    let p={name:pieceNames[f], color:"black", file:f+2, rank:7, isPawnOrigin:false};
+    loadPieceImage(p); pieces.push(p); toLoad.push(p.img);
+  }
+  for(let f=0; f<8; f++){
+    let p={name:"pawn", color:"black", file:f+2, rank:6, isPawnOrigin:true};
+    loadPieceImage(p); pieces.push(p); toLoad.push(p.img);
+  }
+
+  // White pieces
+  for(let f=0; f<8; f++){
+    let p={name:pieceNames[f], color:"white", file:f+2, rank:0, isPawnOrigin:false};
+    loadPieceImage(p); pieces.push(p); toLoad.push(p.img);
+  }
+  for(let f=0; f<8; f++){
+    let p={name:"pawn", color:"white", file:f+2, rank:1, isPawnOrigin:true};
+    loadPieceImage(p); pieces.push(p); toLoad.push(p.img);
+  }
+
+  // Preload all images
+  let loadedCount = 0;
+  toLoad.forEach(img=>{
+    img.onload = ()=>{
+      loadedCount++;
+      if(loadedCount === toLoad.length) draw(); // draw once all loaded
+    };
+  });
+}
+
+// --- Mouse helpers
+function getMouse(e){
+  const rect = canvas.getBoundingClientRect();
+  return {x:e.clientX-rect.left, y:e.clientY-rect.top};
+}
+
+// --- Drag events
+canvas.addEventListener("mousedown", e=>{
+  const mouse = getMouse(e);
+  for(let i=pieces.length-1;i>=0;i--){
+    const p = pieces[i];
+    const px = p.x!==undefined?p.x:p.file*gridWidth+gridWidth/2;
+    const py = p.y!==undefined?p.y:(GRID_ROWS-1-p.rank)*gridHeight+gridHeight/2;
+    const radius = Math.min(gridWidth,gridHeight)*0.45;
+    if(Math.hypot(mouse.x-px, mouse.y-py)<=radius){
+      dragging = p;
+      dragOffsetX = mouse.x - px;
+      dragOffsetY = mouse.y - py;
+      pieces.push(...pieces.splice(i,1));
+      break;
+    }
+  }
+});
+canvas.addEventListener("mousemove", e=>{
+  if(!dragging) return;
+  const mouse = getMouse(e);
+  dragging.x = mouse.x - dragOffsetX;
+  dragging.y = mouse.y - dragOffsetY;
+  draw();
+});
+canvas.addEventListener("mouseup", ()=>{
+  if(dragging){ snapPiece(dragging); dragging=null; draw(); }
+});
+
+// Touch support
+canvas.addEventListener("touchstart", e=>{
+  const t=e.touches[0]; const mouse={x:t.clientX, y:t.clientY};
+  for(let i=pieces.length-1;i>=0;i--){
+    const p=pieces[i];
+    const px = p.x!==undefined?p.x:p.file*gridWidth+gridWidth/2;
+    const py = p.y!==undefined?p.y:(GRID_ROWS-1-p.rank)*gridHeight+gridHeight/2;
+    const radius = Math.min(gridWidth,gridHeight)*0.45;
+    if(Math.hypot(mouse.x-px, mouse.y-py)<=radius){
+      dragging=p;
+      dragOffsetX=mouse.x-px; dragOffsetY=mouse.y-py;
+      pieces.push(...pieces.splice(i,1));
+      break;
+    }
+  }
+});
+canvas.addEventListener("touchmove", e=>{
+  if(!dragging) return;
+  const t=e.touches[0];
+  dragging.x = t.clientX - dragOffsetX;
+  dragging.y = t.clientY - dragOffsetY;
+  draw();
+});
+canvas.addEventListener("touchend", ()=>{
+  if(dragging){ snapPiece(dragging); dragging=null; draw(); }
+});
+
+// --- Snap piece
+function snapPiece(p){
+  const px = p.x!==undefined?p.x:p.file*gridWidth+gridWidth/2;
+  const py = p.y!==undefined?p.y:(GRID_ROWS-1-p.rank)*gridHeight+gridHeight/2;
+
+  let candidates;
+  if(px >= 2*gridWidth && px <= 10*gridWidth){
+    candidates = squares.filter(s => s.col >= 2 && s.col <= 9); // on board
+  } else {
+    candidates = (p.color==="white"?captureZone.white:captureZone.black); // own capture zone
+  }
+
+  // Find nearest
+  let nearest = null, bestDist = Infinity;
+  candidates.forEach(s=>{
+    const dist = Math.hypot(px - (s.col*gridWidth+gridWidth/2), py - ((GRID_ROWS-1-s.rank)*gridHeight+gridHeight/2));
+    if(dist<bestDist){ bestDist=dist; nearest=s; }
+  });
+  if(!nearest) return;
+
+  // Handle occupant
+  const occupant = pieces.find(q => q!==p && q.file===nearest.col && q.rank===nearest.rank);
+  if(occupant){
+    if(occupant.color !== p.color){
+        // Opponent piece captured → move to capture zone
+        const cz = occupant.color==="white" ? captureZone.white : captureZone.black;
+        const free = cz.find(c => !pieces.find(q=>q.file===c.col && q.rank===c.rank));
+        if(free){
+            occupant.file = free.col;
+            occupant.rank = free.rank;
+            delete occupant.x; delete occupant.y;
+        }
+    } else {
+        // Friendly piece occupies square → prevent snapping here
+        const otherCandidates = candidates.filter(s => !(pieces.find(q => q!==p && q.file===s.col && q.rank===s.rank && q.color===p.color)));
+        if(otherCandidates.length > 0){
+            let nearestAlt = null;
+            let bestDistAlt = Infinity;
+            otherCandidates.forEach(s=>{
+                const dist = Math.hypot(px - (s.col*gridWidth+gridWidth/2), py - ((GRID_ROWS-1-s.rank)*gridHeight+gridHeight/2));
+                if(dist<bestDistAlt){ bestDistAlt=dist; nearestAlt=s; }
+            });
+            if(nearestAlt) nearest = nearestAlt;
+        }
+    }
+  }
+
+  p.file = nearest.col;
+  p.rank = nearest.rank;
+  delete p.x; delete p.y;
+}
+
+// --- Right-click pawn cycle
+canvas.addEventListener("contextmenu", e=>{
+  e.preventDefault();
+  const mouse = getMouse(e);
+  for(let i=pieces.length-1;i>=0;i--){
+    const p = pieces[i];
+    const px = p.file*gridWidth+gridWidth/2;
+    const py = (GRID_ROWS-1-p.rank)*gridHeight+gridHeight/2;
+    const radius = Math.min(gridWidth, gridHeight)*0.45;
+    if(Math.hypot(mouse.x-px, mouse.y-py)<=radius && p.isPawnOrigin){
+      const cycle = ["pawn","queen","rook","bishop","knight"];
+      let idx = cycle.indexOf(p.name);
+      idx = (idx+1)%cycle.length;
+      p.name = cycle[idx];
+      p.img.src = `misc/${p.color}-${p.name}.png`;
+      draw();
+      break;
+    }
+  }
+});
+
+// --- Draw
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(const s of squares){
+    if(s.col>=2 && s.col<=9){
+      const isWhite = ((s.rank + (9 - s.col)) % 2 === 0);
+      ctx.fillStyle = isWhite ? "#E6E6E6" : "#555555";
+    } else ctx.fillStyle="#282828";
+    ctx.fillRect(s.col*gridWidth,(GRID_ROWS-1-s.rank)*gridHeight,gridWidth,gridHeight);
+  }
+
+  for(const p of pieces){
+    const px = p.x!==undefined?p.x:p.file*gridWidth+gridWidth/2;
+    const py = p.y!==undefined?p.y:(GRID_ROWS-1-p.rank)*gridHeight+gridHeight/2;
+    const size = Math.min(gridWidth,gridHeight)*0.9;
+    if(p.img.complete) ctx.drawImage(p.img, px-size/2, py-size/2, size, size);
+
+    // Upgraded pawn marker (half-size red dot)
+    if(p.isPawnOrigin && p.name !== "pawn"){
+      const dotSize = size*0.075;
+      ctx.fillStyle="red";
+      ctx.beginPath();
+      ctx.arc(px + size/2 - dotSize, py - size/2 + dotSize, dotSize, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
+// --- Resize
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  gridWidth = canvas.width/GRID_COLS;
+  gridHeight = canvas.height/GRID_ROWS;
+  calculateSquares();
+  defineCaptureSquares();
+  if(pieces.length===0) setupPieces();
+  draw(); // draw immediately
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+</script>
+</body>
+</html>
