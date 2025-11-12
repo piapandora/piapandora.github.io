@@ -172,7 +172,6 @@ function snapPiece(p){
   const occupant = pieces.find(q => q!==p && q.file===nearest.col && q.rank===nearest.rank);
   if(occupant){
     if(occupant.color !== p.color){
-        // Opponent piece captured → move to capture zone
         const cz = occupant.color==="white" ? captureZone.white : captureZone.black;
         const free = cz.find(c => !pieces.find(q=>q.file===c.col && q.rank===c.rank));
         if(free){
@@ -181,7 +180,6 @@ function snapPiece(p){
             delete occupant.x; delete occupant.y;
         }
     } else {
-        // Friendly piece occupies square → prevent snapping here
         const otherCandidates = candidates.filter(s => !(pieces.find(q => q!==p && q.file===s.col && q.rank===s.rank && q.color===p.color)));
         if(otherCandidates.length > 0){
             let nearestAlt = null;
@@ -200,7 +198,7 @@ function snapPiece(p){
   delete p.x; delete p.y;
 }
 
-// --- Right-click pawn cycle
+// --- Right-click pawn cycle (fixed)
 canvas.addEventListener("contextmenu", e=>{
   e.preventDefault();
   const mouse = getMouse(e);
@@ -213,9 +211,15 @@ canvas.addEventListener("contextmenu", e=>{
       const cycle = ["pawn","queen","rook","bishop","knight"];
       let idx = cycle.indexOf(p.name);
       idx = (idx+1)%cycle.length;
-      p.name = cycle[idx];
-      p.img.src = `misc/${p.color}-${p.name}.png`;
-      draw();
+
+      // Preload image before assigning to prevent blank piece
+      const newImg = new Image();
+      newImg.src = `misc/${p.color}-${cycle[idx]}.png`;
+      newImg.onload = ()=>{
+        p.name = cycle[idx];
+        p.img = newImg;
+        draw();
+      };
       break;
     }
   }
@@ -224,21 +228,29 @@ canvas.addEventListener("contextmenu", e=>{
 // --- Draw
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Draw chessboard squares
   for(const s of squares){
     if(s.col>=2 && s.col<=9){
       const isWhite = ((s.rank + (9 - s.col)) % 2 === 0);
       ctx.fillStyle = isWhite ? "#E6E6E6" : "#555555";
-    } else ctx.fillStyle="#282828";
-    ctx.fillRect(s.col*gridWidth,(GRID_ROWS-1-s.rank)*gridHeight,gridWidth,gridHeight);
+      ctx.fillRect(s.col*gridWidth,(GRID_ROWS-1-s.rank)*gridHeight,gridWidth,gridHeight);
+    }
   }
 
+  // Draw capture zones as solid rectangles (no thin lines)
+  ctx.fillStyle = "#282828";
+  ctx.fillRect(0, 0, 2*gridWidth, GRID_ROWS*gridHeight);       // white capture zone
+  ctx.fillRect(10*gridWidth, 0, 2*gridWidth, GRID_ROWS*gridHeight); // black capture zone
+
+  // Draw pieces
   for(const p of pieces){
     const px = p.x!==undefined?p.x:p.file*gridWidth+gridWidth/2;
     const py = p.y!==undefined?p.y:(GRID_ROWS-1-p.rank)*gridHeight+gridHeight/2;
     const size = Math.min(gridWidth,gridHeight)*0.9;
     if(p.img.complete) ctx.drawImage(p.img, px-size/2, py-size/2, size, size);
 
-    // Upgraded pawn marker (half-size red dot)
+    // Upgraded pawn marker
     if(p.isPawnOrigin && p.name !== "pawn"){
       const dotSize = size*0.075;
       ctx.fillStyle="red";
@@ -258,7 +270,7 @@ function resizeCanvas(){
   calculateSquares();
   defineCaptureSquares();
   if(pieces.length===0) setupPieces();
-  draw(); // draw immediately
+  draw();
 }
 
 window.addEventListener("resize", resizeCanvas);
