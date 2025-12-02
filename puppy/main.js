@@ -3,7 +3,7 @@
 // ----------------------
 const START_DISTANCE = 5;        // default camera distance
 const ROTATION_SENSITIVITY = 0.005;
-const TOUCH_MULTIPLIER = 2;    // multiplier for mobile rotation
+const TOUCH_MULTIPLIER = 2;      // multiplier for mobile rotation
 const ZOOM_SPEED = 0.3;
 const LERP_SPEED = 10.0;
 const ZOOM_LERP_SPEED = 10.0;
@@ -88,6 +88,11 @@ let orbit = {
     zoomLerpSpeed: ZOOM_LERP_SPEED
 };
 
+// Store initial state for reset
+const INITIAL_YAW = orbit.yaw;
+const INITIAL_PITCH = orbit.pitch;
+const INITIAL_DISTANCE = orbit.distance;
+
 let dragging = false;
 let lastX = 0;
 let lastY = 0;
@@ -95,6 +100,7 @@ let touchLastX = 0;
 let touchLastY = 0;
 let pinchStartDistance = 0;
 let initialDistance = START_DISTANCE;
+let lastTapTime = 0;
 
 // ----------------------
 // Mouse controls
@@ -121,6 +127,13 @@ window.addEventListener('mousemove', e => {
 canvas.addEventListener('wheel', e => {
     orbit.targetDistance += e.deltaY * orbit.zoomSpeed * 0.01;
     orbit.targetDistance = pc.math.clamp(orbit.targetDistance, MIN_DISTANCE, MAX_DISTANCE);
+});
+
+// Double-click (PC) to reset camera
+canvas.addEventListener('dblclick', () => {
+    orbit.yaw = INITIAL_YAW;
+    orbit.pitch = INITIAL_PITCH;
+    orbit.targetDistance = INITIAL_DISTANCE;
 });
 
 // ----------------------
@@ -165,6 +178,15 @@ canvas.addEventListener('touchmove', e => {
 
 window.addEventListener('touchend', e => {
     if (e.touches.length === 0) dragging = false;
+
+    // Double-tap to reset
+    const currentTime = performance.now();
+    if (currentTime - lastTapTime < 300) {
+        orbit.yaw = INITIAL_YAW;
+        orbit.pitch = INITIAL_PITCH;
+        orbit.targetDistance = INITIAL_DISTANCE;
+    }
+    lastTapTime = currentTime;
 });
 
 // ----------------------
