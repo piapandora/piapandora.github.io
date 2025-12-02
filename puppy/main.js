@@ -63,37 +63,33 @@ modelAsset.on('error', (err) => {
 });
 
 // ----------------------
-// Orbit control setup
+// Orbit control setup with smoothing
 // ----------------------
 let orbit = {
-    pitch: 0,
-    yaw: 0,
-    distance: 4,
     target: new pc.Vec3(0, 0, 0),
-    sensitivity: 0.005,
-    zoomSpeed: 0.1
-};
-
-let orbitTarget = {
-    pitch: 0,
+    distance: 4,
     yaw: 0,
-    distance: 4
+    pitch: 0,
+    currentYaw: 0,
+    currentPitch: 0,
+    sensitivity: 0.005,
+    zoomSpeed: 0.1,
+    lerpSpeed: 8.0
 };
 
-let damping = 0.12; // smoothness factor
 let dragging = false;
 let lastX = 0;
 let lastY = 0;
+let touchLastX = 0;
+let touchLastY = 0;
+let pinchStartDistance = 0;
+let initialDistance = orbit.distance;
 
 // ----------------------
-// Mouse rotation
+// Mouse controls
 // ----------------------
 canvas.addEventListener('mousedown', e => {
-    if (e.button === 0) { // left button for rotation
-        dragging = 'rotate';
-    } else if (e.button === 1 || e.button === 2) { // middle/right for pan
-        dragging = 'pan';
-    }
+    dragging = true;
     lastX = e.clientX;
     lastY = e.clientY;
 });
@@ -107,96 +103,75 @@ window.addEventListener('mousemove', e => {
     lastX = e.clientX;
     lastY = e.clientY;
 
-    if (dragging === 'rotate') {
-        orbitTarget.yaw -= dx * orbit.sensitivity;
-        orbitTarget.pitch += dy * orbit.sensitivity;
-        orbitTarget.pitch = pc.math.clamp(orbitTarget.pitch, -Math.PI / 2, Math.PI / 2);
-    } else if (dragging === 'pan') {
-        const panSpeed = 0.01 * orbitTarget.distance;
-        orbit.target.x -= dx * panSpeed;
-        orbit.target.y += dy * panSpeed;
-    }
+    orbit.yaw -= dx * orbit.sensitivity;
+    orbit.pitch += dy * orbit.sensitivity;
+    orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
 });
 
 // Scroll zoom
 canvas.addEventListener('wheel', e => {
-    orbitTarget.distance += e.deltaY * orbit.zoomSpeed * 0.01;
-    orbitTarget.distance = Math.max(0.1, orbitTarget.distance);
+    orbit.distance += e.deltaY * orbit.zoomSpeed * 0.01;
+    orbit.distance = Math.max(0.1, orbit.distance);
 });
 
 // ----------------------
-// Touch controls (mobile)
+// Touch controls (mobile rotation + pinch zoom)
 // ----------------------
-let touchLastX = 0;
-let touchLastY = 0;
-let lastTouchDist = 0;
-
 canvas.addEventListener('touchstart', e => {
     if (e.touches.length === 1) {
-        dragging = 'rotate';
         const t = e.touches[0];
+        dragging = true;
         touchLastX = t.clientX;
         touchLastY = t.clientY;
     } else if (e.touches.length === 2) {
-        dragging = 'pinch';
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
-        lastTouchDist = Math.sqrt(dx * dx + dy * dy);
+        pinchStartDistance = Math.sqrt(dx * dx + dy * dy);
+        initialDistance = orbit.distance;
     }
 });
 
 canvas.addEventListener('touchmove', e => {
-    if (!dragging) return;
-
-    if (dragging === 'rotate' && e.touches.length === 1) {
+    if (e.touches.length === 1 && dragging) {
         const t = e.touches[0];
         const dx = t.clientX - touchLastX;
         const dy = t.clientY - touchLastY;
         touchLastX = t.clientX;
         touchLastY = t.clientY;
 
-        orbitTarget.yaw -= dx * orbit.sensitivity;
-        orbitTarget.pitch += dy * orbit.sensitivity;
-        orbitTarget.pitch = pc.math.clamp(orbitTarget.pitch, -Math.PI / 2, Math.PI / 2);
-    } else if (dragging === 'pinch' && e.touches.length === 2) {
+        orbit.yaw -= dx * orbit.sensitivity;
+        orbit.pitch += dy * orbit.sensitivity;
+        orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
+
+        e.preventDefault();
+    } else if (e.touches.length === 2) {
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        const delta = lastTouchDist - dist;
-        orbitTarget.distance += delta * orbit.zoomSpeed * 0.01;
-        orbitTarget.distance = Math.max(0.1, orbitTarget.distance);
-
-        lastTouchDist = dist;
-
-        // Two-finger pan
-        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        const dxPan = midX - touchLastX;
-        const dyPan = midY - touchLastY;
-        const panSpeed = 0.01 * orbitTarget.distance;
-        orbit.target.x -= dxPan * panSpeed;
-        orbit.target.y += dyPan * panSpeed;
-        touchLastX = midX;
-        touchLastY = midY;
+        const pinchDistance = Math.sqrt(dx * dx + dy * dy);
+        const scale = pinchStartDistance / pinchDistance;
+        orbit.distance = initialDistance * scale;
+        orbit.distance = Math.max(0.1, orbit.distance);
+        e.preventDefault();
     }
-
-    e.preventDefault();
 }, { passive: false });
 
-window.addEventListener('touchend', () => dragging = false);
+window.addEventListener('touchend', e => {
+    if (e.touches.length === 0) {
+        dragging = false;
+    }
+});
 
 // ----------------------
-// Update camera each frame (smooth interpolation)
-// ----------------------
+// Update camera each frame (smooth)
+ // ----------------------
 app.on('update', dt => {
-    orbit.pitch += (orbitTarget.pitch - orbit.pitch) * damping;
-    orbit.yaw += (orbitTarget.yaw - orbit.yaw) * damping;
-    orbit.distance += (orbitTarget.distance - orbit.distance) * damping;
+    const t = orbit.lerpSpeed * dt;
+    orbit.currentYaw = pc.math.lerp(orbit.currentYaw, orbit.yaw, t);
+    orbit.currentPitch = pc.math.lerp(orbit.currentPitch, orbit.pitch, t);
 
-    const x = orbit.target.x + orbit.distance * Math.cos(orbit.pitch) * Math.sin(orbit.yaw);
-    const y = orbit.target.y + orbit.distance * Math.sin(orbit.pitch);
-    const z = orbit.target.z + orbit.distance * Math.cos(orbit.pitch) * Math.cos(orbit.yaw);
+    const x = orbit.target.x + orbit.distance * Math.cos(orbit.currentPitch) * Math.sin(orbit.currentYaw);
+    const y = orbit.target.y + orbit.distance * Math.sin(orbit.currentPitch);
+    const z = orbit.target.z + orbit.distance * Math.cos(orbit.currentPitch) * Math.cos(orbit.currentYaw);
 
     camera.setPosition(x, y, z);
     camera.lookAt(orbit.target);
