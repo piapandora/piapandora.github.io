@@ -3,7 +3,7 @@
 // ----------------------
 const START_DISTANCE = 5;        // default camera distance
 const ROTATION_SENSITIVITY = 0.005;
-const TOUCH_MULTIPLIER = 1.66;   // base multiplier for mobile rotation
+const TOUCH_MULTIPLIER = 2.5;   // base multiplier for mobile rotation
 const ZOOM_SPEED = 0.3;
 const LERP_SPEED = 10;
 const ZOOM_LERP_SPEED = 10;
