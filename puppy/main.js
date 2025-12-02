@@ -37,7 +37,7 @@ directions.forEach(dir => {
 });
 
 // ----------------------
-// Load GLB model
+// Load GLB model (null-safe + auto-scale)
 // ----------------------
 let modelEntities = [];
 const modelPath = 'assets/little_cartoon_dog.glb';
@@ -63,7 +63,7 @@ modelAsset.on('error', (err) => {
 });
 
 // ----------------------
-// Orbit/pan control setup
+// Orbit control setup
 // ----------------------
 let orbit = {
     pitch: 0,
@@ -71,34 +71,34 @@ let orbit = {
     distance: 4,
     target: new pc.Vec3(0, 0, 0),
     sensitivity: 0.005,
-    zoomSpeed: 0.1,
-    panSpeed: 0.005
+    zoomSpeed: 0.1
 };
 
+let orbitTarget = {
+    pitch: 0,
+    yaw: 0,
+    distance: 4
+};
+
+let damping = 0.12; // smoothness factor
 let dragging = false;
-let action = 'none'; // 'orbit' or 'pan'
 let lastX = 0;
 let lastY = 0;
 
 // ----------------------
-// Mouse controls
+// Mouse rotation
 // ----------------------
 canvas.addEventListener('mousedown', e => {
-    dragging = true;
+    if (e.button === 0) { // left button for rotation
+        dragging = 'rotate';
+    } else if (e.button === 1 || e.button === 2) { // middle/right for pan
+        dragging = 'pan';
+    }
     lastX = e.clientX;
     lastY = e.clientY;
-
-    if (e.button === 0) {
-        action = 'orbit'; // left
-    } else if (e.button === 1 || e.button === 2) {
-        action = 'pan'; // middle or right
-    }
 });
 
-window.addEventListener('mouseup', () => {
-    dragging = false;
-    action = 'none';
-});
+window.addEventListener('mouseup', () => dragging = false);
 
 window.addEventListener('mousemove', e => {
     if (!dragging) return;
@@ -107,101 +107,93 @@ window.addEventListener('mousemove', e => {
     lastX = e.clientX;
     lastY = e.clientY;
 
-    if (action === 'orbit') {
-        orbit.yaw -= dx * orbit.sensitivity;
-        orbit.pitch += dy * orbit.sensitivity;
-        orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
-    } else if (action === 'pan') {
-        const panOffset = new pc.Vec3(-dx * orbit.panSpeed, dy * orbit.panSpeed, 0);
-        // Transform pan to camera local space
-        const right = camera.right;
-        const up = camera.up;
-        orbit.target.add(pc.Vec3.scale(right, panOffset.x));
-        orbit.target.add(pc.Vec3.scale(up, panOffset.y));
+    if (dragging === 'rotate') {
+        orbitTarget.yaw -= dx * orbit.sensitivity;
+        orbitTarget.pitch += dy * orbit.sensitivity;
+        orbitTarget.pitch = pc.math.clamp(orbitTarget.pitch, -Math.PI / 2, Math.PI / 2);
+    } else if (dragging === 'pan') {
+        const panSpeed = 0.01 * orbitTarget.distance;
+        orbit.target.x -= dx * panSpeed;
+        orbit.target.y += dy * panSpeed;
     }
 });
 
 // Scroll zoom
 canvas.addEventListener('wheel', e => {
-    orbit.distance += e.deltaY * orbit.zoomSpeed * 0.01;
-    orbit.distance = Math.max(0.1, orbit.distance);
+    orbitTarget.distance += e.deltaY * orbit.zoomSpeed * 0.01;
+    orbitTarget.distance = Math.max(0.1, orbitTarget.distance);
 });
 
 // ----------------------
-// Touch controls
+// Touch controls (mobile)
 // ----------------------
 let touchLastX = 0;
 let touchLastY = 0;
-let lastDistance = 0;
+let lastTouchDist = 0;
 
 canvas.addEventListener('touchstart', e => {
     if (e.touches.length === 1) {
-        dragging = true;
-        action = 'orbit';
+        dragging = 'rotate';
         const t = e.touches[0];
         touchLastX = t.clientX;
         touchLastY = t.clientY;
     } else if (e.touches.length === 2) {
-        dragging = true;
-        action = 'panZoom';
-        const t0 = e.touches[0];
-        const t1 = e.touches[1];
-        lastDistance = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
-        touchLastX = (t0.clientX + t1.clientX) / 2;
-        touchLastY = (t0.clientY + t1.clientY) / 2;
+        dragging = 'pinch';
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDist = Math.sqrt(dx * dx + dy * dy);
     }
 });
 
 canvas.addEventListener('touchmove', e => {
     if (!dragging) return;
 
-    if (e.touches.length === 1 && action === 'orbit') {
+    if (dragging === 'rotate' && e.touches.length === 1) {
         const t = e.touches[0];
         const dx = t.clientX - touchLastX;
         const dy = t.clientY - touchLastY;
         touchLastX = t.clientX;
         touchLastY = t.clientY;
 
-        orbit.yaw -= dx * orbit.sensitivity;
-        orbit.pitch += dy * orbit.sensitivity;
-        orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
-    } else if (e.touches.length === 2 && action === 'panZoom') {
-        const t0 = e.touches[0];
-        const t1 = e.touches[1];
-        const midX = (t0.clientX + t1.clientX) / 2;
-        const midY = (t0.clientY + t1.clientY) / 2;
+        orbitTarget.yaw -= dx * orbit.sensitivity;
+        orbitTarget.pitch += dy * orbit.sensitivity;
+        orbitTarget.pitch = pc.math.clamp(orbitTarget.pitch, -Math.PI / 2, Math.PI / 2);
+    } else if (dragging === 'pinch' && e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Pan
-        const dx = midX - touchLastX;
-        const dy = midY - touchLastY;
+        const delta = lastTouchDist - dist;
+        orbitTarget.distance += delta * orbit.zoomSpeed * 0.01;
+        orbitTarget.distance = Math.max(0.1, orbitTarget.distance);
+
+        lastTouchDist = dist;
+
+        // Two-finger pan
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const dxPan = midX - touchLastX;
+        const dyPan = midY - touchLastY;
+        const panSpeed = 0.01 * orbitTarget.distance;
+        orbit.target.x -= dxPan * panSpeed;
+        orbit.target.y += dyPan * panSpeed;
         touchLastX = midX;
         touchLastY = midY;
-
-        const panOffset = new pc.Vec3(-dx * orbit.panSpeed, dy * orbit.panSpeed, 0);
-        const right = camera.right;
-        const up = camera.up;
-        orbit.target.add(pc.Vec3.scale(right, panOffset.x));
-        orbit.target.add(pc.Vec3.scale(up, panOffset.y));
-
-        // Zoom
-        const currentDistance = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
-        orbit.distance *= lastDistance / currentDistance;
-        lastDistance = currentDistance;
-        orbit.distance = Math.max(0.1, orbit.distance);
     }
 
     e.preventDefault();
 }, { passive: false });
 
-window.addEventListener('touchend', () => {
-    dragging = false;
-    action = 'none';
-});
+window.addEventListener('touchend', () => dragging = false);
 
 // ----------------------
-// Update camera each frame
+// Update camera each frame (smooth interpolation)
 // ----------------------
 app.on('update', dt => {
+    orbit.pitch += (orbitTarget.pitch - orbit.pitch) * damping;
+    orbit.yaw += (orbitTarget.yaw - orbit.yaw) * damping;
+    orbit.distance += (orbitTarget.distance - orbit.distance) * damping;
+
     const x = orbit.target.x + orbit.distance * Math.cos(orbit.pitch) * Math.sin(orbit.yaw);
     const y = orbit.target.y + orbit.distance * Math.sin(orbit.pitch);
     const z = orbit.target.z + orbit.distance * Math.cos(orbit.pitch) * Math.cos(orbit.yaw);
