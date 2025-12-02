@@ -101,6 +101,7 @@ let touchLastY = 0;
 let pinchStartDistance = 0;
 let initialDistance = START_DISTANCE;
 let lastTapTime = 0;
+let pinchOngoing = false; // track pinch state
 
 // ----------------------
 // Mouse controls
@@ -140,21 +141,22 @@ canvas.addEventListener('dblclick', () => {
 // Touch controls (mobile rotation + pinch zoom)
 // ----------------------
 canvas.addEventListener('touchstart', e => {
-    if (e.touches.length === 1) {
+    if (e.touches.length === 1 && !pinchOngoing) {
         const t = e.touches[0];
         dragging = true;
         touchLastX = t.clientX;
         touchLastY = t.clientY;
     } else if (e.touches.length === 2) {
+        pinchOngoing = true;
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
-        pinchStartDistance = Math.sqrt(dx * dx + dy * dy);
+        pinchStartDistance = Math.sqrt(dx*dx + dy*dy);
         initialDistance = orbit.targetDistance;
     }
 });
 
 canvas.addEventListener('touchmove', e => {
-    if (e.touches.length === 1 && dragging) {
+    if (e.touches.length === 1 && dragging && !pinchOngoing) {
         const t = e.touches[0];
         const dx = (t.clientX - touchLastX) * TOUCH_MULTIPLIER;
         const dy = (t.clientY - touchLastY) * TOUCH_MULTIPLIER;
@@ -163,12 +165,12 @@ canvas.addEventListener('touchmove', e => {
 
         orbit.yaw -= dx * orbit.sensitivity;
         orbit.pitch += dy * orbit.sensitivity;
-        orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
+        orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI/2, Math.PI/2);
         e.preventDefault();
     } else if (e.touches.length === 2) {
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const pinchDistance = Math.sqrt(dx * dx + dy * dy);
+        const pinchDistance = Math.sqrt(dx*dx + dy*dy);
         const scale = pinchStartDistance / pinchDistance;
 
         orbit.targetDistance = pc.math.clamp(initialDistance * scale, MIN_DISTANCE, MAX_DISTANCE);
@@ -177,6 +179,7 @@ canvas.addEventListener('touchmove', e => {
 }, { passive: false });
 
 window.addEventListener('touchend', e => {
+    if (e.touches.length < 2) pinchOngoing = false;
     if (e.touches.length === 0) dragging = false;
 
     // Double-tap to reset
