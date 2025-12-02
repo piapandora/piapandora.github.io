@@ -1,8 +1,9 @@
 // ----------------------
 // Configuration
 // ----------------------
-const START_DISTANCE = 5; // change this to set default camera distance
+const START_DISTANCE = 5;        // default camera distance
 const ROTATION_SENSITIVITY = 0.005;
+const TOUCH_MULTIPLIER = 1.5;    // multiplier for mobile rotation
 const ZOOM_SPEED = 0.3;
 const LERP_SPEED = 10.0;
 const ZOOM_LERP_SPEED = 10.0;
@@ -29,14 +30,13 @@ app.root.addChild(camera);
 // Lights
 // ----------------------
 const directions = [
-    { name: 'top',         angles: [45, 0, 0], intensity: 1 },
-    { name: 'bottom',      angles: [180, 0, 0], intensity: 0.5 },
+    { name: 'top', angles: [45, 0, 0], intensity: 1 },
+    { name: 'bottom', angles: [180, 0, 0], intensity: 0.5 },
     { name: 'front-right', angles: [90, 45, 0], intensity: 0.66 },
-    { name: 'front-left',  angles: [90, -45, 0], intensity: 0.66 },
-    { name: 'back-right',  angles: [90, 135, 0], intensity: 0.66 },
-    { name: 'back-left',   angles: [90, -135, 0], intensity: 0.66 }
+    { name: 'front-left', angles: [90, -45, 0], intensity: 0.66 },
+    { name: 'back-right', angles: [90, 135, 0], intensity: 0.66 },
+    { name: 'back-left', angles: [90, -135, 0], intensity: 0.66 }
 ];
-
 directions.forEach(dir => {
     const light = new pc.Entity();
     light.name = dir.name + '_light';
@@ -67,7 +67,7 @@ modelAsset.ready(() => {
     console.log('Model loaded successfully and auto-scaled!');
 });
 
-modelAsset.on('error', (err) => console.error('Failed to load GLB:', err));
+modelAsset.on('error', err => console.error('Failed to load GLB:', err));
 
 // ----------------------
 // Orbit setup
@@ -102,9 +102,7 @@ canvas.addEventListener('mousedown', e => {
     lastX = e.clientX;
     lastY = e.clientY;
 });
-
 window.addEventListener('mouseup', () => dragging = false);
-
 window.addEventListener('mousemove', e => {
     if (!dragging) return;
     const dx = e.clientX - lastX;
@@ -143,8 +141,8 @@ canvas.addEventListener('touchstart', e => {
 canvas.addEventListener('touchmove', e => {
     if (e.touches.length === 1 && dragging) {
         const t = e.touches[0];
-        const dx = t.clientX - touchLastX;
-        const dy = t.clientY - touchLastY;
+        const dx = (t.clientX - touchLastX) * TOUCH_MULTIPLIER;
+        const dy = (t.clientY - touchLastY) * TOUCH_MULTIPLIER;
         touchLastX = t.clientX;
         touchLastY = t.clientY;
 
@@ -156,6 +154,8 @@ canvas.addEventListener('touchmove', e => {
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
         const pinchDistance = Math.sqrt(dx * dx + dy * dy);
+
+        // Centered zoom along camera-target vector
         const scale = pinchStartDistance / pinchDistance;
         orbit.targetDistance = initialDistance * scale;
         orbit.targetDistance = Math.max(0.1, orbit.targetDistance);
