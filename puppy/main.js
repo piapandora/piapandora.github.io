@@ -3,16 +3,12 @@
 // ----------------------
 const START_DISTANCE = 5;        // default camera distance
 const ROTATION_SENSITIVITY = 0.005;
-const TOUCH_MULTIPLIER = 2;      // base multiplier for mobile rotation
+const TOUCH_MULTIPLIER = 1.66;   // base multiplier for mobile rotation
 const ZOOM_SPEED = 0.3;
 const LERP_SPEED = 10;
 const ZOOM_LERP_SPEED = 10;
 const MIN_DISTANCE = 2;          // clamp zoom
 const MAX_DISTANCE = 8;
-
-// Adjust touch sensitivity based on screen width
-const TOUCH_EFFECTIVE_MULTIPLIER = TOUCH_MULTIPLIER * (window.innerWidth / 400); 
-// Example: 400px width as baseline. Phones smaller than that will be slower, tablets faster.
 
 // ----------------------
 // Create PlayCanvas app
@@ -135,7 +131,7 @@ canvas.addEventListener('dblclick', () => {
 });
 
 // ----------------------
-// Touch controls (mobile rotation + pinch zoom)
+// Touch controls (mobile rotation + pinch zoom, DPR-adjusted)
 // ----------------------
 canvas.addEventListener('touchstart', e => {
     if (e.touches.length === 1) {
@@ -154,8 +150,9 @@ canvas.addEventListener('touchstart', e => {
 canvas.addEventListener('touchmove', e => {
     if (e.touches.length === 1 && dragging) {
         const t = e.touches[0];
-        const dx = (t.clientX - touchLastX) * TOUCH_EFFECTIVE_MULTIPLIER;
-        const dy = (t.clientY - touchLastY) * TOUCH_EFFECTIVE_MULTIPLIER;
+        const dpr = window.devicePixelRatio || 1;
+        const dx = (t.clientX - touchLastX) * TOUCH_MULTIPLIER / dpr;
+        const dy = (t.clientY - touchLastY) * TOUCH_MULTIPLIER / dpr;
         touchLastX = t.clientX;
         touchLastY = t.clientY;
 
