@@ -7,6 +7,8 @@ const TOUCH_MULTIPLIER = 1.5;    // multiplier for mobile rotation
 const ZOOM_SPEED = 0.3;
 const LERP_SPEED = 10.0;
 const ZOOM_LERP_SPEED = 10.0;
+const MIN_DISTANCE = 2.0;        // clamp zoom
+const MAX_DISTANCE = 8.0;
 
 // ----------------------
 // Create PlayCanvas app
@@ -115,10 +117,10 @@ window.addEventListener('mousemove', e => {
     orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
 });
 
-// Smooth mouse wheel zoom
+// Smooth mouse wheel zoom with clamp
 canvas.addEventListener('wheel', e => {
     orbit.targetDistance += e.deltaY * orbit.zoomSpeed * 0.01;
-    orbit.targetDistance = Math.max(0.1, orbit.targetDistance);
+    orbit.targetDistance = pc.math.clamp(orbit.targetDistance, MIN_DISTANCE, MAX_DISTANCE);
 });
 
 // ----------------------
@@ -154,11 +156,9 @@ canvas.addEventListener('touchmove', e => {
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
         const pinchDistance = Math.sqrt(dx * dx + dy * dy);
-
-        // Centered zoom along camera-target vector
         const scale = pinchStartDistance / pinchDistance;
-        orbit.targetDistance = initialDistance * scale;
-        orbit.targetDistance = Math.max(0.1, orbit.targetDistance);
+
+        orbit.targetDistance = pc.math.clamp(initialDistance * scale, MIN_DISTANCE, MAX_DISTANCE);
         e.preventDefault();
     }
 }, { passive: false });
