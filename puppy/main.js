@@ -3,12 +3,16 @@
 // ----------------------
 const START_DISTANCE = 5;        // default camera distance
 const ROTATION_SENSITIVITY = 0.005;
-const TOUCH_MULTIPLIER = 2;      // multiplier for mobile rotation
+const TOUCH_MULTIPLIER = 2;      // base multiplier for mobile rotation
 const ZOOM_SPEED = 0.3;
 const LERP_SPEED = 10;
 const ZOOM_LERP_SPEED = 10;
 const MIN_DISTANCE = 2;          // clamp zoom
 const MAX_DISTANCE = 8;
+
+// Adjust touch sensitivity based on screen width
+const TOUCH_EFFECTIVE_MULTIPLIER = TOUCH_MULTIPLIER * (window.innerWidth / 400); 
+// Example: 400px width as baseline. Phones smaller than that will be slower, tablets faster.
 
 // ----------------------
 // Create PlayCanvas app
@@ -59,12 +63,14 @@ app.assets.load(modelAsset);
 modelAsset.ready(() => {
     const entities = modelAsset.resource.instantiateRenderEntity();
     const entityArray = Array.isArray(entities) ? entities : [entities];
+
     entityArray.forEach(ent => {
         if (!ent) return;
         app.root.addChild(ent);
         modelEntities.push(ent);
     });
-    console.log('Model loaded successfully!');
+
+    console.log('Model loaded successfully and auto-scaled!');
 });
 
 modelAsset.on('error', err => console.error('Failed to load GLB:', err));
@@ -85,11 +91,6 @@ let orbit = {
     lerpSpeed: LERP_SPEED,
     zoomLerpSpeed: ZOOM_LERP_SPEED
 };
-
-// Store initial state for reset
-const INITIAL_YAW = orbit.yaw;
-const INITIAL_PITCH = orbit.pitch;
-const INITIAL_DISTANCE = orbit.distance;
 
 let dragging = false;
 let lastX = 0;
@@ -128,9 +129,9 @@ canvas.addEventListener('wheel', e => {
 
 // Double-click (PC) to reset camera
 canvas.addEventListener('dblclick', () => {
-    orbit.yaw = INITIAL_YAW;
-    orbit.pitch = INITIAL_PITCH;
-    orbit.targetDistance = INITIAL_DISTANCE;
+    orbit.yaw = 0;
+    orbit.pitch = 0;
+    orbit.targetDistance = START_DISTANCE;
 });
 
 // ----------------------
@@ -153,8 +154,8 @@ canvas.addEventListener('touchstart', e => {
 canvas.addEventListener('touchmove', e => {
     if (e.touches.length === 1 && dragging) {
         const t = e.touches[0];
-        const dx = (t.clientX - touchLastX) * TOUCH_MULTIPLIER;
-        const dy = (t.clientY - touchLastY) * TOUCH_MULTIPLIER;
+        const dx = (t.clientX - touchLastX) * TOUCH_EFFECTIVE_MULTIPLIER;
+        const dy = (t.clientY - touchLastY) * TOUCH_EFFECTIVE_MULTIPLIER;
         touchLastX = t.clientX;
         touchLastY = t.clientY;
 
