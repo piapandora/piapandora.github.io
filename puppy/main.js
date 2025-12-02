@@ -20,12 +20,12 @@ app.root.addChild(camera);
 // Add six directional lights
 // ----------------------
 const directions = [
-    { name: 'top', angles: [45, 0, 0], intensity: 1 },
-    { name: 'bottom', angles: [180, 0, 0], intensity: 0.5 },
+    { name: 'top',         angles: [45, 0, 0], intensity: 1 },
+    { name: 'bottom',      angles: [180, 0, 0], intensity: 0.5 },
     { name: 'front-right', angles: [90, 45, 0], intensity: 0.66 },
-    { name: 'front-left', angles: [90, -45, 0], intensity: 0.66 },
-    { name: 'back-right', angles: [90, 135, 0], intensity: 0.66 },
-    { name: 'back-left', angles: [90, -135, 0], intensity: 0.66 }
+    { name: 'front-left',  angles: [90, -45, 0], intensity: 0.66 },
+    { name: 'back-right',  angles: [90, 135, 0], intensity: 0.66 },
+    { name: 'back-left',   angles: [90, -135, 0], intensity: 0.66 }
 ];
 
 directions.forEach(dir => {
@@ -37,7 +37,7 @@ directions.forEach(dir => {
 });
 
 // ----------------------
-// Load GLB model (null-safe + auto-scale)
+// Load GLB model
 // ----------------------
 let modelEntities = [];
 const modelPath = 'assets/little_cartoon_dog.glb';
@@ -58,36 +58,47 @@ modelAsset.ready(() => {
     console.log('Model loaded successfully and auto-scaled!');
 });
 
+modelAsset.on('error', (err) => {
+    console.error('Failed to load GLB:', err);
+});
+
 // ----------------------
-// Enhanced Orbit Control
+// Orbit/pan control setup
 // ----------------------
 let orbit = {
     pitch: 0,
     yaw: 0,
     distance: 4,
     target: new pc.Vec3(0, 0, 0),
-
-    // Sensitivity
-    rotSens: 0.005,
-    panSens: 0.005,
-    zoomSens: 0.003
+    sensitivity: 0.005,
+    zoomSpeed: 0.1,
+    panSpeed: 0.005
 };
 
 let dragging = false;
+let action = 'none'; // 'orbit' or 'pan'
 let lastX = 0;
 let lastY = 0;
-let lastDistance = 0;
 
 // ----------------------
-// Mouse rotate
+// Mouse controls
 // ----------------------
 canvas.addEventListener('mousedown', e => {
     dragging = true;
     lastX = e.clientX;
     lastY = e.clientY;
+
+    if (e.button === 0) {
+        action = 'orbit'; // left
+    } else if (e.button === 1 || e.button === 2) {
+        action = 'pan'; // middle or right
+    }
 });
 
-window.addEventListener('mouseup', () => dragging = false);
+window.addEventListener('mouseup', () => {
+    dragging = false;
+    action = 'none';
+});
 
 window.addEventListener('mousemove', e => {
     if (!dragging) return;
@@ -96,87 +107,104 @@ window.addEventListener('mousemove', e => {
     lastX = e.clientX;
     lastY = e.clientY;
 
-    orbit.yaw -= dx * orbit.rotSens;
-    orbit.pitch += dy * orbit.rotSens;
-    orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
+    if (action === 'orbit') {
+        orbit.yaw -= dx * orbit.sensitivity;
+        orbit.pitch += dy * orbit.sensitivity;
+        orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
+    } else if (action === 'pan') {
+        const panOffset = new pc.Vec3(-dx * orbit.panSpeed, dy * orbit.panSpeed, 0);
+        // Transform pan to camera local space
+        const right = camera.right;
+        const up = camera.up;
+        orbit.target.add(pc.Vec3.scale(right, panOffset.x));
+        orbit.target.add(pc.Vec3.scale(up, panOffset.y));
+    }
 });
 
-// Mouse wheel zoom
+// Scroll zoom
 canvas.addEventListener('wheel', e => {
-    orbit.distance += e.deltaY * orbit.zoomSens;
+    orbit.distance += e.deltaY * orbit.zoomSpeed * 0.01;
     orbit.distance = Math.max(0.1, orbit.distance);
 });
 
 // ----------------------
-// Touch input (FULL FEATURED)
+// Touch controls
 // ----------------------
+let touchLastX = 0;
+let touchLastY = 0;
+let lastDistance = 0;
+
 canvas.addEventListener('touchstart', e => {
     if (e.touches.length === 1) {
-        // one finger rotate
-        lastX = e.touches[0].clientX;
-        lastY = e.touches[0].clientY;
+        dragging = true;
+        action = 'orbit';
+        const t = e.touches[0];
+        touchLastX = t.clientX;
+        touchLastY = t.clientY;
     } else if (e.touches.length === 2) {
-        // pinch zoom or pan
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        lastDistance = Math.sqrt(dx * dx + dy * dy);
+        dragging = true;
+        action = 'panZoom';
+        const t0 = e.touches[0];
+        const t1 = e.touches[1];
+        lastDistance = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+        touchLastX = (t0.clientX + t1.clientX) / 2;
+        touchLastY = (t0.clientY + t1.clientY) / 2;
     }
-}, { passive: false });
+});
 
 canvas.addEventListener('touchmove', e => {
-    if (e.touches.length === 1) {
-        // ROTATE
+    if (!dragging) return;
+
+    if (e.touches.length === 1 && action === 'orbit') {
         const t = e.touches[0];
+        const dx = t.clientX - touchLastX;
+        const dy = t.clientY - touchLastY;
+        touchLastX = t.clientX;
+        touchLastY = t.clientY;
 
-        const dx = t.clientX - lastX;
-        const dy = t.clientY - lastY;
-        lastX = t.clientX;
-        lastY = t.clientY;
-
-        orbit.yaw -= dx * orbit.rotSens;
-        orbit.pitch += dy * orbit.rotSens;
+        orbit.yaw -= dx * orbit.sensitivity;
+        orbit.pitch += dy * orbit.sensitivity;
         orbit.pitch = pc.math.clamp(orbit.pitch, -Math.PI / 2, Math.PI / 2);
+    } else if (e.touches.length === 2 && action === 'panZoom') {
+        const t0 = e.touches[0];
+        const t1 = e.touches[1];
+        const midX = (t0.clientX + t1.clientX) / 2;
+        const midY = (t0.clientY + t1.clientY) / 2;
 
-    } else if (e.touches.length === 2) {
-        // Pinch OR Pan
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        // Pan
+        const dx = midX - touchLastX;
+        const dy = midY - touchLastY;
+        touchLastX = midX;
+        touchLastY = midY;
 
-        const delta = dist - lastDistance;
-        lastDistance = dist;
+        const panOffset = new pc.Vec3(-dx * orbit.panSpeed, dy * orbit.panSpeed, 0);
+        const right = camera.right;
+        const up = camera.up;
+        orbit.target.add(pc.Vec3.scale(right, panOffset.x));
+        orbit.target.add(pc.Vec3.scale(up, panOffset.y));
 
-        orbit.distance -= delta * orbit.zoomSens * 0.5;
+        // Zoom
+        const currentDistance = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+        orbit.distance *= lastDistance / currentDistance;
+        lastDistance = currentDistance;
         orbit.distance = Math.max(0.1, orbit.distance);
     }
 
     e.preventDefault();
 }, { passive: false });
 
-// Double tap → reset view
-let lastTap = 0;
-canvas.addEventListener('touchend', e => {
-    const now = Date.now();
-    if (now - lastTap < 250) {
-        orbit.pitch = 0;
-        orbit.yaw = 0;
-        orbit.distance = 4;
-    }
-    lastTap = now;
+window.addEventListener('touchend', () => {
+    dragging = false;
+    action = 'none';
 });
 
 // ----------------------
 // Update camera each frame
 // ----------------------
 app.on('update', dt => {
-    const x = orbit.target.x +
-        orbit.distance * Math.cos(orbit.pitch) * Math.sin(orbit.yaw);
-
-    const y = orbit.target.y +
-        orbit.distance * Math.sin(orbit.pitch);
-
-    const z = orbit.target.z +
-        orbit.distance * Math.cos(orbit.pitch) * Math.cos(orbit.yaw);
+    const x = orbit.target.x + orbit.distance * Math.cos(orbit.pitch) * Math.sin(orbit.yaw);
+    const y = orbit.target.y + orbit.distance * Math.sin(orbit.pitch);
+    const z = orbit.target.z + orbit.distance * Math.cos(orbit.pitch) * Math.cos(orbit.yaw);
 
     camera.setPosition(x, y, z);
     camera.lookAt(orbit.target);
