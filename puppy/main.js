@@ -3,11 +3,11 @@
 // ----------------------
 const START_DISTANCE = 5;        // default camera distance
 const ROTATION_SENSITIVITY = 0.005;
-const TOUCH_MULTIPLIER = 2;    // multiplier for mobile rotation
+const TOUCH_MULTIPLIER = 2;      // multiplier for mobile rotation
 const ZOOM_SPEED = 0.3;
 const LERP_SPEED = 10;
 const ZOOM_LERP_SPEED = 10;
-const MIN_DISTANCE = 2;        // clamp zoom
+const MIN_DISTANCE = 2;          // clamp zoom
 const MAX_DISTANCE = 8;
 
 // ----------------------
@@ -59,14 +59,12 @@ app.assets.load(modelAsset);
 modelAsset.ready(() => {
     const entities = modelAsset.resource.instantiateRenderEntity();
     const entityArray = Array.isArray(entities) ? entities : [entities];
-
     entityArray.forEach(ent => {
         if (!ent) return;
         app.root.addChild(ent);
         modelEntities.push(ent);
     });
-
-    console.log('Model loaded successfully and auto-scaled!');
+    console.log('Model loaded successfully!');
 });
 
 modelAsset.on('error', err => console.error('Failed to load GLB:', err));
@@ -87,6 +85,11 @@ let orbit = {
     lerpSpeed: LERP_SPEED,
     zoomLerpSpeed: ZOOM_LERP_SPEED
 };
+
+// Store initial state for reset
+const INITIAL_YAW = orbit.yaw;
+const INITIAL_PITCH = orbit.pitch;
+const INITIAL_DISTANCE = orbit.distance;
 
 let dragging = false;
 let lastX = 0;
@@ -121,6 +124,13 @@ window.addEventListener('mousemove', e => {
 canvas.addEventListener('wheel', e => {
     orbit.targetDistance += e.deltaY * orbit.zoomSpeed * 0.01;
     orbit.targetDistance = pc.math.clamp(orbit.targetDistance, MIN_DISTANCE, MAX_DISTANCE);
+});
+
+// Double-click (PC) to reset camera
+canvas.addEventListener('dblclick', () => {
+    orbit.yaw = INITIAL_YAW;
+    orbit.pitch = INITIAL_PITCH;
+    orbit.targetDistance = INITIAL_DISTANCE;
 });
 
 // ----------------------
