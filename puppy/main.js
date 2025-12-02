@@ -12,7 +12,7 @@ app.start();
 // Camera
 // ----------------------
 const camera = new pc.Entity();
-camera.addComponent('camera', { clearColor: new pc.Color(1, 0.2, 0.2) });
+camera.addComponent('camera', { clearColor: new pc.Color(1, 0.5, 0) });
 camera.setPosition(0, 0, 4);
 app.root.addChild(camera);
 
@@ -114,3 +114,4 @@ app.on('update', dt => {
     camera.setPosition(x, y, z);
     camera.lookAt(orbit.target);
 });
+
