@@ -65,7 +65,7 @@ main {
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     object-fit: cover;
     cursor: pointer;
-    transition: opacity 0.8s ease;
+    transition: opacity 0.3s ease-in-out;
 }
 
 /* ───────── Footer ───────── */
@@ -154,7 +154,7 @@ function refreshAll() {
             p.src = randomImage();
             p.style.opacity = '1';
         });
-    }, 400);
+    }, 300);
 }
 
 /* ───────── Events ───────── */
