@@ -97,7 +97,7 @@ function saveImage() {
     oCtx.imageSmoothingEnabled = false;
     oCtx.drawImage(canvas, 0, 0, 1920, 1080);
     const link = document.createElement('a');
-    link.download = `island_art_FHD_${Date.now()}.png`;
+    link.download = `triadic_${Date.now()}.png`;
     link.href = offscreen.toDataURL("image/png");
     link.click();
 }
