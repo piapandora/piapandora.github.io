@@ -41,7 +41,7 @@ let targetPalette = [];
 let lerpFactor = 0;
 let isPaused = false;
 let holdTimer = 0;
-const HOLD_DURATION = 300; 
+const HOLD_DURATION = 266; 
 
 function hexToRgb(hex) {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -97,7 +97,7 @@ function saveImage() {
     oCtx.imageSmoothingEnabled = false;
     oCtx.drawImage(canvas, 0, 0, 1920, 1080);
     const link = document.createElement('a');
-    link.download = `triadic_${Date.now()}.png`;
+    link.download = `triadic-${Date.now()}.png`;
     link.href = offscreen.toDataURL("image/png");
     link.click();
 }
