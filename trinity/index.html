@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Trinity Paradox</title>
+    <link rel="icon" type="image/png" href="misc/icons8-fibonacci-circles-50.png">
+    <style>
+        body, html { 
+            margin: 0; padding: 0; 
+            width: 100%; height: 100%; 
+            background: #000; 
+            overflow: hidden; 
+            display: flex; align-items: center; justify-content: center;
+            touch-action: manipulation; 
+        }
+        canvas { width: 100vw; height: 100vh; object-fit: contain; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const WIDTH = 1920; 
+const HEIGHT = 1080;
+canvas.width = WIDTH; 
+canvas.height = HEIGHT;
+
+let devMode = false;
+let isPaused = false;
+let showTriangles = false;
+let timeScale = 0.8; 
+const TRIANGLE_COUNT = 3; 
+const triangles = [];
+
+const PALETTE = [
+    "#B20000", // Red
+    "#FFFFFF",  // White
+    "#456045" // Gray
+];
+
+class Triangle {
+    constructor(color, index) {
+        this.color = color;
+        this.index = index;
+        this.points = [];
+        for(let i=0; i<3; i++) {
+            this.points.push({
+                x: Math.random() * WIDTH,
+                y: Math.random() * HEIGHT,
+                vx: (Math.random() - 0.5) * 7,
+                vy: (Math.random() - 0.5) * 7
+            });
+        }
+    }
+
+    update() {
+        if (isPaused) return;
+        this.points.forEach(p => {
+            p.x += p.vx * timeScale;
+            p.y += p.vy * timeScale;
+            if (p.x <= 0 || p.x >= WIDTH) p.vx *= -1;
+            if (p.y <= 0 || p.y >= HEIGHT) p.vy *= -1;
+        });
+    }
+
+    getDist(p1, p2) { return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2); }
+
+    draw() {
+        const [A, B, C] = this.points;
+        const a = this.getDist(B, C), b = this.getDist(A, C), c = this.getDist(A, B);
+        const p = a + b + c;
+        const inc = { x: (a*A.x + b*B.x + c*C.x)/p, y: (a*A.y + b*B.y + c*C.y)/p };
+        const D = 2 * (A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y));
+        if (Math.abs(D) < 0.1) return; 
+
+        const circ = {
+            x: ((A.x**2 + A.y**2) * (B.y - C.y) + (B.x**2 + B.y**2) * (C.y - A.y) + (C.x**2 + C.y**2) * (A.y - B.y)) / D,
+            y: ((A.x**2 + A.y**2) * (C.x - B.x) + (B.x**2 + B.y**2) * (A.x - C.x) + (C.x**2 + C.y**2) * (B.x - A.x)) / D
+        };
+
+        const diameter = this.getDist(inc, circ);
+        const midX = (inc.x + circ.x) / 2;
+        const midY = (inc.y + circ.y) / 2;
+
+        if (showTriangles) {
+            ctx.beginPath();
+            ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.lineTo(C.x, C.y); ctx.closePath();
+            ctx.strokeStyle = "rgba(255,255,255,0.05)"; 
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(midX, midY, diameter / 2, 0, Math.PI * 2);
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 5;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+    }
+}
+
+function init() {
+    for (let i = 0; i < TRIANGLE_COUNT; i++) {
+        triangles.push(new Triangle(PALETTE[i], i));
+    }
+    animate();
+}
+
+function animate() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.15)"; 
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    
+    triangles.forEach(t => {
+        t.update();
+        t.draw();
+    });
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener("keydown", (e) => {
+    const code = e.code;
+
+    if (code === "Space") isPaused = !isPaused;
+        
+    if (code === "Enter") {
+        const link = document.createElement('a');
+        link.download = `trinity-${Date.now()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }
+
+    if (devMode) {
+        if (code === "KeyH") showTriangles = !showTriangles;
+        
+        if (code === "KeyW" || code === "ArrowUp") {
+            timeScale = parseFloat((timeScale + 0.1).toFixed(1));
+            console.log("Speed:", timeScale);
+        }
+        if (code === "KeyS" || code === "ArrowDown") {
+            timeScale = parseFloat((Math.max(0.1, timeScale - 0.1)).toFixed(1));
+            console.log("Speed:", timeScale);
+        }
+    }
+});
+
+window.addEventListener("dblclick", () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+});
+
+init();
+</script>
+</body>
+</html>
