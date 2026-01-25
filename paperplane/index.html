@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Plane Simulator</title>
+    <link rel="icon" type="image/png" href="misc/icons8-paper-plane-48.png">
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #000;
+        }
+        canvas { display: block; width: 100vw; height: 100vh; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const WIDTH = 1920;
+    const HEIGHT = 1080;
+    const SCORE_LIMIT = 42230;
+    const TOTAL_COLLECTION_LIMIT = 250;
+    const MIN_RESPAWN_DELAY = 1; 
+    const MAX_RESPAWN_DELAY = 3;
+    const END_GAME_DELAY_FRAMES = 75;
+
+    // --- CURSOR HIDE LOGIC ---
+    let cursorTimer;
+    function resetCursorTimer() {
+        document.body.style.cursor = 'default';
+        clearTimeout(cursorTimer);
+        cursorTimer = setTimeout(() => {
+            document.body.style.cursor = 'none';
+        }, 2000); 
+    }
+    window.addEventListener('mousemove', resetCursorTimer);
+    resetCursorTimer(); 
+    // -------------------------
+
+    const bgImages = [];
+    const bgPaths = ['misc/01.png','misc/02.png','misc/03.png','misc/04.png','misc/05.png'];
+    bgPaths.forEach(path => {
+        const img = new Image();
+        img.src = path;
+        bgImages.push(img);
+    });
+
+    let floatingTexts = [];
+    let collectedCounts = [0, 0, 0, 0, 0];
+    let keys = { w: false, a: false, s: false, d: false, shift: false, space: false, enter: false };
+    let ducks = [];
+    let spawnedCount = 0; 
+    let gameOver = false;
+    let gameOverTimer = 0;
+    let startTime = 0;
+    let finalTimeStr = "";
+    
+    let currentBgIdx = 0;
+    let fadeAlpha = 1.0; 
+    let overlayAlpha = 0;
+    let devMode = false;
+
+    const ORIGINAL_STOCK = [30, 40, 50, 60, 70];
+    let DUCK_TYPES = [
+        { id: 0, name: 'Orange', color: '#ff8000', value: 1, radius: 14, stock: 30 },   
+        { id: 1, name: 'Blue',   color: '#0000ff', value: 5, radius: 14, stock: 40 },   
+        { id: 2, name: 'Red',    color: '#ff0000', value: 20, radius: 14, stock: 50 },  
+        { id: 3, name: 'Green',  color: '#00ff00', value: 100, radius: 14, stock: 60 }, 
+        { id: 4, name: 'White',  color: '#ffffff', value: 500, radius: 14, stock: 70 }   
+    ];
+
+    let player = {
+        x: WIDTH / 2, y: HEIGHT / 2,
+        vx: 0, vy: 0, angle: 0,
+        baseSpeed: 0.8, boostSpeed: 1.1, 
+        friction: 0.95, brakeFriction: 0.92,  
+        size: 40, radius: 40, score: 0, totalCollected: 0
+    };
+
+    window.addEventListener('dblclick', () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => console.warn(err.message));
+        } else {
+            document.exitFullscreen();
+        }
+    });
+
+    function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function initGame() {
+        player = { x: WIDTH / 2, y: HEIGHT / 2, vx: 0, vy: 0, angle: 0, baseSpeed: 0.8, boostSpeed: 1.15, friction: 0.95, brakeFriction: 0.92, size: 40, radius: 40, score: 0, totalCollected: 0 };
+        collectedCounts = [0, 0, 0, 0, 0];
+        spawnedCount = 0;
+        gameOver = false;
+        gameOverTimer = 0;
+        overlayAlpha = 0;
+        currentBgIdx = 0;
+        fadeAlpha = 1.0;
+        ducks = [];
+        floatingTexts = [];
+        startTime = performance.now();
+        DUCK_TYPES.forEach((d, i) => d.stock = ORIGINAL_STOCK[i]);
+        for (let i = 0; i < 3; i++) {
+            const d = createDuck();
+            if (d) ducks.push(d);
+        }
+    }
+
+    window.addEventListener('keydown', (e) => {
+        const k = e.key.toLowerCase();
+        if (['w','a','s','d',' '].includes(k)) keys[k === ' ' ? 'space' : k] = true;
+        if (e.shiftKey) keys.shift = true;
+        if (e.key === 'Enter' && gameOver && gameOverTimer <= 0) initGame();
+        if (k === 'v') devMode = !devMode;
+        
+        /* DEBUG TRIGGER: Press 'K' to complete game
+        if (k === 'k' && !gameOver) {
+            player.score = SCORE_LIMIT;
+            player.totalCollected = TOTAL_COLLECTION_LIMIT;
+            triggerEndGame();
+        }
+        */
+    });
+
+    window.addEventListener('keyup', (e) => {
+        const k = e.key.toLowerCase();
+        if (['w','a','s','d',' '].includes(k)) keys[k === ' ' ? 'space' : k] = false;
+        if (!e.shiftKey) keys.shift = false;
+    });
+
+    function triggerEndGame() {
+        gameOver = true;
+        gameOverTimer = END_GAME_DELAY_FRAMES;
+        finalTimeStr = formatTime(performance.now() - startTime);
+    }
+
+    function getAvailableDuckType() {
+        if (spawnedCount >= TOTAL_COLLECTION_LIMIT) return null;
+        const c = player.totalCollected;
+        let targetIdx = (c < 31) ? 0 : (c < 71) ? 1 : (c < 121) ? 2 : (c < 181) ? 3 : 4;
+        if (Math.random() < 0.20) {
+            const totalRemainingStock = DUCK_TYPES.reduce((sum, d) => sum + d.stock, 0);
+            if (totalRemainingStock > 0) {
+                let roll = Math.random() * totalRemainingStock;
+                let runningSum = 0;
+                for (let i = 0; i < DUCK_TYPES.length; i++) {
+                    runningSum += DUCK_TYPES[i].stock;
+                    if (roll <= runningSum) { targetIdx = i; break; }
+                }
+            }
+        }
+        if (DUCK_TYPES[targetIdx].stock <= 0) targetIdx = DUCK_TYPES.findIndex(d => d.stock > 0);
+        if (targetIdx === -1) return null;
+        DUCK_TYPES[targetIdx].stock--;
+        spawnedCount++;
+        return DUCK_TYPES[targetIdx];
+    }
+
+    function getGridPosition() {
+        const GRID_COLS = 32; const GRID_ROWS = 18;
+        const CELL_W = WIDTH / GRID_COLS; const CELL_H = HEIGHT / GRID_ROWS;
+        let attempts = 0;
+        while (attempts < 100) {
+            const col = Math.floor(Math.random() * (GRID_COLS - 2)) + 1;
+            const row = Math.floor(Math.random() * (GRID_ROWS - 2)) + 1;
+            const x = col * CELL_W + CELL_W / 2;
+            const y = row * CELL_H + CELL_H / 2;
+            if (!ducks.some(d => !d.hidden && d.x === x && d.y === y)) return { x, y };
+            attempts++;
+        }
+        return { x: WIDTH / 2, y: HEIGHT / 2 };
+    }
+
+    function createDuck() {
+        const type = getAvailableDuckType();
+        if (!type) return null;
+        const pos = getGridPosition();
+        return { ...type, x: pos.x, y: pos.y, pulse: Math.random() * Math.PI * 2, hidden: false, respawnTimer: 0, toBeRemoved: false };
+    }
+
+    function resize() { canvas.width = WIDTH; canvas.height = HEIGHT; }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function update() {
+        const gp = navigator.getGamepads()[0];
+        
+        if (gameOver) {
+            if (gameOverTimer > 0) {
+                gameOverTimer--;
+            } else {
+                if (gp && gp.buttons[3].pressed) initGame();
+                if (overlayAlpha < 1) overlayAlpha += 0.02; 
+            }
+        }
+
+        let currentFriction = player.friction, currentAccel = player.baseSpeed;
+        let inputX = 0, inputY = 0;
+
+        if (!gameOver) {
+            if (gp) {
+                if (gp.buttons[2].pressed) currentAccel = player.boostSpeed;
+                if (gp.buttons[0].pressed) currentFriction = player.brakeFriction;
+                inputX = Math.abs(gp.axes[0]) > 0.1 ? gp.axes[0] : 0;
+                inputY = Math.abs(gp.axes[1]) > 0.1 ? gp.axes[1] : 0;
+                
+                // HIDE CURSOR IMMEDIATELY ON GAMEPAD MOVEMENT
+                if (inputX !== 0 || inputY !== 0) {
+                    document.body.style.cursor = 'none';
+                    clearTimeout(cursorTimer);
+                }
+            } 
+            if (keys.w) inputY = -1; if (keys.s) inputY = 1;
+            if (keys.a) inputX = -1; if (keys.d) inputX = 1;
+            if (keys.shift) currentAccel = player.boostSpeed;
+            if (keys.space) currentFriction = player.brakeFriction;
+            player.vx += inputX * currentAccel;
+            player.vy += inputY * currentAccel;
+        }
+
+        if (Math.abs(player.vx) > 0.1 || Math.abs(player.vy) > 0.1) player.angle = Math.atan2(player.vy, player.vx);
+        player.vx *= currentFriction; player.vy *= currentFriction;
+        player.x += player.vx; player.y += player.vy;
+
+        if (player.x < 0) player.x = 0; if (player.x > WIDTH) player.x = WIDTH;
+        if (player.y < 0) player.y = 0; if (player.y > HEIGHT) player.y = HEIGHT;
+
+        const c = player.totalCollected;
+        let newBgIdx = (c < 31) ? 0 : (c < 71) ? 1 : (c < 121) ? 2 : (c < 181) ? 3 : 4;
+        if (newBgIdx !== currentBgIdx) {
+            currentBgIdx = newBgIdx;
+            fadeAlpha = 0; 
+        }
+        if (fadeAlpha < 1) fadeAlpha += 0.04; 
+
+        floatingTexts.forEach(ft => { ft.y -= 1.2; ft.timer--; });
+        floatingTexts = floatingTexts.filter(ft => ft.timer > 0);
+
+        let targetSlotCount = (c >= 181) ? 7 : (c >= 121) ? 6 : (c >= 71) ? 5 : (c >= 31) ? 4 : 3;
+        if (ducks.filter(d => !d.toBeRemoved).length < targetSlotCount && spawnedCount < TOTAL_COLLECTION_LIMIT) {
+            const d = createDuck();
+            if (d) ducks.push(d);
+        }
+
+        ducks.forEach((duck, index) => {
+            if (duck.hidden || duck.toBeRemoved) {
+                if (duck.respawnTimer > 0) duck.respawnTimer--;
+                else if (!duck.toBeRemoved) {
+                    const newDuck = createDuck();
+                    if (newDuck) ducks[index] = newDuck;
+                    else duck.toBeRemoved = true;
+                }
+                return;
+            }
+            duck.pulse += 0.08;
+            if (Math.sqrt((player.x - duck.x)**2 + (player.y - duck.y)**2) < player.radius + duck.radius) {
+                player.score += duck.value;
+                player.totalCollected++;
+                collectedCounts[duck.id]++;
+                floatingTexts.push({ x: duck.x, y: duck.y, val: duck.value, timer: 75 });
+                duck.hidden = true;
+                duck.respawnTimer = Math.floor(Math.random() * ((MAX_RESPAWN_DELAY - MIN_RESPAWN_DELAY) * 60)) + (MIN_RESPAWN_DELAY * 60);
+                
+                if (player.score >= SCORE_LIMIT || player.totalCollected >= TOTAL_COLLECTION_LIMIT) {
+                    triggerEndGame();
+                }
+            }
+        });
+        ducks = ducks.filter(d => !d.toBeRemoved || !d.hidden);
+    }
+
+    function draw() {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+        const prevBg = bgImages[Math.max(0, currentBgIdx - 1)];
+        const currBg = bgImages[currentBgIdx];
+        if (prevBg && prevBg.complete) {
+            ctx.globalAlpha = 1.0;
+            ctx.drawImage(prevBg, 0, 0, WIDTH, HEIGHT);
+        }
+        if (currBg && currBg.complete) {
+            ctx.globalAlpha = fadeAlpha;
+            ctx.drawImage(currBg, 0, 0, WIDTH, HEIGHT);
+        }
+        ctx.globalAlpha = 1.0;
+
+        ctx.font = '900 70px Inter, sans-serif'; ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+        ctx.strokeText(player.score, WIDTH / 2, 90);
+        ctx.fillStyle = 'white'; ctx.fillText(player.score, WIDTH / 2, 90);
+
+        if (devMode) {
+            ctx.font = '700 24px Inter, sans-serif';
+            let debugXStart = WIDTH / 2 - 250;
+            DUCK_TYPES.forEach((type, i) => {
+                ctx.fillStyle = type.color;
+                ctx.fillText(`${type.name.toLowerCase()}: ${collectedCounts[i]}`, debugXStart + (i * 125), 130);
+            });
+        }
+
+        ctx.font = '900 40px Inter, sans-serif';
+        floatingTexts.forEach(ft => {
+            ctx.globalAlpha = ft.timer > 20 ? 1 : ft.timer / 20;
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+            ctx.strokeText(`+${ft.val}`, ft.x, ft.y);
+            ctx.fillStyle = 'white'; ctx.fillText(`+${ft.val}`, ft.x, ft.y);
+        });
+        ctx.globalAlpha = 1.0;
+
+        ducks.forEach(duck => {
+            if (duck.hidden || duck.toBeRemoved) return;
+            const p = Math.sin(duck.pulse) * 4;
+            ctx.beginPath(); ctx.arc(duck.x, duck.y, duck.radius + 12 + p, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 3; ctx.stroke();
+            ctx.beginPath(); ctx.arc(duck.x, duck.y, duck.radius + p, 0, Math.PI * 2);
+            ctx.fillStyle = duck.color; ctx.fill();
+        });
+
+        ctx.save();
+        ctx.translate(player.x, player.y); ctx.rotate(player.angle);
+        ctx.beginPath();
+        const r = 8, s = player.size;
+        ctx.moveTo(s, 0);
+        ctx.arcTo(s, 0, -s/2, -s/1.5, r); ctx.lineTo(-s/2, -s/1.5);
+        ctx.arcTo(-s/2, -s/1.5, -s/2, s/1.5, r); ctx.lineTo(-s/2, s/1.5);
+        ctx.arcTo(-s/2, s/1.5, s, 0, r); ctx.closePath();
+        ctx.fillStyle = 'white'; ctx.fill();
+        ctx.strokeStyle = 'black'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.restore();
+
+        if (gameOver && gameOverTimer <= 0) {
+            ctx.globalAlpha = overlayAlpha;
+            ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, WIDTH, HEIGHT);
+            ctx.fillStyle = 'white'; ctx.textAlign = 'center';
+            ctx.font = '900 100px Inter, sans-serif'; ctx.fillText("GAME COMPLETE", WIDTH/2, HEIGHT/2 - 50);
+            ctx.font = '900 50px Inter, sans-serif'; ctx.fillText(`Time - ${finalTimeStr}`, WIDTH/2, HEIGHT/2 + 50);
+            ctx.font = '700 30px Inter, sans-serif'; ctx.fillText("Press ENTER or △ to Continue", WIDTH/2, HEIGHT/2 + 150);
+            ctx.globalAlpha = 1.0;
+        }
+
+        requestAnimationFrame(draw);
+        update();
+    }
+    initGame();
+    draw();
+</script>
+</body>
+</html>
