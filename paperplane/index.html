@@ -120,7 +120,7 @@
         if (['w','a','s','d',' '].includes(k)) keys[k === ' ' ? 'space' : k] = true;
         if (e.shiftKey) keys.shift = true;
         if (e.key === 'Enter' && gameOver && gameOverTimer <= 0) initGame();
-        if (k === 'v') devMode = !devMode;
+        // if (k === 'v') devMode = !devMode;
         
         /* DEBUG TRIGGER: Press 'K' to complete game
         if (k === 'k' && !gameOver) {
@@ -355,4 +355,5 @@
     draw();
 </script>
 </body>
+
 </html>
