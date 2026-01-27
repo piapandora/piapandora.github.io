@@ -408,7 +408,7 @@
                 const p = Math.sin(duck.pulse) * 4;
                 const dImg = duckImgs[duck.id];
 
-                if (dImg && dImg.complete && !devToolsEnabled) {
+                if (dImg && dImg.complete && devToolsEnabled) {
                     const size = 60 + (p * 2);
                     ctx.drawImage(dImg, duck.x - size/2, duck.y - size/2, size, size);
                 } else {
@@ -432,7 +432,7 @@
             // NEW: Sprite Swap Logic
             const activePlayerImg = isCurrentlyBoosting ? playerBoostImg : playerImg;
 
-            if (activePlayerImg.complete && !devToolsEnabled) {
+            if (activePlayerImg.complete && devToolsEnabled) {
                 ctx.drawImage(activePlayerImg, -40, -40, 80, 80);
             } else {
                 ctx.beginPath(); 
@@ -511,3 +511,4 @@
 </script>
 </body>
 </html>
+
