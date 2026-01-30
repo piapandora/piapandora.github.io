@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Plane Simulator</title>
+    <link rel="icon" type="image/png" href="misc/icons8-paper-plane-48.png">
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #000;
+            font-family: "Verdana", Geneva, sans-serif;
+        }
+
+        #game-container {
+            position: absolute;
+            width: 1920px;
+            height: 1080px;
+            top: 50%;
+            left: 50%;
+            transform-origin: center;
+            overflow: hidden;
+            background: #000;
+            image-rendering: auto; 
+        }
+
+        canvas { 
+            display: block; 
+            width: 100%; 
+            height: 100%; 
+        }
+
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; 
+            display: flex; justify-content: center; align-items: center;
+            color: white; text-align: center;
+        }
+
+        #welcome-menu, #game-over-menu {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
+            background-size: cover; background-position: center;
+            pointer-events: auto; 
+        }
+
+        #welcome-menu { background-image: url('misc/00.png'); }
+        
+        .title-container { margin-bottom: 30px; }
+        .title-main { 
+            font-size: 70px; font-weight: bold; color: #eee; 
+            -webkit-text-stroke: 1.5px #000; letter-spacing: 4px; line-height: 0.9;
+        }
+        .title-sub { 
+            font-size: 60px; font-weight: bold; color: #ff8000; 
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.5); letter-spacing: 2px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .controls-row {
+            display: flex; gap: 60px; margin-bottom: 40px;
+            background: rgba(0,0,0,0.25); padding: 15px 30px; border-radius: 12px;
+        }
+        .control-group { text-align: left; }
+        .control-group h3 { 
+            margin: 0 0 8px 0; font-size: 18px; color: #fff; 
+            border-bottom: 1px solid rgba(255,255,255,0.3); 
+        }
+        .control-group p { margin: 4px 0; font-size: 14px; color: #ccc; }
+
+        .prompt { 
+            font-size: 20px; font-weight: bold; 
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.98); }
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 8px rgba(255,128,0,0.2); }
+            to { text-shadow: 0 0 20px rgba(255,128,0,0.6); }
+        }
+
+        #game-over-menu { 
+            background: rgba(0, 0, 0, 0.85); 
+            display: none; opacity: 0; transition: opacity 0.5s;
+        }
+        .menu-box {
+            width: 40%; padding: 30px; background: rgba(20, 20, 20, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+        }
+        .title-large { font-size: 50px; font-weight: bold; margin: 0; line-height: 1.1; }
+        .highlight { color: #ff8000; }
+        .stats { font-size: 28px; font-weight: bold; margin: 20px 0; }
+        .triangle { color: orange; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="ui-layer">
+            <div id="welcome-menu">
+                <div class="title-container">
+                    <div class="title-main">PAPER PLANE</div>
+                    <div class="title-sub">SIMULATOR</div>
+                </div>
+
+                <div class="controls-row">
+                    <div class="control-group">
+                        <h3>KEYBOARD</h3>
+                        <p>Move: WASD or Arrows</p>
+                        <p>Boost: Spacebar</p>
+                        <p>Fullscreen: Double Click</p>
+                    </div>
+                    <div class="control-group">
+                        <h3>GAMEPAD</h3>
+                        <p>Move: Left Stick</p>
+                        <p>Boost: X or Right Stick</p>
+                        <p>Fullscreen: Circle</p>
+                    </div>
+                </div>
+
+                <div class="prompt">
+                    Press <span class="highlight">ENTER</span> or <span class="triangle">△</span> to Begin
+                </div>
+            </div>
+
+            <div id="game-over-menu">
+                <div class="menu-box">
+                    <div class="title-large">GAME</div>
+                    <div class="title-large highlight">COMPLETE</div>
+                    <div id="final-stats" class="stats"></div>
+                    <div class="prompt">
+                        Press <span class="highlight">ENTER</span> or <span class="triangle">△</span> to Continue
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    /** * MASTER SETTINGS */
+    const BASE_SPEED  = 1.1;
+    const BOOST_SPEED = 1.65;
+    const FRICTION    = 0.92;
+    const DUCK_LIMIT  = 198; 
+    
+    const ENABLE_PARTICLES = true;
+    const ENABLE_VIBRATION = false;
+
+    const WIDTH  = 1920;
+    const HEIGHT = 1080;
+    const END_GAME_DELAY_FRAMES = 75;
+
+    const container = document.getElementById('game-container');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const welcomeMenu = document.getElementById('welcome-menu');
+    const gameOverMenu = document.getElementById('game-over-menu');
+    const finalStats = document.getElementById('final-stats');
+
+    let lastTime = 0;
+    const fpsInterval = 1000 / 60;
+
+    const offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = WIDTH; offscreenCanvas.height = HEIGHT;
+    const octx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+    let boundaryData = null;
+
+    const playerImg = new Image(); playerImg.src = 'misc/player.png';
+    const playerBoostImg = new Image(); playerBoostImg.src = 'misc/playerboo.png';
+    const duckImgs = {};
+    [1,2,3,4,5].forEach(i => {
+        const img = new Image(); img.src = `misc/d0${i}.png`;
+        duckImgs[i-1] = img;
+    });
+
+    let isAqua = false;
+    let gameStarted = false;
+    let devToolsEnabled = false; 
+    let xReleases = []; 
+    let cursorTimer;
+    let inputLockout = 0; 
+    let isCurrentlyBoosting = false;
+    let isLegitSession = true; 
+
+    let bestTimeRaw = localStorage.getItem('paperPlaneBestTime') || Infinity;
+
+    const bgImages = [];
+    const overlayImages = [];
+    const bgPaths = ['misc/01.png','misc/02.png','misc/03.png','misc/04.png','misc/05.png','misc/06.png'];
+    const overlayPaths = ['misc/ov01.png','misc/ov02.png','misc/ov03.png','misc/ov04.png','misc/ov05.png','misc/ov06.png'];
+
+    bgPaths.forEach(path => { const img = new Image(); img.src = path; bgImages.push(img); });
+    overlayPaths.forEach(path => { const img = new Image(); img.src = path; overlayImages.push(img); });
+
+    // --- UNIVERSAL COLOR PICKER (Fixes 1px edge bug) ---
+    function getPixelColor(x, y) {
+        if (!boundaryData) return { r: 255, g: 255, b: 255 };
+        const px = Math.max(0, Math.min(WIDTH - 1, Math.floor(x)));
+        const py = Math.max(0, Math.min(HEIGHT - 1, Math.floor(y)));
+        const idx = (py * WIDTH + px) * 4;
+        return { r: boundaryData[idx], g: boundaryData[idx + 1], b: boundaryData[idx + 2] };
+    }
+
+    function loadLevelSVG() {
+        const img = new Image();
+        const svgString = `<svg width="1920" height="1080" viewBox="0 0 508 285.75" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <g id="layer1">
+                <rect style="fill:#ffffff;" width="508" height="285.75" x="0" y="0" />
+                <rect style="fill:#0000ff;" width="95.25" height="31.75" x="206.375" y="0" />
+            </g>
+        </svg>`;
+
+        img.onload = () => {
+            octx.clearRect(0,0,WIDTH,HEIGHT);
+            octx.drawImage(img, 0, 0, WIDTH, HEIGHT);
+            boundaryData = octx.getImageData(0, 0, WIDTH, HEIGHT).data;
+        };
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+    }
+    loadLevelSVG();
+
+    let floatingTexts = [];
+    let trailParticles = [];
+    let collectedCounts = [0, 0, 0, 0, 0];
+    let keys = { up: false, down: false, left: false, right: false, boost: false }; 
+    let ducks = [];
+    let spawnedCount = 0; 
+    let gameOver = false;
+    let gameOverTimer = 0;
+    let startTime = 0;
+    let finalTimeStored = 0; 
+    let currentBgIdx = 0;
+    let fadeAlpha = 1.0; 
+    let overlayAlpha = 0;
+
+    const ORIGINAL_STOCK = [30, 34, 40, 45, 49]; 
+    let DUCK_TYPES = [
+        { id: 0, name: 'Orange', color: '#FFA500', value: 1,   radius: 14, stock: 30 }, 
+        { id: 1, name: 'Blue',   color: '#0000ff', value: 5,   radius: 14, stock: 34 }, 
+        { id: 2, name: 'Red',    color: '#ff0000', value: 20,  radius: 14, stock: 40 },
+        { id: 3, name: 'Green',  color: '#00ff00', value: 100, radius: 14, stock: 45 },
+        { id: 4, name: 'White',  color: '#ffffff', value: 500, radius: 14, stock: 49 }
+    ];
+
+    let player = { x: WIDTH/2, y: HEIGHT/2, vx: 0, vy: 0, angle: 0, score: 0, totalCollected: 0, currentSpeed: 0, isSlowing: false };
+
+    function initGame() {
+        devToolsEnabled = false; xReleases = []; inputLockout = 0; isLegitSession = true; 
+        welcomeMenu.style.display = 'none'; gameOverMenu.style.display = 'none'; gameOverMenu.style.opacity = 0;
+        player.x = WIDTH/2; player.y = HEIGHT/2; player.vx = 0; player.vy = 0; player.angle = 0;
+        player.score = 0; player.totalCollected = 0; player.isSlowing = false;
+        collectedCounts = [0, 0, 0, 0, 0]; spawnedCount = 0;
+        gameOver = false; gameOverTimer = 0; overlayAlpha = 0; currentBgIdx = isAqua ? 5 : 0;
+        fadeAlpha = 1.0; ducks = []; floatingTexts = []; trailParticles = [];
+        startTime = performance.now(); finalTimeStored = 0;
+        DUCK_TYPES.forEach((d, i) => d.stock = ORIGINAL_STOCK[i]);
+        for (let i = 0; i < 3; i++) { const d = createDuck(true); if (d) ducks.push(d); }
+    }
+
+    function formatTime(ms) {
+        if (ms === Infinity) return "--:--";
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function triggerEndGame() {
+        gameOver = true; gameOverTimer = END_GAME_DELAY_FRAMES;
+        const finalMs = performance.now() - startTime;
+        finalTimeStored = finalMs; 
+        if (isLegitSession && finalMs < bestTimeRaw) {
+            bestTimeRaw = finalMs; localStorage.setItem('paperPlaneBestTime', bestTimeRaw);
+        }
+        finalStats.innerText = `Time - ${formatTime(finalMs)} / Best - ${formatTime(bestTimeRaw)}`;
+        inputLockout = 30; 
+    }
+
+    function toggleFS() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+    }
+
+    window.addEventListener('keydown', (e) => {
+        const k = e.key;
+        if (k === 'w' || k === 'ArrowUp') keys.up = true;
+        if (k === 's' || k === 'ArrowDown') keys.down = true;
+        if (k === 'a' || k === 'ArrowLeft') keys.left = true;
+        if (k === 'd' || k === 'ArrowRight') keys.right = true;
+        if (k === ' ') keys.boost = true;
+        if (devToolsEnabled && k.toLowerCase() === 'k' && !gameOver && gameStarted) {
+            isLegitSession = false; player.score = 30000; player.totalCollected = DUCK_LIMIT;
+            triggerEndGame();
+        }
+        if (k === 'Enter') {
+            if (!gameStarted) { gameStarted = true; initGame(); } 
+            else if (gameOver && gameOverTimer <= 0 && inputLockout <= 0) {
+                gameStarted = false; gameOver = false;
+                gameOverMenu.style.display = 'none'; welcomeMenu.style.display = 'flex';
+                inputLockout = 20;
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        const k = e.key;
+        if (k === 'w' || k === 'ArrowUp') keys.up = false;
+        if (k === 's' || k === 'ArrowDown') keys.down = false;
+        if (k === 'a' || k === 'ArrowLeft') keys.left = false;
+        if (k === 'd' || k === 'ArrowRight') keys.right = false;
+        if (k === ' ') keys.boost = false;
+        if (k.toLowerCase() === 'x') {
+            const now = performance.now(); xReleases.push(now);
+            if (xReleases.length > 3) xReleases.shift();
+            if (xReleases.length === 3 && (xReleases[2] - xReleases[0] < 400)) {
+                devToolsEnabled = !devToolsEnabled; xReleases = []; 
+                if (devToolsEnabled) isLegitSession = false; 
+            }
+        }
+    });
+
+    function getAvailableDuckType() {
+        if (spawnedCount >= DUCK_LIMIT) return null;
+        const c = player.totalCollected;
+        let currentStageIdx = (c <= 30) ? 0 : (c <= 65) ? 1 : (c <= 105) ? 2 : (c <= 150) ? 3 : 4;
+        let targetIdx; let roll = Math.random();
+        if (roll < 0.66) { targetIdx = currentStageIdx; } 
+        else {
+            let possibleIndices = [0, 1, 2, 3, 4];
+            if (currentStageIdx === 0) possibleIndices = [0, 1, 2];
+            else if (currentStageIdx === 1) possibleIndices = [0, 1, 2, 3];
+            targetIdx = possibleIndices[Math.floor(Math.random() * possibleIndices.length)];
+        }
+        if (DUCK_TYPES[targetIdx].stock <= 0) { targetIdx = DUCK_TYPES.findIndex(d => d.stock > 0); }
+        if (targetIdx === -1) return null;
+        DUCK_TYPES[targetIdx].stock--; spawnedCount++;
+        return DUCK_TYPES[targetIdx];
+    }
+
+    function createDuck(avoidCenter = false) {
+        if (!boundaryData) return null; 
+        const type = getAvailableDuckType();
+        if (!type) return null;
+        const GRID_COLS = 32, GRID_ROWS = 18;
+        const CELL_W = WIDTH / GRID_COLS, CELL_H = HEIGHT / GRID_ROWS;
+        let x, y;
+        for(let i=0; i<200; i++) {
+            const col = Math.floor(Math.random() * (GRID_COLS - 2)) + 1;
+            const row = Math.floor(Math.random() * (GRID_ROWS - 2)) + 1;
+            x = col * CELL_W + CELL_W / 2; y = row * CELL_H + CELL_H / 2;
+            
+            // --- UPDATED WHITE SPAWN CHECK ---
+            if (boundaryData) {
+                const pixel = getPixelColor(x, y);
+                if (pixel.r < 200 || pixel.g < 200 || pixel.b < 200) continue; 
+            }
+
+            if (avoidCenter && Math.sqrt((x - WIDTH/2)**2 + (y - HEIGHT/2)**2) < 180) continue;
+            if (!ducks.some(d => !d.hidden && d.x === x && d.y === y)) break;
+        }
+        return { ...type, x, y, pulse: Math.random()*Math.PI*2, hidden: false, respawnTimer: 0, toBeRemoved: false };
+    }
+
+    function update() {
+        const gp = navigator.getGamepads()[0];
+        if (inputLockout > 0) inputLockout--;
+        if (gp) {
+            if (gp.buttons[3].pressed && inputLockout <= 0) {
+                if (!gameStarted) { gameStarted = true; initGame(); } 
+                else if (gameOver && gameOverTimer <= 0) { 
+                    gameStarted = false; gameOver = false;
+                    gameOverMenu.style.display = 'none'; welcomeMenu.style.display = 'flex';
+                    inputLockout = 20; 
+                }
+            }
+            if (gp.buttons[1].pressed && inputLockout <= 0) { toggleFS(); inputLockout = 20; }
+        }
+
+        floatingTexts.forEach(ft => { ft.y -= 1.2; ft.timer--; });
+        floatingTexts = floatingTexts.filter(ft => ft.timer > 0);
+        trailParticles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.02; p.size *= 0.98; });
+        trailParticles = trailParticles.filter(p => p.life > 0);
+
+        if (!gameStarted) return;
+        if (gameOver) {
+            if (gameOverTimer > 0) gameOverTimer--;
+            else {
+                gameOverMenu.style.display = 'flex';
+                if (overlayAlpha < 1) overlayAlpha += 0.02;
+                gameOverMenu.style.opacity = overlayAlpha;
+            }
+        }
+
+        let currentAccel = BASE_SPEED;
+        let inputX = 0, inputY = 0;
+        isCurrentlyBoosting = false; player.isSlowing = false;
+
+        if (!gameOver) {
+            if (gp) {
+                if (gp.buttons[0].pressed || gp.buttons[2].pressed || gp.axes[3] < -0.5) { 
+                    currentAccel = BOOST_SPEED; isCurrentlyBoosting = true; 
+                }
+                inputX = Math.abs(gp.axes[0]) > 0.1 ? gp.axes[0] : 0;
+                inputY = Math.abs(gp.axes[1]) > 0.1 ? gp.axes[1] : 0;
+            } 
+            if (keys.up) inputY = -1; if (keys.down) inputY = 1;
+            if (keys.left) inputX = -1; if (keys.right) inputX = 1;
+            if (keys.boost) { currentAccel = BOOST_SPEED; isCurrentlyBoosting = true; }
+        }
+
+        player.vx += inputX * currentAccel; player.vy += inputY * currentAccel;
+
+        // --- UPDATED SLOWDOWN LOGIC (Universal Fix) ---
+        if (isAqua && boundaryData) {
+            const pixel = getPixelColor(player.x, player.y);
+            if (pixel.r > 200 && pixel.g < 100 && pixel.b < 100) {
+                player.vx *= 0.95; player.vy *= 0.95;
+                player.isSlowing = true;
+            }
+        }
+
+        if (ENABLE_PARTICLES && (isCurrentlyBoosting || player.isSlowing)) {
+            if (Math.random() > 0.5) {
+                const angle = player.angle + Math.PI + (Math.random() - 0.5);
+                let pColor = '#FFA500';
+                let pXPoz = player.x - Math.cos(player.angle) * 30;
+                let pYPoz = player.y - Math.sin(player.angle) * 30;
+                if (player.isSlowing) {
+                    pColor = '#e7d19d';
+                    pXPoz = player.x - Math.cos(player.angle) * 25;
+                    pYPoz = player.y - Math.sin(player.angle) * 25;
+                }
+                trailParticles.push({
+                    x: pXPoz, y: pYPoz, vx: Math.cos(angle) * 2.5, vy: Math.sin(angle) * 2.5,
+                    life: 1.0, size: Math.random() * 4 + 9, color: pColor
+                });
+            }
+        }
+
+        if (Math.abs(player.vx) > 0.1 || Math.abs(player.vy) > 0.1) player.angle = Math.atan2(player.vy, player.vx);
+        const endFriction = gameOver ? 0.96 : FRICTION;
+        player.vx *= endFriction; 
+        player.vy *= endFriction;
+        player.x += player.vx; player.y += player.vy;
+
+        player.x = Math.max(0, Math.min(WIDTH, player.x));
+        player.y = Math.max(0, Math.min(HEIGHT, player.y));
+        player.currentSpeed = Math.sqrt(player.vx ** 2 + player.vy ** 2);
+
+        if (gameOver) return;
+        const c = player.totalCollected;
+        let nextIdx = isAqua ? 5 : (c <= 30) ? 0 : (c <= 65) ? 1 : (c <= 105) ? 2 : (c <= 150) ? 3 : 4;
+        if (nextIdx !== currentBgIdx) { currentBgIdx = nextIdx; fadeAlpha = 0; }
+        if (fadeAlpha < 1) fadeAlpha += 0.04; 
+
+        let targetSlot = (c > 150) ? 7 : (c > 105) ? 6 : (c > 65) ? 5 : (c > 30) ? 4 : 3;
+        if (ducks.filter(d => !d.toBeRemoved).length < targetSlot && spawnedCount < DUCK_LIMIT) {
+            const d = createDuck(); if (d) ducks.push(d);
+        }
+
+        ducks.forEach((duck, index) => {
+            if (duck.hidden) {
+                if (duck.respawnTimer > 0) duck.respawnTimer--;
+                else { const n = createDuck(); if (n) ducks[index] = n; else duck.toBeRemoved = true; }
+                return;
+            }
+            duck.pulse += 0.08;
+            if (Math.sqrt((player.x - duck.x)**2 + (player.y - duck.y)**2) < 54) {
+                player.score += duck.value; player.totalCollected++; collectedCounts[duck.id]++;
+                floatingTexts.push({ x: duck.x, y: duck.y, val: duck.value, timer: 75 });
+                duck.hidden = true; duck.respawnTimer = Math.floor(Math.random() * 120) + 60;
+                if (player.totalCollected >= DUCK_LIMIT) triggerEndGame();
+            }
+        });
+        ducks = ducks.filter(d => !d.toBeRemoved);
+    }
+
+    function draw() {
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, WIDTH, HEIGHT);
+        if (gameStarted) {
+            const currBg = bgImages[currentBgIdx];
+            if (currBg && currBg.complete) { ctx.globalAlpha = fadeAlpha; ctx.drawImage(currBg, 0, 0, WIDTH, HEIGHT); }
+            ctx.globalAlpha = 1.0;
+
+            trailParticles.forEach(p => {
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+
+            ducks.forEach(duck => {
+                if (duck.hidden) return;
+                const p = Math.sin(duck.pulse) * 4;
+                const dImg = duckImgs[duck.id];
+                if (dImg && dImg.complete && devToolsEnabled) {
+                    const size = 60 + (p * 2); ctx.drawImage(dImg, duck.x - size/2, duck.y - size/2, size, size);
+                } else {
+                    ctx.beginPath(); ctx.arc(duck.x, duck.y, duck.radius + 12 + p, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 3; ctx.stroke();
+                    ctx.beginPath(); ctx.arc(duck.x, duck.y, duck.radius + p, 0, Math.PI * 2);
+                    ctx.fillStyle = duck.color; ctx.fill();
+                }
+            });
+
+            ctx.save();
+            ctx.translate(player.x, player.y); ctx.rotate(player.angle);
+            const activePlayerImg = isCurrentlyBoosting ? playerBoostImg : playerImg;
+            if (activePlayerImg.complete && devToolsEnabled) {
+                ctx.drawImage(activePlayerImg, -40, -40, 80, 80);
+            } else {
+                ctx.beginPath(); const r = 8, s = 40;
+                ctx.moveTo(s, 0); ctx.arcTo(s, 0, -s/2, -s/1.5, r); ctx.lineTo(-s/2, -s/1.5);
+                ctx.arcTo(-s/2, -s/1.5, -s/2, s/1.5, r); ctx.lineTo(-s/2, s/1.5);
+                ctx.arcTo(-s/2, s/1.5, s, 0, r); ctx.closePath();
+                ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = 'black'; ctx.lineWidth = 3; ctx.stroke();
+            }
+            ctx.restore();
+
+            const currOverlay = overlayImages[currentBgIdx];
+            if (currOverlay && currOverlay.complete) {
+                ctx.globalAlpha = fadeAlpha; ctx.drawImage(currOverlay, 0, 0, WIDTH, HEIGHT); ctx.globalAlpha = 1.0;
+            }
+
+            ctx.font = 'bold 66px "Verdana"'; ctx.textAlign = 'center'; 
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 6; ctx.strokeText(player.score, WIDTH / 2, 90); 
+            ctx.fillStyle = 'white'; ctx.fillText(player.score, WIDTH / 2, 90);
+
+            if (devToolsEnabled) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                const hudW = 680; const hudH = 50; const hudX = WIDTH / 2 - hudW / 2;
+                ctx.beginPath(); ctx.roundRect(hudX, 115, hudW, hudH, 25); ctx.fill();
+                ctx.font = 'bold 22px "Verdana"'; ctx.textAlign = 'center';
+                let debugXStart = WIDTH / 2 - 250;
+                DUCK_TYPES.forEach((type, i) => {
+                    ctx.fillStyle = type.color;
+                    ctx.fillText(`${type.name.toLowerCase()}: ${collectedCounts[i]}`, debugXStart + (i * 125), 147);
+                });
+                const elapsed = gameOver ? finalTimeStored : (performance.now() - startTime);
+                const seconds = (elapsed / 1000).toFixed(1); 
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.beginPath(); ctx.roundRect(WIDTH / 2 - 210, 175, 200, 40, 20); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(WIDTH / 2 + 10, 175, 200, 40, 20); ctx.fill();
+                ctx.font = 'bold 20px "Verdana"'; ctx.textAlign = 'center';
+                ctx.fillStyle = '#FFFF00'; ctx.fillText(`speed: ${player.currentSpeed.toFixed(2)}`, WIDTH / 2 - 110, 201);
+                ctx.fillStyle = '#00FFFF'; ctx.fillText(`time: ${seconds}s`, WIDTH / 2 + 110, 201);
+            }
+
+            ctx.font = 'bold 40px "Segoe UI"'; ctx.textAlign = 'center';
+            floatingTexts.forEach(ft => {
+                ctx.globalAlpha = ft.timer > 20 ? 1 : ft.timer / 20;
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.strokeText(`+${ft.val}`, ft.x, ft.y);
+                ctx.fillStyle = 'white'; ctx.fillText(`+${ft.val}`, ft.x, ft.y);
+            });
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    function mainLoop(currentTime) {
+        requestAnimationFrame(mainLoop);
+        const elapsed = currentTime - lastTime;
+        if (elapsed > fpsInterval) {
+            lastTime = currentTime - (elapsed % fpsInterval);
+            update();
+        }
+        draw();
+    }
+
+    function resize() { 
+        canvas.width = WIDTH; canvas.height = HEIGHT; 
+        const scale = Math.min(window.innerWidth / WIDTH, window.innerHeight / HEIGHT);
+        container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('dblclick', toggleFS);
+    window.addEventListener('mousemove', () => {
+        document.body.style.cursor = 'default'; clearTimeout(cursorTimer);
+        cursorTimer = setTimeout(() => { document.body.style.cursor = 'none'; }, 1000); 
+    });
+
+    resize(); 
+    requestAnimationFrame(mainLoop);
+</script>
+</body>
+</html>
