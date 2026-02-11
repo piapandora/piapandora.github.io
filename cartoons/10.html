@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Character Maker</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: url('misc/bg.jpeg') center/cover no-repeat;
+  }
+  #container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+  .column {
+    flex: 1;
+    position: relative; /* for stacking layers */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .layer {
+    position: absolute;
+    left: 0; width: 100%; height: 50%; /* layers still half screen height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .layer img {
+    max-width: 100%; max-height: 100%;
+  }
+
+  /* Placement and z-index */
+  .head { top: 0%; z-index: 3; }
+  .torso { top: 25%; z-index: 2; }
+  .legs { top: 50%; z-index: 1; }
+
+  /* Invisible overlay grid */
+  #overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    /* grid-template-rows: repeat(3,1fr); */
+	grid-template-rows: 3fr 2fr 4fr;
+    z-index: 10;
+  }
+  .cell {
+    width: 100%; height: 100%;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <div class="column" data-col="0">
+    <div class="layer head"><img src="misc/h1r.png"></div>
+    <div class="layer torso"><img src="misc/t1r.png"></div>
+    <div class="layer legs"><img src="misc/l1r.png"></div>
+  </div>
+  <div class="column" data-col="1">
+    <div class="layer head"><img src="misc/h2y.png"></div>
+    <div class="layer torso"><img src="misc/t2y.png"></div>
+    <div class="layer legs"><img src="misc/l2y.png"></div>
+  </div>
+  <div class="column" data-col="2">
+    <div class="layer head"><img src="misc/h3b.png"></div>
+    <div class="layer torso"><img src="misc/t3b.png"></div>
+    <div class="layer legs"><img src="misc/l3b.png"></div>
+  </div>
+
+  <!-- Invisible overlay grid (each row 1/3 height) -->
+  <div id="overlay">
+    <!-- Head row -->
+    <div class="cell" data-col="0" data-type="head"></div>
+    <div class="cell" data-col="1" data-type="head"></div>
+    <div class="cell" data-col="2" data-type="head"></div>
+    <!-- Torso row -->
+    <div class="cell" data-col="0" data-type="torso"></div>
+    <div class="cell" data-col="1" data-type="torso"></div>
+    <div class="cell" data-col="2" data-type="torso"></div>
+    <!-- Legs row -->
+    <div class="cell" data-col="0" data-type="legs"></div>
+    <div class="cell" data-col="1" data-type="legs"></div>
+    <div class="cell" data-col="2" data-type="legs"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+const images = {
+  head: ["misc/h1r.png","misc/h1y.png","misc/h1b.png",
+  "misc/h2r.png","misc/h2y.png","misc/h2b.png",
+  "misc/h3r.png","misc/h3y.png","misc/h3b.png",
+  "misc/h4r.png","misc/h4y.png","misc/h4b.png",
+  "misc/h5r.png","misc/h5y.png","misc/h5b.png"],
+  torso: ["misc/t1r.png","misc/t1y.png","misc/t1b.png",
+  "misc/t2r.png","misc/t2y.png","misc/t2b.png",
+  "misc/t3r.png","misc/t3y.png","misc/t3b.png"],
+  legs: ["misc/l1r.png","misc/l1y.png","misc/l1b.png",
+  "misc/l2r.png","misc/l2y.png","misc/l2b.png",
+  "misc/l3r.png","misc/l3y.png","misc/l3b.png"]
+};
+
+const state = [
+  {head:0, torso:0, legs:0},
+  {head:4, torso:4, legs:4},
+  {head:8, torso:8, legs:8}
+];
+
+// Overlay grid controls the layers
+document.querySelectorAll("#overlay .cell").forEach(cell => {
+  cell.addEventListener("click", ()=>{
+    const colIndex = parseInt(cell.dataset.col);
+    const type = cell.dataset.type;
+    state[colIndex][type] = (state[colIndex][type]+1) % images[type].length;
+    const layer = document.querySelector(`.column[data-col='${colIndex}'] .${type}`);
+    layer.querySelector("img").src = images[type][state[colIndex][type]];
+  });
+});
+
+// --- Save on Enter
+document.addEventListener("keydown", e=>{
+  if(e.key === "Enter"){
+    html2canvas(document.getElementById("container"), {
+        backgroundColor: null,
+        scale: 3
+    }).then(canvas=>{
+      const link = document.createElement("a");
+      link.download = "character.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  }
+});
+</script>
+</body>
+</html>
