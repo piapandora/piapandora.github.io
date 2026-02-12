@@ -2,191 +2,288 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Pia's Little Piano</title>
+    <title>Pia's Piano</title>
     <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
     <style>
-        body { background: #0b0b0b; color: #fff; font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden;}
+        body { background: #0b0b0b; color: #fff; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; user-select: none;}
         
-        #hud { display: flex; align-items: center; gap: 40px; background: #161616; padding: 25px 50px; border-radius: 20px; border: 1px solid #333; margin-bottom: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        .mode-container { display: flex; background: #000; padding: 6px; border-radius: 12px; border: 1px solid #444; }
-        .mode-btn { 
-            padding: 12px 30px; border: none; background: none; color: #555; 
-            cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: 0.2s; border-radius: 8px;
-            letter-spacing: 1px;
+        #hud { 
+            display: flex; align-items: center; justify-content: space-between;
+            background: #161616; padding: 15px 30px; border-radius: 20px; border: 1px solid #333; 
+            margin-bottom: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            width: fit-content; min-width: 1102px; box-sizing: border-box;
         }
+        
+        .info-box { text-align: left; border-right: 1px solid #333; padding-right: 20px; display: flex; flex-direction: column; justify-content: center; }
+        .inst-box { flex-grow: 1; min-width: 250px; } 
+        .sus-box { min-width: 80px; align-items: center; text-align: center; border-right: none; cursor: pointer; }
+        
+        .label { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 4px; display: block; transition: 0.2s; }
+        .val { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: #666; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Hover effects for Sustain and Volume labels */
+        .sus-box:hover .label, 
+        .vol-container:hover .label { 
+            color: #fff; 
+        }
+
+        #sus-led { width: 10px; height: 10px; border-radius: 50%; background: #222; border: 1px solid #444; transition: 0.3s; margin-top: 4px; }
+        #sus-led.on { background: #2ECC71; border-color: #afffcf; box-shadow: 0 0 10px rgba(46, 204, 113, 0.8); }
+
+        .nav-cluster { display: flex; align-items: center; background: #000; padding: 4px; border-radius: 50px; border: 1px solid #444; gap: 5px; margin: 0 20px; }
+        .nav-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent; color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 1rem; }
+        .nav-btn:hover { color: #fff; background: #222; }
+        
+        .nav-btn.select { background: #2ECC71; color: #000; }
+        .pulse-ready { animation: pulse-green 1s infinite; }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        .mode-container { display: flex; background: #000; padding: 4px; border-radius: 12px; border: 1px solid #444; }
+        .mode-btn { padding: 8px 20px; border: none; background: none; color: #555; cursor: pointer; font-weight: 800; font-size: 0.75rem; transition: 0.2s; border-radius: 8px; letter-spacing: 1px; }
         .mode-btn.active { background: #00d1ff; color: #000; }
         
-        .info-box { text-align: left; min-width: 150px; }
-        .label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 4px; display: block; }
-        .val { font-family: monospace; font-size: 1.1rem; color: #00d1ff; }
+        .vol-container { width: 120px; text-align: left; cursor: ew-resize; padding-left: 20px; border-left: 1px solid #333;}
+        .vol-track { width: 100%; height: 8px; background: #000; border-radius: 4px; border: 1px solid #333; margin-top: 8px; overflow: hidden; position: relative; }
+        #vol-bar { width: 100%; height: 100%; background: #2ECC71; pointer-events: none; }
 
-        .piano { display: flex; position: relative; background: #000; padding: 15px; border-radius: 15px; border-top: 12px solid #222; }
-        .key-white { width: 48px; height: 200px; background: #fff; border: 1px solid #bbb; border-radius: 0 0 6px 6px; z-index: 1; position: relative; }
-        .key-black { width: 30px; height: 125px; background: #222; margin-left: -15px; margin-right: -15px; z-index: 2; border-radius: 0 0 4px 4px; }
+        .piano { 
+            display: flex; position: relative; background: #1a1a1a; 
+            padding: 12px; border-radius: 16px; border-top: 15px solid #222; 
+            box-sizing: border-box; width: fit-content; height: 280px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
         
-        .active-white { background: #00d1ff !important; transform: translateY(2px); }
-        .active-black { background: #ff4757 !important; transform: translateY(2px); }
-        .key-notate { position: absolute; bottom: 12px; width: 100%; text-align: center; color: #aaa; font-size: 11px; font-weight: bold; pointer-events: none; }
+        .key-white { 
+            width: 55px; height: 240px; background: #fff; margin: 0 1.5px; 
+            border-radius: 0 0 6px 6px; z-index: 1; position: relative; cursor: pointer; 
+            flex-shrink: 0; transition: transform 0.05s, background 0.1s;
+            box-sizing: border-box; border: 1px solid #ddd; border-top: none;
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05), 0 5px 5px rgba(0,0,0,0.2);
+        }
+
+        .key-black { 
+            width: 34px; height: 145px; background: #222; z-index: 2; 
+            border-radius: 0 0 4px 4px; cursor: pointer; border: 1px solid #000; 
+            position: absolute; top: 12px; transition: transform 0.05s, background 0.1s; 
+            box-shadow: 2px 5px 10px rgba(0,0,0,0.5);
+        }
+        
+        .key-notate { position: absolute; bottom: 15px; width: 100%; text-align: center; color: #bbb; font-size: 11px; font-weight: 800; pointer-events: none; transition: color 0.1s; }
+
+        .active-white { 
+            background: #00d1ff !important; 
+            transform: translateY(4px); 
+            border-color: #00d1ff; 
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .active-white .key-notate {
+            color: #003d4d !important;
+        }
+
+        .active-black { 
+            background: #006880 !important; 
+            transform: translateY(2px); 
+            box-shadow: 1px 2px 5px rgba(0,0,0,0.8);
+        }
+
+        .flash-ready { animation: flash-glow 0.6s ease-out; }
+        @keyframes flash-glow { 0% { background: #fff; } 100% { background: #2ECC71; } }
     </style>
 </head>
-<body>
+<body ondblclick="toggleFullscreen(event)">
 
     <div id="hud">
-        <div class="info-box">
-            <span class="label">Hardware Input</span>
-            <div id="dev-name" class="val">Click to Start</div>
+        <div class="info-box inst-box">
+            <span class="label">Instrument</span>
+            <div id="dev-name" class="val">Acoustic Grand Piano</div>
         </div>
-
+        <div class="info-box sus-box" onclick="toggleSustain()">
+            <span class="label">Sustain</span>
+            <div id="sus-led"></div>
+        </div>
+        <div class="nav-cluster">
+            <button class="nav-btn" onclick="cycleInst(-1)">&#10094;</button>
+            <button id="btn-select" class="nav-btn select pulse-ready" onclick="init()">&#10003;</button>
+            <button class="nav-btn" onclick="cycleInst(1)">&#10095;</button>
+        </div>
         <div class="mode-container">
-            <button id="btnTenor" class="mode-btn active" onclick="setSpecificMode('tenor')">TENOR (C3)</button>
-            <button id="btnSoprano" class="mode-btn" onclick="setSpecificMode('soprano')">SOPRANO (C4)</button>
+            <button id="btnTenor" class="mode-btn active" onclick="setSpecificMode('tenor')">TENOR</button>
+            <button id="btnSoprano" class="mode-btn" onclick="setSpecificMode('soprano')">SOPRANO</button>
         </div>
-
-        <div class="info-box">
-            <span class="label">Visual Range</span>
-            <div id="range-val" class="val">C3 - G5</div>
+        <div class="vol-container" id="vol-slider">
+            <span class="label">Volume</span>
+            <div class="vol-track"><div id="vol-bar"></div></div>
         </div>
     </div>
 
-    <div class="piano" id="piano"></div>
+    <div id="piano" class="piano"></div>
 
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const pianoEl = document.getElementById('piano');
+        const masterGain = audioCtx.createGain();
+        masterGain.connect(audioCtx.destination);
+        masterGain.gain.value = 6.0; 
+
         const devName = document.getElementById('dev-name');
-        const rangeVal = document.getElementById('range-val');
+        const volBar = document.getElementById('vol-bar');
+        const btnSelect = document.getElementById('btn-select');
+        const volSlider = document.getElementById('vol-slider');
+        const susLed = document.getElementById('sus-led');
 
-        let currentMode = 'tenor';
-        let currentStartNote = 48; 
-        const NUM_KEYS = 32;
-        const samples = {};
-        const activeNodes = new Map();
-        const keyElements = [];
-        const pattern = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+        const instList = ["acoustic_grand_piano","bright_acoustic_piano","electric_grand_piano","honkytonk_piano","electric_piano_1","electric_piano_2","harpsichord","clavinet","celesta","glockenspiel","music_box","vibraphone","marimba","xylophone","tubular_bells","dulcimer","drawbar_organ","percussive_organ","rock_organ","church_organ","reed_organ","accordion","harmonica","tango_accordion","acoustic_guitar_nylon","acoustic_guitar_steel","electric_guitar_jazz","electric_guitar_clean","electric_guitar_muted","overdriven_guitar","distortion_guitar","guitar_harmonics","acoustic_bass","electric_bass_finger","electric_bass_pick","fretless_bass","slap_bass_1","slap_bass_2","synth_bass_1","synth_bass_2","violin","viola","cello","contrabass","tremolo_strings","pizzicato_strings","orchestral_harp","timpani","string_ensemble_1","string_ensemble_2","synth_strings_1","synth_strings_2","choir_aahs","voice_oohs","synth_choir","orchestra_hit","trumpet","trombone","tuba","muted_trumpet","french_horn","brass_section","synth_brass_1","synth_brass_2","soprano_sax","alto_sax","tenor_sax","baritone_sax","oboe","english_horn","bassoon","clarinet","piccolo","flute","recorder","pan_flute","blown_bottle","shakuhachi","whistle","ocarina","lead_1_square","lead_2_sawtooth","lead_3_calliope","lead_4_chiff","lead_5_charang","lead_6_voice","lead_7_fifths","lead_8_bass__lead","pad_1_new_age","pad_2_warm","pad_3_polysynth","pad_4_choir","pad_5_bowed","pad_6_metallic","pad_7_halo","pad_8_sweep","fx_1_rain","fx_2_soundtrack","fx_3_crystal","fx_4_atmosphere","fx_5_brightness","fx_6_goblins","fx_7_echoes","fx_8_scifi","sitar","banjo","shamisen","koto","kalimba","bagpipe","fiddle","shanai","tinkle_bell","agogo","steel_drums","woodblock","taiko_drum","melodic_tom","synth_drum","reverse_cymbal","guitar_fret_noise","breath_noise","seashore","bird_tweet","telephone_ring","helicopter","applause","gunshot"];
+        const labelList = instList.map(name => name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '));
 
-        // Handles Spacebar toggling
-        function toggleMode() {
-            const nextMode = (currentMode === 'tenor') ? 'soprano' : 'tenor';
-            setSpecificMode(nextMode);
+        let currentIdx = 0, midiInitialized = false, currentMode = 'tenor', currentStartNote = 48, lastSpacePress = 0, firstActivation = true, isSustain = false;
+        const samples = {}, activeNodes = new Map(), keyElements = [];
+
+        function toggleFullscreen(e) {
+            if (e.target.tagName === 'BODY' || e.target.id === 'piano' || e.target.id === 'hud') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
         }
 
-        // Handles specific selection (Mouse click or Spacebar target)
-        function setSpecificMode(mode) {
-            currentMode = mode;
-            currentStartNote = (mode === 'tenor') ? 48 : 60;
-            
-            document.getElementById('btnTenor').classList.toggle('active', currentMode === 'tenor');
-            document.getElementById('btnSoprano').classList.toggle('active', currentMode === 'soprano');
-            rangeVal.innerText = (currentMode === 'tenor') ? "C3 - G5" : "C4 - G6";
-            
-            updateLabels();
-            keyElements.forEach(k => k.el.classList.remove('active-white', 'active-black'));
+        function cycleInst(dir) {
+            currentIdx = (currentIdx + dir + instList.length) % instList.length;
+            devName.innerText = labelList[currentIdx];
+            devName.style.color = "#666"; 
         }
+
+        function toggleSustain(force) {
+            isSustain = (force !== undefined) ? force : !isSustain;
+            if (isSustain) susLed.classList.add('on');
+            else { susLed.classList.remove('on'); activeNodes.forEach((node, note) => stopAudio(note)); }
+        }
+
+        let isDragging = false;
+        const updateVol = (e) => {
+            const rect = volSlider.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(e.clientX - rect.left, rect.width)) / rect.width;
+            volBar.style.width = (pct * 100) + '%';
+            masterGain.gain.setTargetAtTime(pct * 6, audioCtx.currentTime, 0.02);
+        };
+        volSlider.onmousedown = (e) => { isDragging = true; updateVol(e); };
+        window.onmousemove = (e) => { if (isDragging) updateVol(e); };
+        window.onmouseup = () => { isDragging = false; };
 
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault(); 
-                toggleMode();
-            }
+            if (e.code === 'Space') { e.preventDefault(); if (Date.now() - lastSpacePress > 300) { setSpecificMode(currentMode === 'tenor' ? 'soprano' : 'tenor'); lastSpacePress = Date.now(); } }
+            if (e.code === 'ArrowRight') cycleInst(1);
+            if (e.code === 'ArrowLeft') cycleInst(-1);
+            if (e.code === 'ArrowUp') toggleSustain(true);
+            if (e.code === 'ArrowDown') toggleSustain(false);
+            if (e.code === 'Enter') init();
         });
 
-        function buildUI() {
-            for (let i = 0; i < NUM_KEYS; i++) {
-                const key = document.createElement('div');
-                const label = document.createElement('div');
-                label.className = 'key-notate';
-                key.appendChild(label);
-                pianoEl.appendChild(key);
-                keyElements.push({ el: key, label: label });
-            }
-            updateLabels();
-        }
-
-        function updateLabels() {
-            keyElements.forEach((item, i) => {
-                const noteValue = currentStartNote + i;
-                item.el.className = pattern[noteValue % 12] ? 'key-black' : 'key-white';
-                item.label.innerText = (noteValue % 12 === 0) ? `C${Math.floor(noteValue/12)-1}` : '';
-            });
-        }
-
-        async function loadPiano() {
-            devName.innerText = "Loading Audio...";
+        async function init() {
+            btnSelect.classList.remove('pulse-ready');
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!firstActivation) { devName.innerText = "Loading..."; devName.style.color = "#00d1ff"; }
+            for (let k in samples) delete samples[k];
             const map = {36:'C2', 48:'C3', 60:'C4', 64:'E4', 67:'G4', 72:'C5', 76:'E5', 79:'G5', 84:'C6', 96:'C7'};
-            for (let [note, file] of Object.entries(map)) {
-                try {
-                    const res = await fetch(`https://gleitz.github.io/midi-js-soundfonts/FatBoy/acoustic_grand_piano-mp3/${file}.mp3`);
+            const instrument = instList[currentIdx];
+            try {
+                for (let [note, file] of Object.entries(map)) {
+                    const res = await fetch(`https://gleitz.github.io/midi-js-soundfonts/FatBoy/${instrument}-mp3/${file}.mp3`);
                     samples[note] = await audioCtx.decodeAudioData(await res.arrayBuffer());
-                } catch(e) { console.error("Failed to load sample", file); }
-            }
-            devName.innerText = "Ready!";
-            setupMIDI();
+                }
+                devName.innerText = labelList[currentIdx]; devName.style.color = "#00d1ff";
+                btnSelect.classList.add('flash-ready'); 
+                setTimeout(() => btnSelect.classList.remove('flash-ready'), 600);
+                firstActivation = false; 
+            } catch (err) { devName.innerText = "LOAD ERROR"; }
+            if (midiInitialized) return;
+            navigator.requestMIDIAccess().then(access => {
+                midiInitialized = true;
+                for (let input of access.inputs.values()) input.onmidimessage = handleMIDI;
+            });
         }
 
-        function setupMIDI() {
-            navigator.requestMIDIAccess().then(access => {
-                for (let input of access.inputs.values()) {
-                    devName.innerText = input.name;
-                    input.onmidimessage = handleMIDI;
-                }
-            });
+        function setSpecificMode(mode) {
+            activeNodes.forEach((node, note) => stopAudio(note));
+            currentMode = mode;
+            currentStartNote = (mode === 'tenor') ? 48 : 60;
+            document.getElementById('btnTenor').classList.toggle('active', currentMode === 'tenor');
+            document.getElementById('btnSoprano').classList.toggle('active', currentMode === 'soprano');
+            updatePianoUI();
         }
 
         function handleMIDI(m) {
-            const [cmd, rawNote, vel] = m.data;
-            const type = cmd & 0xf0;
-
-            const physicalOffset = rawNote - 60; 
-            const virtualNote = currentStartNote + physicalOffset;
-
-            if (type === 144 && vel > 0) {
-                playAudio(virtualNote, vel);
-                updateVisual(virtualNote, true);
-            } else if (type === 128 || (type === 144 && vel === 0)) {
-                stopAudio(virtualNote);
-                updateVisual(virtualNote, false);
+            const [status, data1, data2] = m.data, type = status & 0xf0;
+            if (type === 176 && data1 === 7) {
+                masterGain.gain.setTargetAtTime((data2 / 127) * 6.0, audioCtx.currentTime, 0.02);
+                volBar.style.width = (data2 / 127 * 100) + '%'; return;
             }
+            const virtualNote = currentStartNote + (data1 - 60);
+            if (type === 144 && data2 > 0) { playAudio(virtualNote, 110); updateVisual(virtualNote, true); }
+            else if (type === 128 || (type === 144 && data2 === 0)) { stopAudio(virtualNote); updateVisual(virtualNote, false); }
         }
 
         function playAudio(note, vel) {
             const loaded = Object.keys(samples).map(Number);
             if (loaded.length === 0) return;
             const closest = loaded.reduce((p, c) => Math.abs(c-note) < Math.abs(p-note) ? c : p);
-            const src = audioCtx.createBufferSource();
-            const gain = audioCtx.createGain();
-            src.buffer = samples[closest];
-            src.detune.value = (note - closest) * 100;
-            gain.gain.value = (vel / 127) * 1.5;
-            src.connect(gain).connect(audioCtx.destination);
-            src.start(0);
-            activeNodes.set(note, { src, gain });
+            const src = audioCtx.createBufferSource(), noteGain = audioCtx.createGain();
+            src.buffer = samples[closest]; src.detune.value = (note - closest) * 100;
+            noteGain.gain.value = (vel / 127);
+            src.connect(noteGain); noteGain.connect(masterGain);
+            src.start(0); activeNodes.set(note, { src, gain: noteGain });
         }
 
         function stopAudio(note) {
+            if (isSustain) return;
             const node = activeNodes.get(note);
-            if (node) {
-                node.gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                node.src.stop(audioCtx.currentTime + 0.3);
-                activeNodes.delete(note);
-            }
+            if (node) { node.gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); node.src.stop(audioCtx.currentTime + 0.3); activeNodes.delete(note); }
+        }
+
+        function updatePianoUI() {
+            const pattern = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+            let whiteKeyCount = 0;
+            const whiteKeyFootprint = 58; 
+            const padding = 12;
+
+            keyElements.forEach((item, i) => {
+                const noteValue = currentStartNote + i, isBlack = pattern[noteValue % 12];
+                if (isBlack) {
+                    item.el.className = 'key-black'; 
+                    item.el.style.left = (padding + (whiteKeyCount * whiteKeyFootprint) - 17) + "px"; 
+                } else {
+                    item.el.className = 'key-white'; 
+                    item.el.style.left = 'auto'; 
+                    item.el.firstChild.innerText = (noteValue % 12 === 0) ? `C${Math.floor(noteValue/12)-1}` : ''; 
+                    whiteKeyCount++;
+                }
+                item.el.classList.remove('active-white', 'active-black');
+            });
         }
 
         function updateVisual(note, active) {
             const relIndex = note - currentStartNote;
-            if (relIndex >= 0 && relIndex < NUM_KEYS) {
+            if (relIndex >= 0 && relIndex < 32) {
                 const item = keyElements[relIndex];
                 const cls = item.el.classList.contains('key-white') ? 'active-white' : 'active-black';
                 active ? item.el.classList.add(cls) : item.el.classList.remove(cls);
             }
         }
 
-        buildUI();
-        window.addEventListener('click', () => {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            if (Object.keys(samples).length === 0) loadPiano();
-        }, { once: true });
+        const piano = document.getElementById('piano');
+        for (let i = 0; i < 32; i++) {
+            const key = document.createElement('div'), noteText = document.createElement('div');
+            noteText.className = "key-notate"; key.appendChild(noteText);
+            key.onmousedown = (e) => { e.preventDefault(); const n = currentStartNote + i; playAudio(n, 110); updateVisual(n, true); };
+            key.onmouseup = key.onmouseleave = () => { const n = currentStartNote + i; stopAudio(n); updateVisual(n, false); };
+            piano.appendChild(key); keyElements.push({ el: key });
+        }
+        updatePianoUI();
+        volBar.style.width = '100%';
     </script>
 </body>
-
 </html>
