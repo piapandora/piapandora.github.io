@@ -11,10 +11,10 @@
             display: flex; align-items: center; justify-content: space-between;
             background: #161616; padding: 15px 30px; border-radius: 20px; border: 1px solid #333; 
             margin-bottom: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-            width: fit-content; min-width: 1122px; box-sizing: border-box; gap: 31px;
+            width: fit-content; min-width: 1102px; box-sizing: border-box;
         }
         
-        .info-box { text-align: left; padding-right: 20px; display: flex; flex-direction: column; justify-content: center; }
+        .info-box { text-align: left; border-right: 1px solid #333; padding-right: 20px; display: flex; flex-direction: column; justify-content: center; }
         .inst-box { flex-grow: 1; min-width: 250px; } 
         .sus-box { min-width: 80px; align-items: center; text-align: center; border-right: none; cursor: pointer; }
         
@@ -22,7 +22,9 @@
         .val { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: #666; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .sus-box:hover .label, 
-        .vol-container:hover .label { color: #ddd; }
+        .vol-container:hover .label { 
+            color: #fff; 
+        }
 
         #sus-led { width: 10px; height: 10px; border-radius: 50%; background: #222; border: 1px solid #444; transition: 0.3s; margin-top: 4px; }
         #sus-led.on { background: #2ECC71; border-color: #afffcf; box-shadow: 0 0 10px rgba(46, 204, 113, 0.8); }
@@ -43,10 +45,9 @@
         .mode-btn { padding: 8px 20px; border: none; background: none; color: #555; cursor: pointer; font-weight: 800; font-size: 0.75rem; transition: 0.2s; border-radius: 8px; letter-spacing: 1px; }
         .mode-btn.active { background: #00d1ff; color: #000; }
         
-        .vol-container { width: 120px; text-align: left; cursor: ew-resize; padding-left: 20px;}
+        .vol-container { width: 120px; text-align: left; cursor: ew-resize; padding-left: 20px; border-left: 1px solid #333;}
         .vol-track { width: 100%; height: 8px; background: #000; border-radius: 4px; border: 1px solid #333; margin-top: 8px; overflow: hidden; position: relative; }
-        #vol-bar { width: 100%; height: 100%; background: #2ECC71; pointer-events: none; transition: background 0.2s; }
-        #vol-bar.muted { background: #e74c3c; }
+        #vol-bar { width: 100%; height: 100%; background: #2ECC71; pointer-events: none; }
 
         .piano { 
             display: flex; position: relative; background: #1a1a1a; 
@@ -72,9 +73,22 @@
         
         .key-notate { position: absolute; bottom: 15px; width: 100%; text-align: center; color: #bbb; font-size: 11px; font-weight: 800; pointer-events: none; transition: color 0.1s; }
 
-        .active-white { background: #00d1ff !important; transform: translateY(4px); border-color: #00d1ff; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
-        .active-white .key-notate { color: #003d4d !important; }
-        .active-black { background: #006880 !important; transform: translateY(2px); box-shadow: 1px 2px 5px rgba(0,0,0,0.8); }
+        .active-white { 
+            background: #00d1ff !important; 
+            transform: translateY(4px); 
+            border-color: #00d1ff; 
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .active-white .key-notate {
+            color: #003d4d !important;
+        }
+
+        .active-black { 
+            background: #006880 !important; 
+            transform: translateY(2px); 
+            box-shadow: 1px 2px 5px rgba(0,0,0,0.8);
+        }
 
         .flash-ready { animation: flash-glow 0.6s ease-out; }
         @keyframes flash-glow { 0% { background: #fff; } 100% { background: #2ECC71; } }
@@ -101,7 +115,7 @@
             <button id="btnSoprano" class="mode-btn" onclick="setSpecificMode('soprano')">SOPRANO</button>
         </div>
         <div class="vol-container" id="vol-slider">
-            <span id="vol-label" class="label">Volume</span>
+            <span class="label">Volume</span>
             <div class="vol-track"><div id="vol-bar"></div></div>
         </div>
     </div>
@@ -116,7 +130,6 @@
 
         const devName = document.getElementById('dev-name');
         const volBar = document.getElementById('vol-bar');
-        const volLabel = document.getElementById('vol-label');
         const btnSelect = document.getElementById('btn-select');
         const volSlider = document.getElementById('vol-slider');
         const susLed = document.getElementById('sus-led');
@@ -125,13 +138,15 @@
         const labelList = instList.map(name => name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '));
 
         let currentIdx = 0, midiInitialized = false, currentMode = 'tenor', currentStartNote = 48, lastSpacePress = 0, firstActivation = true, isSustain = false;
-        let isMuted = false, preMuteVol = 1.0;
         const samples = {}, activeNodes = new Map(), keyElements = [];
 
         function toggleFullscreen(e) {
             if (e.target.tagName === 'BODY' || e.target.id === 'piano' || e.target.id === 'hud') {
-                if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-                else if (document.exitFullscreen) document.exitFullscreen();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
             }
         }
 
@@ -147,37 +162,15 @@
             else { susLed.classList.remove('on'); activeNodes.forEach((node, note) => stopAudio(note)); }
         }
 
-        function setVolume(pct) {
-            pct = Math.max(0, Math.min(1, pct));
-            volBar.style.width = (pct * 100) + '%';
-            masterGain.gain.setTargetAtTime(pct * 6.0, audioCtx.currentTime, 0.02);
-            
-            if (pct > 0) {
-                isMuted = false;
-                volBar.classList.remove('muted');
-                volLabel.innerText = "Volume";
-            }
-        }
-
-        function toggleMute() {
-            if (!isMuted) {
-                preMuteVol = parseFloat(volBar.style.width) / 100;
-                setVolume(0);
-                isMuted = true;
-                volBar.classList.add('muted');
-                volLabel.innerText = "MUTED";
-            } else {
-                setVolume(preMuteVol || 1.0);
-            }
-        }
-
         let isDragging = false;
-        const updateVolFromMouse = (e) => {
+        const updateVol = (e) => {
             const rect = volSlider.getBoundingClientRect();
-            setVolume(Math.max(0, Math.min(e.clientX - rect.left, rect.width)) / rect.width);
+            const pct = Math.max(0, Math.min(e.clientX - rect.left, rect.width)) / rect.width;
+            volBar.style.width = (pct * 100) + '%';
+            masterGain.gain.setTargetAtTime(pct * 6, audioCtx.currentTime, 0.02);
         };
-        volSlider.onmousedown = (e) => { isDragging = true; updateVolFromMouse(e); };
-        window.onmousemove = (e) => { if (isDragging) updateVolFromMouse(e); };
+        volSlider.onmousedown = (e) => { isDragging = true; updateVol(e); };
+        window.onmousemove = (e) => { if (isDragging) updateVol(e); };
         window.onmouseup = () => { isDragging = false; };
 
         window.addEventListener('keydown', (e) => {
@@ -187,15 +180,12 @@
             if (e.code === 'ArrowUp') toggleSustain(true);
             if (e.code === 'ArrowDown') toggleSustain(false);
             if (e.code === 'Enter') init();
-            if (e.key === '+' || e.key === '=') setVolume((parseFloat(volBar.style.width) / 100) + 0.05);
-            if (e.key === '-' || e.key === '_') setVolume((parseFloat(volBar.style.width) / 100) - 0.05);
-            if (e.key.toLowerCase() === 'm') toggleMute();
         });
 
         async function init() {
             btnSelect.classList.remove('pulse-ready');
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            if (!firstActivation) {  devName.innerText = "Loading..."; devName.style.color = "#00d1ff"; }
+            if (!firstActivation) { devName.innerText = "Loading..."; devName.style.color = "#00d1ff"; }
             for (let k in samples) delete samples[k];
             const map = {36:'C2', 48:'C3', 60:'C4', 64:'E4', 67:'G4', 72:'C5', 76:'E5', 79:'G5', 84:'C6', 96:'C7'};
             const instrument = instList[currentIdx];
@@ -227,8 +217,10 @@
 
         function handleMIDI(m) {
             const [status, data1, data2] = m.data, type = status & 0xf0;
-            if (type === 176 && data1 === 7) { setVolume(data2 / 127); return; }
-            
+            if (type === 176 && data1 === 7) {
+                masterGain.gain.setTargetAtTime((data2 / 127) * 6.0, audioCtx.currentTime, 0.02);
+                volBar.style.width = (data2 / 127 * 100) + '%'; return;
+            }
             const virtualNote = currentStartNote + (data1 - 48);
             if (type === 144 && data2 > 0) { playAudio(virtualNote, 110); updateVisual(virtualNote, true); }
             else if (type === 128 || (type === 144 && data2 === 0)) { stopAudio(virtualNote); updateVisual(virtualNote, false); }
@@ -289,9 +281,8 @@
             key.onmouseup = key.onmouseleave = () => { const n = currentStartNote + i; stopAudio(n); updateVisual(n, false); };
             piano.appendChild(key); keyElements.push({ el: key });
         }
-        
         updatePianoUI();
-        setVolume(1.0);
+        volBar.style.width = '100%';
     </script>
 </body>
 </html>
