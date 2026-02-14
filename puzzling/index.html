@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzling Squares</title>
+    <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+    <style>
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background-color: #181818; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        canvas {
+            display: block;
+            max-width: 100vw; max-height: 100vh;
+            object-fit: contain; background-color: #181818;
+            cursor: grab;
+        }
+        canvas:active { cursor: grabbing; }
+    </style>
+</head>
+<body>
+    <canvas id="puzzle"></canvas>
+
+<script>
+    const canvas = document.getElementById("puzzle");
+    const ctx = canvas.getContext("2d");
+
+    const VIRTUAL_W = 1920, VIRTUAL_H = 1080;
+    const UNIT = 120, PLAY_SIZE = 8, OFFSET_X = 4, OFFSET_Y = 0.5;
+
+    canvas.width = VIRTUAL_W; canvas.height = VIRTUAL_H;
+
+    let pieces = [], selectedPieces = [], animatingPieces = [];
+    let isDragging = false, isSelecting = false, isSpaceOrCtrl = false;
+    let selectionStart = { x: 0, y: 0 }, selectionEnd = { x: 0, y: 0 }, lastMouse = { x: 0, y: 0 };
+    let preDragSelection = []; 
+    let gameWon = false, flashOpacity = 0, winFlashTimer = 0;
+    let xReleases = [];
+
+    // --- RANDOM IMAGE LOGIC ---
+    const puzzleOptions = [
+        "misc/puz01.webp",
+        "misc/puz02.png",
+        "misc/puz03.webp",
+        "misc/puz04.webp",
+        "misc/puz05.png",
+        "misc/puz07.png",
+    ];
+    
+    const img = new Image();
+    const randomImg = puzzleOptions[Math.floor(Math.random() * puzzleOptions.length)];
+    img.src = randomImg;
+    img.onload = () => { initGame(); tick(); };
+
+    function initGame() {
+        const slots = [];
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 16; c++) if (c < 4 || c >= 12) slots.push({ c, r: r + OFFSET_Y });
+        }
+        slots.sort(() => Math.random() - 0.5);
+        const sW = img.width / 8, sH = img.height / 8;
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const slot = slots.pop();
+                pieces.push({
+                    targetX: c + OFFSET_X, targetY: r + OFFSET_Y,
+                    sx: c * sW, sy: r * sH, sw: sW, sh: sH,
+                    x: slot.c, y: slot.r, startX: slot.c, startY: slot.r,
+                    vx: null, vy: null,
+                    shadowAlpha: 0 
+                });
+            }
+        }
+    }
+
+    function tick() {
+        if (winFlashTimer > 0) winFlashTimer--;
+        flashOpacity = gameWon ? 0.5 + 0.5 * Math.sin(Date.now() / 318) : 0;
+        updateAnimations();
+        render();
+        requestAnimationFrame(tick);
+    }
+
+    function updateAnimations() {
+        const speed = 0.15; 
+        pieces.forEach(p => {
+            const isMoving = (isDragging && selectedPieces.includes(p)) || animatingPieces.includes(p);
+            const targetAlpha = isMoving ? 1 : 0;
+            p.shadowAlpha += (targetAlpha - p.shadowAlpha) * 0.15;
+
+            if (animatingPieces.includes(p)) {
+                const tx = p.x * UNIT, ty = p.y * UNIT;
+                p.vx += (tx - p.vx) * speed;
+                p.vy += (ty - p.vy) * speed;
+                if (Math.abs(p.vx - tx) < 0.5 && Math.abs(p.vy - ty) < 0.5) {
+                    p.vx = p.vy = null;
+                    animatingPieces = animatingPieces.filter(ap => ap !== p);
+                }
+            }
+        });
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, VIRTUAL_W, VIRTUAL_H);
+        ctx.fillStyle = winFlashTimer > 0 ? '#2e4a39' : (gameWon ? `rgba(46, 74, 57, ${flashOpacity})` : "#181818");
+        ctx.fillRect(0, 0, VIRTUAL_W, VIRTUAL_H);
+
+        // 1. GRID LAYER
+        ctx.strokeStyle = "rgba(255, 255, 0, 0.1)"; ctx.lineWidth = 1;
+        for (let i = 0; i <= PLAY_SIZE; i++) {
+            ctx.beginPath(); ctx.moveTo((OFFSET_X + i) * UNIT, OFFSET_Y * UNIT); ctx.lineTo((OFFSET_X + i) * UNIT, (OFFSET_Y + PLAY_SIZE) * UNIT); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(OFFSET_X * UNIT, (OFFSET_Y + i) * UNIT); ctx.lineTo((OFFSET_X + PLAY_SIZE) * UNIT, (OFFSET_Y + i) * UNIT); ctx.stroke();
+        }
+
+        // Logic Separation: Moving/Fading pieces go in handLayer
+        const handLayer = pieces.filter(p => p.vx !== null || p.vy !== null || p.shadowAlpha > 0.01);
+        const boardLayer = pieces.filter(p => !handLayer.includes(p));
+
+        // 2. STATIONARY PASS (Bottom)
+        boardLayer.forEach(p => {
+            ctx.drawImage(img, p.sx, p.sy, p.sw, p.sh, p.x * UNIT, p.y * UNIT, UNIT, UNIT);
+            if (selectedPieces.includes(p) && !isDragging) drawSelectionBorder(p.x * UNIT, p.y * UNIT);
+        });
+
+        // 3. UNIFIED SHADOW PASS (Middle)
+        handLayer.forEach(p => {
+            if (p.shadowAlpha <= 0.01) return;
+            ctx.save();
+            ctx.shadowColor = `rgba(0,0,0,${0.6 * p.shadowAlpha})`;
+            ctx.shadowBlur = 15 * p.shadowAlpha;
+            ctx.shadowOffsetX = 8 * p.shadowAlpha;
+            ctx.shadowOffsetY = 8 * p.shadowAlpha;
+            ctx.fillStyle = "black";
+            ctx.globalAlpha = p.shadowAlpha;
+            const dx = p.vx ?? p.x * UNIT, dy = p.vy ?? p.y * UNIT;
+            ctx.fillRect(dx, dy, UNIT, UNIT);
+            ctx.restore();
+        });
+
+        // 4. HAND FACES (Top)
+        handLayer.forEach(p => {
+            const dx = p.vx ?? p.x * UNIT, dy = p.vy ?? p.y * UNIT;
+            ctx.drawImage(img, p.sx, p.sy, p.sw, p.sh, dx, dy, UNIT, UNIT);
+            if (selectedPieces.includes(p)) drawSelectionBorder(dx, dy);
+        });
+
+        // 5. MARQUEE
+        if (isSelecting) {
+            ctx.strokeStyle = "rgba(0, 255, 255, 0.8)";
+            ctx.setLineDash([6, 4]); ctx.lineWidth = 2;
+            const x = Math.min(selectionStart.x, selectionEnd.x), y = Math.min(selectionStart.y, selectionEnd.y);
+            const w = Math.abs(selectionEnd.x - selectionStart.x), h = Math.abs(selectionEnd.y - selectionStart.y);
+            ctx.strokeRect(x, y, w, h);
+            ctx.fillStyle = "rgba(0, 255, 255, 0.1)"; ctx.fillRect(x, y, w, h);
+            ctx.setLineDash([]);
+        }
+    }
+
+    function drawSelectionBorder(x, y) {
+        ctx.strokeStyle = "#ffff00"; ctx.lineWidth = 6;
+        ctx.strokeRect(x + 3, y + 3, UNIT - 6, UNIT - 6);
+    }
+
+    function checkWinState() {
+        const alreadyWon = gameWon;
+        gameWon = pieces.every(p => p.x === p.targetX && p.y === p.targetY);
+        if (gameWon && !alreadyWon) winFlashTimer = 60; 
+    }
+
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: (e.clientX - rect.left) * (VIRTUAL_W / rect.width), y: (e.clientY - rect.top) * (VIRTUAL_H / rect.height) };
+    }
+
+    // Input Events
+    window.addEventListener('keyup', e => { 
+        if(e.code === 'Space' || e.key === 'Control') isSpaceOrCtrl = false; 
+        if (e.key.toLowerCase() === 'x') {
+            const now = performance.now(); xReleases.push(now);
+            if (xReleases.length > 3) xReleases.shift();
+            if (xReleases.length === 3 && (xReleases[2] - xReleases[0] < 400)) {
+                pieces.forEach(p => { p.x = p.targetX; p.y = p.targetY; p.vx = p.vy = null; p.shadowAlpha = 0; });
+                animatingPieces = []; checkWinState(); xReleases = [];
+            }
+        }
+    });
+
+    window.addEventListener('keydown', e => { if(e.code === 'Space' || e.key === 'Control') isSpaceOrCtrl = true; });
+
+    canvas.addEventListener('mousedown', e => {
+        if (animatingPieces.length > 0) return;
+        const m = getMousePos(e);
+        const multi = isSpaceOrCtrl || e.ctrlKey;
+        const clicked = [...pieces].reverse().find(p => m.x >= p.x * UNIT && m.x <= (p.x + 1) * UNIT && m.y >= p.y * UNIT && m.y <= (p.y + 1) * UNIT);
+
+        if (clicked) {
+            if (multi) {
+                if (selectedPieces.includes(clicked)) selectedPieces = selectedPieces.filter(p => p !== clicked);
+                else selectedPieces.push(clicked);
+            } else {
+                if (!selectedPieces.includes(clicked)) selectedPieces = [clicked];
+                isDragging = true; lastMouse = m;
+                selectedPieces.forEach(p => { p.vx = p.x * UNIT; p.vy = p.y * UNIT; p.startX = p.x; p.startY = p.y; });
+            }
+        } else {
+            isSelecting = true;
+            selectionStart = m; selectionEnd = m;
+            preDragSelection = multi ? [...selectedPieces] : [];
+            selectedPieces = [...preDragSelection];
+        }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+        const m = getMousePos(e);
+        if (isDragging) {
+            let dx = m.x - lastMouse.x, dy = m.y - lastMouse.y;
+            const minX = Math.min(...selectedPieces.map(p => p.vx + dx)), maxX = Math.max(...selectedPieces.map(p => p.vx + dx + UNIT));
+            const minY = Math.min(...selectedPieces.map(p => p.vy + dy)), maxY = Math.max(...selectedPieces.map(p => p.vy + dy + UNIT));
+            if (minX < 0 || maxX > VIRTUAL_W) dx = 0;
+            if (minY < OFFSET_Y * UNIT || maxY > (OFFSET_Y + 8) * UNIT) dy = 0;
+            selectedPieces.forEach(p => { p.vx += dx; p.vy += dy; });
+            lastMouse = m;
+        } else if (isSelecting) {
+            selectionEnd = m;
+            const x1_ = Math.min(selectionStart.x, selectionEnd.x), x2_ = Math.max(selectionStart.x, selectionEnd.x);
+            const y1_ = Math.min(selectionStart.y, selectionEnd.y), y2_ = Math.max(selectionStart.y, selectionEnd.y);
+            const currentBoxSet = pieces.filter(p => {
+                const px1 = p.x * UNIT, px2 = px1 + UNIT, py1 = p.y * UNIT, py2 = py1 + UNIT;
+                return (x1_ < px2 && x2_ > px1 && y1_ < py2 && y2_ > py1);
+            });
+            selectedPieces = Array.from(new Set([...preDragSelection, ...currentBoxSet]));
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isDragging) {
+            const intended = selectedPieces.map(p => ({ p, nx: Math.round(p.vx / UNIT), ny: Math.round((p.vy / UNIT) - OFFSET_Y) + OFFSET_Y }));
+            const collision = intended.some(pos => pieces.some(other => !selectedPieces.includes(other) && other.x === pos.nx && other.y === pos.ny));
+            selectedPieces.forEach(p => {
+                const pos = intended.find(ip => ip.p === p);
+                if (collision) { p.x = p.startX; p.y = p.startY; animatingPieces.push(p); } 
+                else { p.x = pos.nx; p.y = pos.ny; p.vx = p.vy = null; }
+            });
+            isDragging = false; checkWinState();
+        }
+        isSelecting = false;
+    });
+</script>
+</body>
+</html>
