@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pia's Chalkboard</title>
+    <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+        body { background-color: #1a1a1a; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
+        #canvas { display: block; cursor: crosshair; }
+        
+        .ui {
+            position: fixed; top: 20px; left: 20px;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px);
+            padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            display: none; 
+            z-index: 100;
+        }
+        .ui.active { display: block; }
+        
+        .color-preview { 
+            display: inline-block; width: 20px; height: 20px; 
+            border-radius: 50%; vertical-align: middle; margin-left: 10px;
+            border: 2px solid white;
+        }
+        .shortcut-hint { font-size: 0.75rem; opacity: 0.6; margin-top: 10px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <div class="ui" id="hud">
+        <h3>Dev Mode Active</h3>
+        <p>Color: <span id="current-color-name">Gold</span> <span id="color-dot" class="color-preview" style="background: #ffd700;"></span></p>
+        <p>Pen Size: <span id="size-val">10</span>px</p>
+        <div class="shortcut-hint">
+            [1-0] Colors | [- / +] Size<br>
+            [Enter] Save Drawing
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        window.addEventListener("load", () => {
+            const canvas = document.querySelector("#canvas");
+            const ctx = canvas.getContext("2d");
+            const hud = document.querySelector("#hud");
+            const colorNameEl = document.querySelector("#current-color-name");
+            const colorDotEl = document.querySelector("#color-dot");
+            const sizeValEl = document.querySelector("#size-val");
+
+            canvas.height = window.innerHeight;
+            canvas.width = window.innerWidth;
+
+            let devMode = false;
+            let painting = false;
+            let currentSize = 10;
+            let currentColor = "#ffd700";
+            let xPresses = [];
+
+            const palette = {
+                "1": { name: "Gold", hex: "#ffd700" },
+                "2": { name: "Neon Pink", hex: "#ff00ff" },
+                "3": { name: "Cyan", hex: "#00ffff" },
+                "4": { name: "Lime", hex: "#32cd32" },
+                "5": { name: "White", hex: "#ffffff" },
+                "6": { name: "Sky Blue", hex: "#87ceeb" },
+                "7": { name: "Lavender", hex: "#e6e6fa" },
+                "8": { name: "Orange", hex: "#ffa500" },
+                "9": { name: "Mint", hex: "#98ff98" },
+                "0": { name: "Coral", hex: "#ff7f50" }
+            };
+
+            window.oncontextmenu = (e) => e.preventDefault();
+
+            window.addEventListener("keydown", (e) => {
+                const now = Date.now();
+                if (e.key.toLowerCase() === 'x') {
+                    xPresses.push(now);
+                    if (xPresses.length > 3) xPresses.shift();
+                    if (xPresses.length === 3 && (xPresses[2] - xPresses[0] < 400)) {
+                        devMode = !devMode;
+                        hud.classList.toggle('active', devMode);
+                        xPresses = [];
+                    }
+                }
+
+                if (!devMode) return;
+
+                if (palette[e.key]) {
+                    currentColor = palette[e.key].hex;
+                    colorNameEl.innerText = palette[e.key].name;
+                    colorDotEl.style.background = currentColor;
+                }
+                if (e.key === "=" || e.key === "+") {
+                    currentSize = Math.min(currentSize + 5, 100);
+                }
+                if (e.key === "-" || e.key === "_") {
+                    currentSize = Math.max(currentSize - 5, 2);
+                }
+                if (e.key === "Enter") {
+                    const link = document.createElement('a');
+                    link.download = `pia-sketch-${Date.now()}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                }
+
+                sizeValEl.innerText = currentSize;
+            });
+
+            function startPosition(e) {
+                painting = true;
+                draw(e);
+            }
+
+            function finishedPosition() {
+                painting = false;
+                ctx.beginPath();
+            }
+
+            function draw(e) {
+                if (!painting) return;
+
+                if (e.buttons === 2) {
+                    ctx.globalCompositeOperation = "destination-out";
+                    // Eraser Logic: 20px standard, pen size * 2 in devMode
+                    ctx.lineWidth = devMode ? (currentSize * 2) : 20;
+                } else {
+                    ctx.globalCompositeOperation = "source-over";
+                    ctx.lineWidth = devMode ? currentSize : 10;
+                    ctx.strokeStyle = devMode ? currentColor : "#ffd700";
+                }
+
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+
+                ctx.lineTo(e.clientX, e.clientY);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(e.clientX, e.clientY);
+            }
+
+            canvas.addEventListener("pointerdown", startPosition);
+            canvas.addEventListener("pointerup", finishedPosition);
+            canvas.addEventListener("pointermove", draw);
+
+            window.addEventListener("resize", () => {
+                const temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                canvas.height = window.innerHeight;
+                canvas.width = window.innerWidth;
+                ctx.putImageData(temp, 0, 0);
+            });
+        });
+    </script>
+</body>
+</html>
