@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Frenzy</title>
+    <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #000;
+        }
+        .container {
+            display: flex;
+            gap: 0px; 
+            width: 100vw;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            border: none;
+            background: #000;
+            width: 48vw; 
+            height: 48vw;
+            max-height: 95vh;
+            max-width: 95vh;
+        }
+        .controls-hint {
+            position: fixed;
+            bottom: 20px;
+            text-align: center;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            font-family: 'Courier New', Courier, monospace;
+            color: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body ondblclick="toggleFullscreen()">
+
+    <div class="container">
+        <canvas id="canvas1"></canvas>
+        <canvas id="canvas2"></canvas>
+    </div>
+
+    <!-- <div class="controls-hint">
+        [SPACE] Mutate | [ENTER] Save | [DBL-CLICK] Fullscreen
+    </div> -->
+
+<script>
+    const SIZE = 960; 
+    
+    let currentBranches = 3;
+    let currentMaxLevel = 4;
+    let currentSides = 5;
+
+    const canvas1 = document.getElementById("canvas1");
+    const ctx1 = canvas1.getContext("2d");
+    const canvas2 = document.getElementById("canvas2");
+    const ctx2 = canvas2.getContext("2d");
+
+    [canvas1, canvas2].forEach(c => { 
+        c.width = SIZE; 
+        c.height = SIZE; 
+    });
+
+    // --- LOGIC ONE ---
+    function drawFractalOne() {
+        const lineWidth = Math.floor(Math.random() * 11) + 4;
+        const hue = Math.random() * 360;
+        const spread = Math.random() * 4 - 2;
+        const scale = Math.random() * 0.1 + 0.6;
+
+        ctx1.clearRect(0, 0, SIZE, SIZE);
+        ctx1.lineCap = 'round';
+        ctx1.lineWidth = lineWidth;
+        ctx1.save();
+        ctx1.translate(SIZE/2, SIZE/2);
+        for (let i = 0; i < currentSides; i++){
+            drawBranchOne(0, currentMaxLevel, spread, scale, currentBranches, hue);
+            ctx1.rotate(Math.PI * 2 / currentSides);
+        }
+        ctx1.restore();
+    }
+
+    function drawBranchOne(level, maxLevel, spread, scale, branches, hue){
+        if (level > maxLevel) return;
+        const branchSize = 160;
+        const lightness = 10 + level * 12;
+        ctx1.strokeStyle = `hsl(${hue}, 100%, ${lightness}%)`;
+        ctx1.beginPath();
+        ctx1.moveTo(0, 0);
+        ctx1.lineTo(branchSize, 0);
+        ctx1.stroke(); 
+
+        for (let i = 0; i < branches; i++){
+            const position = branchSize - (branchSize / branches) * i;
+            ctx1.save();
+            ctx1.translate(position, 0);
+            ctx1.scale(scale, scale);
+            ctx1.rotate(spread);
+            drawBranchOne(level + 1, maxLevel, spread, scale, branches, hue);
+            ctx1.restore();
+        }
+    }
+
+    // --- LOGIC TWO ---
+    class FractalTwo {
+        constructor(){
+            this.lineWidth = Math.floor(Math.random() * 11) + 4;
+            this.hue = Math.random() * 360;
+            this.spread = Math.random() * 0.5 + 0.4;
+            this.scale = Math.random() * 0.1 + 0.7;
+            this.branchSize = 160;
+        }
+        draw(ctx){
+            ctx.clearRect(0, 0, SIZE, SIZE);
+            ctx.lineCap = 'round';
+            ctx.lineWidth = this.lineWidth;
+            ctx.save();
+            ctx.translate(SIZE/2, SIZE/2);
+            for (let i = 0; i < currentSides; i++){
+                this.drawBranch(ctx, 0);
+                ctx.rotate(Math.PI * 2 / currentSides);
+            }
+            ctx.restore();
+        }
+        drawBranch(ctx, level){
+            if (level > currentMaxLevel) return;
+            const lightness = 10 + level * 12;
+            ctx.strokeStyle = `hsl(${this.hue}, 100%, ${lightness}%)`;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(this.branchSize, 0);
+            ctx.stroke(); 
+
+            for (let i = 0; i < currentBranches; i++){
+                const position = this.branchSize - (this.branchSize / currentBranches) * i;
+                ctx.save();
+                ctx.translate(position, 0);
+                ctx.scale(this.scale, this.scale);
+                ctx.rotate(this.spread * 2.1 * i / currentBranches - this.spread * 0.95);
+                this.drawBranch(ctx, level + 1);
+                ctx.restore();
+            }
+        }
+    }
+
+    function runAll() {
+        currentMaxLevel = Math.floor(Math.random() * 3) + 3; 
+        currentBranches = Math.floor(Math.random() * 3) + 3; 
+        currentSides = Math.floor(Math.random() * 4) + 3;    
+
+        console.log(`Mutation: Sides ${currentSides}, Level ${currentMaxLevel}, Branches ${currentBranches}`);
+        
+        drawFractalOne();
+        new FractalTwo().draw(ctx2);
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            runAll();
+        }
+        if (e.code === 'Enter') {
+            saveCanvas(canvas1, 'logic_A');
+            saveCanvas(canvas2, 'logic_B');
+        }
+    });
+
+    function saveCanvas(canvas, name) {
+        const link = document.createElement('a');
+        link.download = `${name}_S${currentSides}_L${currentMaxLevel}_B${currentBranches}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+
+    runAll();
+</script>
+</body>
+</html>
