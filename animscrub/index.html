@@ -1,1 +1,201 @@
-haha
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation Scrubber</title>
+    <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <style>
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #000;
+            user-select: none; -webkit-user-select: none;
+            cursor: none !important; 
+        }
+        canvas { display: block; width: 100vw; height: 100vh; object-fit: cover; }
+        #status {
+            position: fixed; top: 20px; left: 20px; color: rgba(255,255,255,0.4);
+            font-family: monospace; font-size: 10px; pointer-events: none; z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="status"></div>
+    <canvas id="mainCanvas"></canvas>
+
+    <script>
+        const SETTINGS = {
+            sensitivity: 0.0008
+        };
+
+        const playlist = [
+            {
+                id: "Human Target",
+                path: "./anims/human/",
+                prefix: "anim",
+                ext: ".png",
+                startFrame: 118,
+                endFrame: 914,
+                behavior: "standard",
+                numOfDigits: 4,
+                frames: []
+            },
+            // {
+            //     id: "Animator Backflip",
+            //     path: "./anims/base/",
+            //     prefix: "anim-base",
+            //     ext: ".png",
+            //     startFrame: 1,
+            //     endFrame: 76,
+            //     behavior: "loop",
+            //     numOfDigits: 4,
+            //     frames: []
+            // }
+        ];
+
+        let currentIdx = 0;
+        let globalProgress = 0; 
+        let isLoaded = false;
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const status = document.getElementById('status');
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        canvas.addEventListener('click', () => {
+            if (document.pointerLockElement !== canvas) {
+                canvas.requestPointerLock();
+            }
+        });
+
+        window.addEventListener('dblclick', toggleFullscreen);
+
+        async function loadCartridge(idx) {
+            isLoaded = false;
+            globalProgress = 0; 
+            
+            const cart = playlist[idx];
+            status.style.opacity = '1';
+            status.innerText = `LOADING [${cart.id}]...`;
+
+            if (cart.frames.length > 0) {
+                isLoaded = true;
+                render();
+                setTimeout(() => status.style.opacity = '0', 500);
+                return;
+            }
+
+            cart.frames = []; 
+            const total = cart.endFrame - cart.startFrame + 1;
+            let loaded = 0;
+
+            // Internal helper to track progress and finalize load
+            const checkProgress = () => {
+                loaded++;
+                status.innerText = `LOADING [${cart.id}]: ${Math.round((loaded/total)*100)}%`;
+                if (loaded === total) {
+                    isLoaded = true;
+                    render();
+                    setTimeout(() => status.style.opacity = '0', 1000);
+                }
+            };
+
+            for (let i = cart.startFrame; i <= cart.endFrame; i++) {
+                const img = new Image();
+                const frameNum = String(i).padStart(cart.numOfDigits, '0');
+                const finalPath = `${cart.path}${cart.prefix}${frameNum}${cart.ext}`;
+                
+                img.onload = checkProgress;
+                
+                // If an image is missing, we still increment progress so the app doesn't hang
+                img.onerror = () => {
+                    console.warn(`Frame not found: ${finalPath}`);
+                    checkProgress();
+                };
+
+                img.src = finalPath;
+                cart.frames.push(img);
+            }
+        }
+
+        function render() {
+            if (!isLoaded) return;
+            const cart = playlist[currentIdx];
+            const frameCount = cart.frames.length;
+            if (frameCount === 0) return;
+
+            const frameIdx = Math.max(0, Math.min(frameCount - 1, Math.floor(globalProgress * frameCount)));
+            const img = cart.frames[frameIdx];
+            
+            // Only draw if the image exists and loaded; otherwise, keeps previous frame on canvas
+            if (img && img.complete && img.naturalWidth !== 0) {
+                const canvasRatio = canvas.width / canvas.height;
+                const imgRatio = img.width / img.height;
+                let dw, dh, dx, dy;
+
+                if (canvasRatio > imgRatio) {
+                    dw = canvas.width; dh = dw / imgRatio;
+                    dx = 0; dy = (canvas.height - dh) / 2;
+                } else {
+                    dh = canvas.height; dw = dh * imgRatio;
+                    dx = (canvas.width - dw) / 2; dy = 0;
+                }
+                ctx.drawImage(img, dx, dy, dw, dh);
+            }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isLoaded) return;
+            const cart = playlist[currentIdx];
+
+            let moveAmount = e.movementX * SETTINGS.sensitivity;
+            if (document.pointerLockElement !== canvas) {
+                moveAmount = (e.movementX / (window.innerWidth / 1.5));
+            }
+
+            globalProgress += moveAmount;
+
+            if (cart.behavior === "loop") {
+                globalProgress = (globalProgress + 1) % 1;
+            } else {
+                globalProgress = Math.max(0, Math.min(1, globalProgress));
+            }
+
+            requestAnimationFrame(render);
+        });
+
+        window.addEventListener('keydown', (e) => {
+            <!-- if (e.code === 'KeyF') toggleFullscreen(); -->
+
+            let changed = false;
+            if (e.code === 'Space' || e.code === 'ArrowRight') {
+                currentIdx = (currentIdx + 1) % playlist.length;
+                changed = true;
+            } else if (e.code === 'ArrowLeft') {
+                currentIdx = (currentIdx - 1 + playlist.length) % playlist.length;
+                changed = true;
+            }
+            if (changed) loadCartridge(currentIdx);
+        });
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            render();
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        loadCartridge(currentIdx);
+    </script>
+</body>
+</html>
