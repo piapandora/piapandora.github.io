@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pangea Viewer</title>
+    <style>
+        body { margin: 0; background: #000; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        #viewer { max-width: 100vw; max-height: 100vh; object-fit: contain; }
+    </style>
+</head>
+<body>
+    <img id="viewer">
+
+    <script>
+        const KEY = atob("amFzb25zLXBhbmdlYQ==");
+        const viewer = document.getElementById('viewer');
+
+        function xorCipher(text) {
+            let res = "";
+            for (let i = 0; i < text.length; i++) res += String.fromCharCode(text.charCodeAt(i) ^ KEY.charCodeAt(i % KEY.length));
+            return res;
+        }
+
+        document.body.addEventListener('dragover', e => e.preventDefault());
+        document.body.addEventListener('drop', e => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const obj = JSON.parse(reader.result);
+                    const manifest = JSON.parse(xorCipher(atob(obj.m)));
+                    viewer.src = `data:${manifest.t};base64,${xorCipher(atob(obj.b))}`;
+                } catch(e) { console.error("Decryption failed"); }
+            };
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
