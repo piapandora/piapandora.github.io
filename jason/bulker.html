@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jason's Pangea ZIP</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root { --bg: #0b0b0c; --card: #1c1c1e; --accent: #0a84ff; --text: #f5f5f7; --text-dim: #86868b; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; user-select: none; }
+        .container { width: 100%; max-width: 480px; padding: 20px; }
+        #drop-zone { background: var(--card); border: 2px dashed #3a3a3c; border-radius: 24px; padding: 80px 20px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
+        #drop-zone.hover { border-color: var(--accent); background: #242426; }
+        h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+        p { color: var(--text-dim); font-size: 14px; margin-bottom: 0; }
+        .controls { margin-top: 20px; display: grid; gap: 1px; background: #3a3a3c; border-radius: 14px; overflow: hidden; }
+        .toggle-group { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 16px; }
+        .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a3a3c; transition: .3s; border-radius: 34px; }
+        input:checked + .slider { background-color: var(--accent); }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider:before { transform: translateX(18px); }
+        .status { margin-top: 24px; text-align: center; color: var(--accent); min-height: 1.2em; font-size: 14px; font-weight: 500; }
+        #action-btn { display: none; margin-top: 20px; cursor: pointer; background: var(--accent); color: white; padding: 12px; border-radius: 12px; text-align: center; font-weight: 600; }
+        #progress-container { width: 100%; background: #3a3a3c; height: 4px; border-radius: 2px; margin-top: 15px; display: none; }
+        #progress-bar { width: 0%; background: var(--accent); height: 100%; border-radius: 2px; transition: width 0.1s; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="drop-zone">
+        <h1>Jason's Pangea</h1>
+        <p id="drop-text">Drop Batch for ZIP</p>
+        <div id="progress-container"><div id="progress-bar"></div></div>
+    </div>
+    <div class="controls">
+        <div class="toggle-group"><span>ZIP Mode</span><label class="switch"><input type="checkbox" id="toggle-zip" checked><span class="slider"></span></label></div>
+        <div class="toggle-group"><span>Auto-Download</span><label class="switch"><input type="checkbox" id="toggle-auto" checked><span class="slider"></span></label></div>
+    </div>
+    <div id="status-msg" class="status">Ready</div>
+    <div id="action-btn">Download ZIP</div>
+</div>
+
+<script>
+    const KEY = atob("amFzb25zLXBhbmdlYQ==");
+    let useZip = true, autoDownload = true, pendingResults = [];
+
+    const dropZone = document.getElementById('drop-zone'), statusMsg = document.getElementById('status-msg'), actionBtn = document.getElementById('action-btn'), progressBar = document.getElementById('progress-bar'), progressContainer = document.getElementById('progress-container');
+
+    document.getElementById('toggle-zip').addEventListener('change', e => useZip = e.target.checked);
+    document.getElementById('toggle-auto').addEventListener('change', e => autoDownload = e.target.checked);
+
+    function xorCipher(text) {
+        let res = "";
+        for (let i = 0; i < text.length; i++) res += String.fromCharCode(text.charCodeAt(i) ^ KEY.charCodeAt(i % KEY.length));
+        return res;
+    }
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('hover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('hover'));
+    dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault(); dropZone.classList.remove('hover');
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length) await processBulk(files);
+    });
+
+    async function processBulk(files) {
+        pendingResults = []; actionBtn.style.display = 'none'; progressContainer.style.display = 'block';
+        const batchTimestamp = Date.now();
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            statusMsg.innerText = `Processing ${i + 1}/${files.length}...`;
+            progressBar.style.width = `${((i + 1) / files.length) * 100}%`;
+            
+            // i + 1 ensures the index starts at 1
+            const result = await handleFileAsync(file, batchTimestamp, i + 1);
+            if (result) pendingResults.push(result);
+            
+            await new Promise(r => setTimeout(r, 5));
+        }
+
+        if (pendingResults.length > 0) {
+            if (autoDownload) await executeDownload();
+            else {
+                statusMsg.innerText = `${pendingResults.length} files ready.`;
+                actionBtn.innerText = useZip ? "Download ZIP" : `Download ${pendingResults.length} Files`;
+                actionBtn.style.display = 'block';
+            }
+        }
+        setTimeout(() => { progressContainer.style.display = 'none'; progressBar.style.width = '0%'; }, 1000);
+    }
+
+    function handleFileAsync(file, timestamp, index) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            const ext = file.name.split('.').pop();
+            const sequentialName = `jp-${timestamp}-${index}`;
+
+            if (file.type.startsWith('image/')) {
+                reader.onload = () => {
+                    const manifest = { t: file.type, e: ext };
+                    const output = JSON.stringify({ m: btoa(xorCipher(JSON.stringify(manifest))), b: btoa(xorCipher(reader.result.split(',')[1])) });
+                    resolve({ name: `${sequentialName}.json`, data: output, isRaw: true });
+                };
+                reader.readAsDataURL(file);
+            } else if (ext.toLowerCase() === 'json') {
+                reader.onload = () => {
+                    try {
+                        const obj = JSON.parse(reader.result);
+                        const manifest = JSON.parse(xorCipher(atob(obj.m)));
+                        const rawBase64 = xorCipher(atob(obj.b));
+                        resolve({ name: `${sequentialName}.${manifest.e}`, data: rawBase64, isBase64: true, mime: manifest.t });
+                    } catch(e) { resolve(null); }
+                };
+                reader.readAsText(file);
+            } else { resolve(null); }
+        });
+    }
+
+    async function executeDownload() {
+        statusMsg.innerText = "Generating...";
+        if (useZip) {
+            const zip = new JSZip();
+            pendingResults.forEach(res => {
+                if (res.isBase64) zip.file(res.name, res.data, {base64: true});
+                else zip.file(res.name, res.data);
+            });
+            const content = await zip.generateAsync({type:"blob"});
+            triggerDownload(URL.createObjectURL(content), `Pangea_Batch_${Date.now()}.zip`);
+        } else {
+            pendingResults.forEach(res => {
+                const url = res.isBase64 ? `data:${res.mime};base64,${res.data}` : URL.createObjectURL(new Blob([res.data], {type: 'application/json'}));
+                triggerDownload(url, res.name);
+            });
+        }
+        statusMsg.innerText = "Done!"; actionBtn.style.display = 'none';
+    }
+
+    actionBtn.addEventListener('click', executeDownload);
+    function triggerDownload(u, n) { const a = document.createElement('a'); a.href = u; a.download = n; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+</script>
+</body>
+</html>
