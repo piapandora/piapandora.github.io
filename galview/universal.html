@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Gallery</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: #eee;
+            font-family: sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #viewport {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #display-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        #drop-prompt {
+            position: absolute;
+            text-align: center;
+            color: #444;
+            border: 2px dashed #222;
+            padding: 40px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <main id="viewport">
+        <div id="drop-prompt">
+            Drag & Drop Files (Is or Js)<br>
+            <small>(A: Prev | D: Next | Space: Jump | W: Fullscreen)</small>
+        </div>
+        <img id="display-img" src="" alt="Gallery View">
+    </main>
+
+<script>
+    let images = [];
+    let currentIndex = 0;
+    let decryptionKey = "";
+    let cursorTimer;
+
+    const displayImg = document.getElementById('display-img');
+    const dropPrompt = document.getElementById('drop-prompt');
+
+    /* ───────── Cursor Auto-Hide (VLC Style) ───────── */
+    function hideCursor() {
+        document.body.style.cursor = 'none';
+    }
+
+    function showCursor() {
+        document.body.style.cursor = 'default';
+        clearTimeout(cursorTimer);
+        cursorTimer = setTimeout(hideCursor, 1000);
+    }
+
+    window.addEventListener('mousemove', showCursor);
+    showCursor();
+
+    /* ───────── Decryption Logic ───────── */
+    function xorCipher(text, key) {
+        let res = "";
+        for (let i = 0; i < text.length; i++) {
+            res += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        }
+        return res;
+    }
+
+    /* ───────── File Processing ───────── */
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('drop', e => {
+        e.preventDefault();
+        const files = Array.from(e.dataTransfer.files);
+        files.forEach(processFile);
+    });
+
+    function processFile(file) {
+        const isJson = file.name.toLowerCase().endsWith('.json');
+        const isImage = file.type.startsWith('image/');
+
+        if (isJson) {
+            if (!decryptionKey) {
+                decryptionKey = prompt("Enter Key for files:");
+                if (!decryptionKey) return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const obj = JSON.parse(reader.result);
+                    const manifest = JSON.parse(xorCipher(atob(obj.m), decryptionKey));
+                    const dataUrl = `data:${manifest.t};base64,${xorCipher(atob(obj.b), decryptionKey)}`;
+                    addToGallery(dataUrl, file.name);
+                } catch(e) {
+                    console.error("Failed for:", file.name);
+                    decryptionKey = ""; 
+                }
+            };
+            reader.readAsText(file);
+        } else if (isImage) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                addToGallery(e.target.result, file.name);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function addToGallery(src, name) {
+        images.push({ src, name });
+        if (images.length === 1) {
+            showImage(0);
+            dropPrompt.style.display = 'none';
+            displayImg.style.display = 'block';
+        }
+    }
+
+    function showImage(index) {
+        if (images.length === 0) return;
+        if (index >= images.length) index = 0;
+        if (index < 0) index = images.length - 1;
+        currentIndex = index;
+        displayImg.src = images[currentIndex].src;
+    }
+
+    function jumpToRandom() {
+        if (images.length <= 1) return;
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * images.length);
+        } while (randomIndex === currentIndex);
+        showImage(randomIndex);
+    }
+
+    /* ───────── Controls ───────── */
+    document.addEventListener('keydown', e => {
+        const key = e.key.toLowerCase();
+        
+        if (e.code === 'Space') {
+            e.preventDefault();
+            jumpToRandom();
+        }
+        
+        if (key === 'd') showImage(currentIndex + 1);
+        if (key === 'a') showImage(currentIndex - 1);
+        if (key === 'w') toggleFullscreen();
+    });
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+</script>
+</body>
+</html>
