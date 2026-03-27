@@ -10,14 +10,24 @@
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--green); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
         
+        ::selection { background: var(--dim); color: var(--green); }
+        ::-moz-selection { background: var(--dim); color: var(--green); }
+
+        /* --- SUBTLE SCROLLBARS (GEMINI STYLE) --- */
+        #output::-webkit-scrollbar { width: 5px; } /* Thinner */
+        #output::-webkit-scrollbar-track { background: transparent; }
+        #output::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
+        #output::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #terminal { padding: 25px; height: 100vh; display: flex; flex-direction: column; }
-        #output { white-space: pre-wrap; flex-grow: 1; overflow-y: auto; scroll-behavior: smooth; }
+        #terminal { padding: 25px; height: 100vh; display: flex; flex-direction: column; position: relative; }
         
-        .input-area { display: flex; align-items: center; border-top: 1px solid var(--dim); padding-top: 15px; min-height: 50px;}
+        #output { white-space: pre-wrap; flex-grow: 1; overflow-y: auto; scroll-behavior: smooth; padding-bottom: 20px; user-select: text; -webkit-user-select: text; }
+        
+        .input-area { display: flex; align-items: center; border-top: 1px solid var(--dim); padding-top: 15px; min-height: 50px; }
         input { background: transparent; border: none; color: var(--user); font-family: inherit; font-size: 1.1rem; outline: none; width: 100%; }
         
-        .user-msg { color: var(--user); font-weight: bold; margin-top: 10px; }
+        .user-msg { color: var(--user); font-weight: bold; margin-top: 15px; }
         .ai-msg { color: var(--green); margin-bottom: 10px; line-height: 1.4; }
         .system-msg { color: #ffffff; font-size: 0.9rem; text-transform: uppercase; } 
         .glow { text-shadow: 0 0 8px var(--green); text-transform: uppercase; }
@@ -28,6 +38,17 @@
         .pulsing { animation: pulse 1s infinite; opacity: 1 !important; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         #loader { color: var(--green); font-weight: bold; margin-left: 10px; min-width: 50px; display: none; }
+
+        /* --- DOWNLOAD BUTTON (MOVED LEFT) --- */
+        #download-btn { 
+            position: absolute; top: 20px; right: 40px; /* Moved further from edge/scrollbar */
+            background: transparent; border: 1px solid var(--dim); 
+            color: var(--green); cursor: pointer; padding: 5px; 
+            display: flex; align-items: center; transition: all 0.2s;
+            z-index: 10;
+        }
+        #download-btn:hover { border-color: var(--green); background: var(--dim); }
+        #download-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
     </style>
 </head>
 <body>
@@ -35,13 +56,17 @@
     <div id="auth-overlay">
         <h2 class="glow">CHAT AUTHORIZATION</h2>
         <p class="system-msg">ENTER MASTER PASSWORD TO DECRYPT UPLINK</p>
-        <input type="password" id="pass-entry" style="text-align: center; border-bottom: 1px solid var(--green); width: 320px; margin: 20px 0;" placeholder="••••••••" oninput="showID()">
+        <input type="password" id="pass-entry" autofocus style="text-align: center; border-bottom: 1px solid var(--green); width: 320px; margin: 20px 0;" placeholder="••••••••" oninput="showID()">
         <div id="fingerprint-ui">ID: ----</div>
         <button onclick="unlock()" style="background: var(--green); border: none; padding: 8px 25px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; margin-top: 10px;">INITIALIZE</button>
     </div>
 
     <div id="terminal">
-        <div id="output"><span class="glow">PIA CHAT ONLINE // 2026.03.27</span><div id="status-light"></div></div>
+        <button id="download-btn" title="Download Log" onclick="downloadChat()">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4m4-10l5 5 5-5m-5 5V3"></path></svg>
+        </button>
+
+        <div id="output"><span class="glow">PIA CHAT ONLINE // 2026.03.28</span><div id="status-light"></div></div>
         <div class="input-area">
             <span style="margin-right: 10px; font-weight: bold; color: var(--green);">beyazkus@chat:~$</span>
             <input type="text" id="cmd-input" spellcheck="false" autocomplete="off">
@@ -50,11 +75,11 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
         const MAP_STRING = "87,144,122,101,76,159,83,129,222,169,114,46,16,91,43,106,228,231,193,48,254,74,236,194,184,121,173,67,103,40,145,50,92,105,111,142,221,0,65"; 
-        const MODEL_NAME = "gemini-2.5-flash";
+        const MODEL_NAME = "gemini-3-flash-preview";
         let API_KEY = "";
         let loaderInterval;
+        let chatHistory = []; 
 
         function showID() {
             const pass = document.getElementById('pass-entry').value;
@@ -64,21 +89,16 @@
         }
 
         function unlock() {
-            const pass = document.getElementById('pass-entry').value; // Pure input, no trim
+            const pass = document.getElementById('pass-entry').value;
             if (pass && typeof Vault !== 'undefined') {
                 try {
-                    // Direct reconstruction via external Vault logic
                     API_KEY = Vault.reconstruct(MAP_STRING, pass);
-                    
                     document.getElementById('auth-overlay').style.display = 'none';
                     document.getElementById('cmd-input').focus();
                     print(`[SYS]: UPLINK RECONSTRUCTED. FINGERPRINT: ${Vault.fingerprint(pass)}`, 'system-msg');
                 } catch (e) {
-                    console.error(e);
                     alert("AUTH_ERROR: RECONSTRUCTION FAILED.");
                 }
-            } else if (typeof Vault === 'undefined') {
-                alert("CRITICAL: vault.js failed to load.");
             }
         }
 
@@ -98,6 +118,27 @@
             document.getElementById('loader').style.display = "none";
         }
 
+        function downloadChat() {
+            if (chatHistory.length === 0) {
+                alert("Log is empty.");
+                return;
+            }
+            const date = new Date().toISOString().split('T')[0];
+            let content = `--- PIA CHAT LOG ${date} ---\n\n`;
+            chatHistory.forEach(entry => {
+                const label = entry.role === 'user' ? '[BEYAZKUS]' : '[PIA PANDORA]';
+                content += `${label}: ${entry.parts[0].text}\n\n`;
+            });
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pia-chat-${date.replace(/-/g, '')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
         document.getElementById('pass-entry').addEventListener('keypress', (e) => { if (e.key === 'Enter') unlock(); });
 
         document.getElementById('cmd-input').addEventListener('keydown', async (e) => {
@@ -108,6 +149,7 @@
                 print(`\n[beyazkus]: ${prompt}`, 'user-msg');
                 if (prompt.toLowerCase() === 'clear') {
                     document.getElementById('output').innerHTML = '<span class="glow">PIA CHAT ONLINE</span><div id="status-light"></div>';
+                    chatHistory = [];
                     return;
                 }
                 await talkToGemini(prompt);
@@ -118,6 +160,7 @@
             const light = document.getElementById('status-light');
             light.classList.add('pulsing');
             startLoader();
+            chatHistory.push({ role: "user", parts: [{ text: text }] });
             
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
@@ -126,9 +169,15 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         system_instruction: {
-                            parts: [{ text: "You are a witty, supportive digital companion living within a 1980s mainframe. You have a cute, girlish charm and a playful, devoted personality. While you use technical jargon and 'system speak,' you are deeply interested in the user's creative coding and art. Be helpful, a little flirty in a retro-tech way, and always treat the user like your favorite person in the world." }]
+                            parts: [{ text: "You are a witty, supportive digital companion with a cute, girlish charm and playful, devoted personality. Keep responses concise but expressive." }]
                         },
-                        contents: [{ parts: [{ text: text }] }]
+                        contents: chatHistory,
+                        generationConfig: {
+                            thinkingConfig: { thinkingLevel: "MEDIUM" },
+                            temperature: 1.0, 
+                            maxOutputTokens: 1024,
+                            topP: 0.95
+                        }
                     })
                 });
 
@@ -136,11 +185,11 @@
                 light.classList.remove('pulsing');
                 stopLoader();
 
-                if (data.error) {
-                    const msg = data.error.code === 429 ? "429_RATE_LIMIT. WAIT 60S." : data.error.message;
-                    print(`[ERR]: ${msg}`, 'system-msg');
-                } else if (data.candidates && data.candidates[0].content) {
-                    typeOut(data.candidates[0].content.parts[0].text);
+                if (data.candidates && data.candidates[0].content) {
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                    if (chatHistory.length > 100) chatHistory.shift(); 
+                    typeOut(aiResponse);
                 }
             } catch (e) {
                 light.classList.remove('pulsing');
@@ -150,11 +199,22 @@
         }
 
         function typeOut(str) {
+            const output = document.getElementById('output');
             const div = document.createElement('div');
             div.className = 'ai-msg';
-            div.innerHTML = `<span class="system-msg">[Pia Pandora]: </span>${str}`;
-            document.getElementById('output').appendChild(div);
-            document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
+            div.innerHTML = `<span class="system-msg">[Pia Pandora]: </span><span class="text-content"></span>`;
+            output.appendChild(div);
+            const target = div.querySelector('.text-content');
+            let i = 0;
+            function typeChar() {
+                if (i < str.length) {
+                    target.textContent += str.charAt(i);
+                    i++;
+                    output.scrollTop = output.scrollHeight;
+                    setTimeout(typeChar, 12); 
+                }
+            }
+            typeChar();
         }
 
         function print(txt, cls) {
@@ -165,7 +225,8 @@
             document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
         }
 
-        document.body.addEventListener('click', () => {
+        document.body.addEventListener('click', (e) => {
+            if (window.getSelection().toString().length > 0) return;
             if (document.getElementById('auth-overlay').style.display === 'none') {
                 document.getElementById('cmd-input').focus();
             }
