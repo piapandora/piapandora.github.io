@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>THE LAB</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; background: #050505; color: #00ff41; overflow: hidden; font-family: monospace; }
+        #input-container { display: flex; flex-direction: column; height: 100%; padding: 20px; box-sizing: border-box; }
+        textarea { 
+            flex-grow: 1; background: transparent; border: 1px solid #00ff4133; 
+            color: #00ff41; padding: 20px; font-family: 'Courier New', monospace;
+            outline: none; resize: none; font-size: 14px;
+        }
+        .footer { padding: 10px 0; font-size: 12px; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+    <div id="input-container">
+        <div class="footer">> INPUT SOURCE CODE (Press CTRL + ENTER to Execute)</div>
+        <textarea id="code-input" spellcheck="false" autofocus placeholder="Write or Paste single-page HTML/CSS/JS here..."></textarea>
+    </div>
+
+    <script>
+        const input = document.getElementById('code-input');
+        
+        input.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                executeCode(input.value);
+            }
+        });
+
+        function executeCode(htmlCode) {
+            document.open();
+            document.write(htmlCode);
+            document.close();
+        }
+    </script>
+</body>
+</html>
