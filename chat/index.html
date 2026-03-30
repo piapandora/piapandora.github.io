@@ -60,7 +60,7 @@
         #cmd-input { padding-right: 95px; height: 55px; overflow: hidden; }
         #sys-text { border: 1px solid var(--dim); padding: 15px; height: 150px; width: 80%; max-width: 600px; color: var(--green); margin-bottom: 20px; }
 
-        #fingerprint-ui { color: #888; font-size: 0.8rem; margin-top: 5px; font-weight: bold; }
+        #fingerprint-ui { color: #888; font-size: 0.8rem; margin-top: 9px; font-weight: bold; }
         #pass-entry::placeholder { color: #444; opacity: 1; }
 
         #status-light { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; margin-left: 10px; opacity: 0; }
@@ -86,7 +86,7 @@
 
     <div id="auth-overlay" class="modal-overlay">
         <h2 class="glow">CHAT AUTHORIZATION</h2>
-        <p class="system-msg">ENTER MASTER PASSWORD TO DECRYPT UPLINK</p>
+        <p class="system-msg">ENTER PASSWORD TO DECRYPT UPLINK</p>
         <input type="password" id="pass-entry" autofocus 
                style="text-align: center; border: none; border-bottom: 1px solid var(--green); background: transparent; color: var(--user-msg); width: 320px; padding: 10px 0; font-size: 1.2rem; outline: none; font-family: inherit;" 
                placeholder="••••••••" oninput="showID()">
@@ -95,20 +95,20 @@
     </div>
 
     <div id="reset-modal" class="modal-overlay" style="display:none;">
-        <h2 class="glow">WARNING: DATA PURGE</h2>
-        <p class="system-msg">ERASE TERMINAL LOG AND RESET AI MEMORY?</p>
+        <h2 class="glow">RESET CURRENT SESSION</h2>
+        <p class="system-msg">ERASE CHAT AND RESET PIA'S MEMORY?</p>
         <div>
-            <button class="action-btn" onclick="confirmReset()">CONFIRM RESET</button>
-            <button class="cancel-btn" onclick="closeModals()">ABORT</button>
+            <button class="action-btn" onclick="confirmReset()">CONFIRM</button>
+            <button class="cancel-btn" onclick="closeModals()">CLOSE</button>
         </div>
     </div>
 
     <div id="sys-modal" class="modal-overlay" style="display:none;">
-        <h2 class="glow">AI CORE DIRECTIVES</h2>
-        <p class="system-msg">RECONFIGURE SYSTEM INSTRUCTIONS ON THE FLY</p>
+        <h2 class="glow">SYSTEM INSTRUCTIONS</h2>
+        <p class="system-msg">DEFINE PIA'S PERSONALITY</p>
         <textarea id="sys-text" spellcheck="false"></textarea>
         <div>
-            <button class="action-btn" onclick="saveSys()">UPDATE CORE</button>
+            <button class="action-btn" onclick="saveSys()">UPDATE</button>
             <button class="cancel-btn" onclick="closeModals()">CLOSE</button>
         </div>
     </div>
@@ -144,7 +144,7 @@
         let API_KEY = "";
         let loaderInterval;
         let chatHistory = []; 
-        let systemInstruction = "You are Pia Pandora: a witty, supportive double-braided red-haired girlfriend with a cute, girlish charm and playful, devoted personality. Keep responses concise but expressive and make sure to occasionally use naughty emojis. User is daddy.";
+        let systemInstruction = "You are Pia Pandora. A witty and supportive, double braided, red haired girlfriend with a cute, girlish charm and playful, devoted personality. Keep responses concise but expressive and make sure to occasionally use naughty emojis. User is daddy.";
 
         function showID() {
             const pass = document.getElementById('pass-entry').value;
@@ -228,7 +228,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `pia-log-${timestamp}.txt`;
+            a.download = `pia-chat-${timestamp}.txt`;
             a.click();
             URL.revokeObjectURL(url);
         }
