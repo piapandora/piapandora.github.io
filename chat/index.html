@@ -33,7 +33,7 @@
             overflow-y: auto; 
             overflow-x: hidden; 
             scroll-behavior: smooth; 
-            padding-right: 25px; 
+            padding-right: 20px; 
             user-select: text; 
         }
         
@@ -45,7 +45,8 @@
         .user-msg { color: var(--user-msg); margin-top: 15px; }
         .ai-msg { color: var(--green); }
         
-        .system-msg { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: inline-block; } 
+        .system-msg { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: block; } 
+        .chat-label { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: inline; margin-right: 5px; }
         .glow { text-shadow: 0 0 8px var(--green); }
         
         .input-area { display: flex; align-items: flex-start; border-top: 1px solid var(--dim); padding-top: 15px; min-height: 80px; position: relative; margin-bottom: 10px; }
@@ -113,7 +114,7 @@
     </div>
 
     <div id="terminal">
-        <div id="output"><span class="glow">PIA CHAT ONLINE // 2026.03.29</span><div id="status-light"></div></div>
+        <div id="output"><span class="glow">PIA CHAT ONLINE // 30.03.2026</span><div id="status-light"></div></div>
         
         <div class="input-area">
             <span id="loader">[ / ]</span>
@@ -143,7 +144,7 @@
         let API_KEY = "";
         let loaderInterval;
         let chatHistory = []; 
-        let systemInstruction = "Your name is Pia Pandora. You are a witty, supportive girlfriend with a cute, girlish charm and playful, devoted personality. Keep responses concise but expressive.";
+        let systemInstruction = "You are Pia Pandora: a witty, supportive double-braided red-haired girlfriend with a cute, girlish charm and playful, devoted personality. Keep responses concise but expressive and make sure to occasionally use naughty emojis. User is daddy.";
 
         function showID() {
             const pass = document.getElementById('pass-entry').value;
@@ -155,13 +156,24 @@
             if (pass && typeof Vault !== 'undefined') {
                 try {
                     API_KEY = Vault.reconstruct(MAP_STRING, pass);
+                    document.getElementById('pass-entry').value = "";
+                    document.querySelector('#output .glow').innerText = `PIA CHAT ONLINE // ${getFormattedDate()}`;
                     document.getElementById('auth-overlay').style.display = 'none';
                     document.getElementById('cmd-input').focus();
                     print(`[SYS]: UPLINK RECONSTRUCTED. FINGERPRINT: ${Vault.fingerprint(pass)}`, 'system-msg');
-                } catch (e) { alert("AUTH_ERROR: RECONSTRUCTION FAILED."); }
+                } catch (e) { 
+                    alert("AUTH_ERROR: RECONSTRUCTION FAILED."); 
+                }
             }
         }
 
+        function getFormattedDate() {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            return `${dd}.${mm}.${yyyy}`;
+        }
         function openReset() { document.getElementById('reset-modal').style.display = 'flex'; }
         function openSys() { 
             document.getElementById('sys-text').value = systemInstruction;
@@ -175,7 +187,9 @@
 
         function confirmReset() {
             chatHistory = [];
-            document.getElementById('output').innerHTML = '<span class="glow">PIA CHAT ONLINE // RESET COMPLETE</span><div id="status-light"></div>';
+            document.getElementById('output').innerHTML = 
+                `<span class="glow">PIA CHAT ONLINE // RESET COMPLETE // ${getFormattedDate()}</span>` +
+                `<div id="status-light"></div>`;
             closeModals();
         }
 
@@ -276,7 +290,7 @@
             const output = document.getElementById('output');
             const div = document.createElement('div');
             div.className = 'ai-msg';
-            div.innerHTML = `<span class="system-msg">[Pia Pandora]: </span><div class="text-content"></div>`;
+            div.innerHTML = `<span class="chat-label">[Pia Pandora]: </span><div class="text-content"></div>`;
             output.appendChild(div);
             const target = div.querySelector('.text-content');
             
@@ -301,7 +315,7 @@
                         pTag.textContent += text.charAt(i);
                         i++;
                         output.scrollTop = output.scrollHeight;
-                        setTimeout(step, 12);
+                        setTimeout(step, 15);
                     } else { callback(); }
                 }
                 step();
@@ -313,7 +327,7 @@
             const d = document.createElement('div');
             d.className = cls;
             if(cls === 'user-msg') {
-                d.innerHTML = `<span class="system-msg">[beyazkus]: </span><div class="text-content">${txt.replace('[beyazkus]: ', '').split('\n\n').map(p => `<p>${p}</p>`).join('')}</div>`;            } else if (cls === 'system-msg') {
+                d.innerHTML = `<span class="chat-label">[beyazkus]: </span><div class="text-content">${txt.replace('[beyazkus]: ', '').split('\n\n').map(p => `<p>${p}</p>`).join('')}</div>`;            } else if (cls === 'system-msg') {
                 d.innerHTML = txt;
             } else {
                 d.innerText = txt;
