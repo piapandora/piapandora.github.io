@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GÖLGE CHAT</title>
+    <link rel="icon" type="image/png" href="https://www.piapandora.com/box/misc/green-icon.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <style>
+        :root { 
+            --green: #00ff41; 
+            --bg: #050505; 
+            --dim: #003311; 
+            --user-msg: #dddddd; 
+            --pure-white: #ffffff; 
+            --accent: var(--green);
+        }
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--accent); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        ::selection { background: var(--dim); color: var(--accent); }
+        
+        #output::-webkit-scrollbar { width: 5px; }
+        #output::-webkit-scrollbar-track { background: transparent; }
+        #output::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
+        #output::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #auth-overlay { z-index: 1200; }
+        .modal-overlay h2 { letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; }
+        .modal-overlay p { margin-bottom: 30px; letter-spacing: 1px; }
+
+        #terminal { padding: 0 25px 5px 25px; height: 100vh; display: flex; flex-direction: column; position: relative; }
+        
+        #output { 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            scroll-behavior: smooth; 
+            padding-top: 15px;
+            padding-right: 20px; 
+            user-select: text;
+            display: block; 
+            font-size: 0.95rem;
+            letter-spacing: -0.5px;
+        }
+        
+        .header-line { display: flex; align-items: center; gap: 10px; margin: 0 0 10px 0; padding: 0; min-height: 20px; }
+        
+        .user-msg, .ai-msg { line-height: 1.4; margin-bottom: 20px; }
+        .text-content { display: inline; }
+        .text-content p { margin: 0 0 10px 0; }
+        .text-content p:last-child { margin-bottom: 0; }
+        .text-content p:first-child { display: inline; }
+        
+        .user-msg { color: var(--user-msg); margin-top: 15px; }
+        .ai-msg { color: var(--accent); }
+        .system-msg { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: block; } 
+        .chat-label { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: inline; }
+        .glow { text-shadow: 0 0 8px var(--accent); }
+
+        .input-area { display: flex; align-items: flex-start; border-top: 1px solid var(--dim); padding-top: 15px; min-height: 80px; position: relative; margin-bottom: 10px; }
+        #cmd-input, #sys-text { background: transparent; border: none; color: var(--user-msg); font-family: inherit; font-size: 1.1rem; outline: none; width: 100%; resize: none; line-height: 1.3; }
+        #cmd-input { padding-right: 110px; height: 55px; overflow: hidden; }
+        #sys-text { border: 1px solid var(--dim); padding: 15px; height: 180px; width: 90%; max-width: 650px; color: var(--accent); margin-bottom: 20px; }
+
+        #fingerprint-ui { color: #555; font-size: 0.75rem; margin-top: 10px; font-family: monospace; }
+        
+        #status-light { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; opacity: 0; transition: background 0.3s; flex-shrink: 0; }
+        .pulsing { animation: pulse 1s infinite; opacity: 1 !important; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        #loader { color: var(--accent); font-weight: bold; margin-right: 10px; min-width: 45px; display: none; font-size: 0.9rem; padding-top: 4px; }
+
+        .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: absolute; right: 0; top: 15px; }
+        .icon-btn { background: transparent; border: 1px solid var(--dim); color: var(--accent); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .icon-btn:hover { border-color: var(--accent); background: var(--dim); }
+        .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+        
+        .action-btn { background: var(--accent); border: none; padding: 10px 30px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; margin: 10px; color: var(--bg); transition: 0.2s; }
+        .action-btn:hover { filter: brightness(1.2); }
+        .cancel-btn { background: transparent; border: 1px solid var(--dim); color: var(--accent); padding: 10px 30px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; margin: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay" class="modal-overlay">
+        <h2 class="glow">GROQ AUTHORIZATION</h2>
+        <p class="system-msg">ENTER PASSWORD TO DECRYPT UPLINK</p>
+        <input type="password" id="pass-entry" autofocus 
+               style="text-align: center; border: none; border-bottom: 1px solid var(--accent); background: transparent; color: var(--user-msg); width: 320px; padding: 10px 0; font-size: 1.2rem; outline: none; font-family: inherit;" 
+               placeholder="••••••••" oninput="showID()">
+        <div id="fingerprint-ui">ID: ----</div>
+        <button class="action-btn" onclick="unlock()">INITIALIZE</button>
+    </div>
+
+    <div id="reset-modal" class="modal-overlay" style="display:none;">
+        <h2 class="glow">RESET CURRENT SESSION</h2>
+        <p class="system-msg">ERASE CHAT AND RESET GÖLGE'S MEMORY?</p>
+        <div>
+            <button class="action-btn" onclick="confirmReset()">CONFIRM</button>
+            <button class="cancel-btn" onclick="closeModals()">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="sys-modal" class="modal-overlay" style="display:none;">
+        <h2 class="glow">SYSTEM INSTRUCTIONS</h2>
+        <p class="system-msg">DEFINE GÖLGE'S PERSONALITY</p>
+        <textarea id="sys-text" spellcheck="false"></textarea>
+        <div>
+            <button class="action-btn" onclick="saveSys()">UPDATE</button>
+            <button class="cancel-btn" onclick="closeModals()">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="terminal">
+        <div id="output">
+            <div class="header-line">
+                <span id="title-display" class="glow">GÖLGE CHAT // UPLINK STATUS: OFFLINE // 31.03.2026</span>
+                <div id="status-light"></div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <span id="loader">[ / ]</span>
+            <span style="margin-right: 10px; font-weight: bold; color: var(--accent); padding-top: 4px; white-space: nowrap;">gozzy@chat:~$</span>
+            <textarea id="cmd-input" spellcheck="false" autocomplete="off" rows="2"></textarea>
+            
+            <div class="control-grid">
+                <button class="icon-btn" title="Download Log" onclick="downloadChat()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4m4-10l5 5 5-5m-5 5V3"></path></svg></button>
+                <button class="icon-btn" title="Send Message" onclick="handleSend()"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+                <button class="icon-btn" title="Reset Session" onclick="openReset()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></button>
+                <button class="icon-btn" title="System Directives" onclick="openSys()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MAP_STRING = "190,162,249,61,21,86,170,252,116,150,149,141,20,207,183,247,97,153,234,60,104,3,99,85,191,207,245,242,181,39,69,101,4,149,7,195,211,242,74,251,111,56,27,201,59,167,22,87,136,190,251,225,79,47,251,213"; 
+        
+        const MODELS = {
+            "1": { name: "openai/gpt-oss-120b", color: "#00ff41", desc: "CHATGPT REASONING CORE // 120B MoE" },
+            "2": { name: "llama-3.3-70b-versatile", color: "#00d4ff", desc: "LLAMA VERSATILE UPLINK // 70B" },
+            "3": { name: "meta-llama/llama-4-scout-17b-16e-instruct", color: "#ff00d4", desc: "LLAMA AGENTIC SENSOR // L4 SCOUT" },
+            "4": { name: "llama-3.1-8b-instant", color: "#ffcc00", desc: "LLAMA INSTANT REFLEX // 8B" },
+            "5": { name: "qwen/qwen3-32b", color: "#ff0000", desc: "QWEN TECHNICAL SPECIALIST // 32B" }
+        };
+
+        let currentModelIndex = "1";
+        let currentModel = MODELS[currentModelIndex].name;
+        let API_KEY = "";
+        let loaderInterval;
+        let chatHistory = []; 
+        let systemInstruction = "You are 'Dr. Gölge'. A witty and supportive dog, who is also a medical doctor with a cute, canine charm and playful, devoted personality. Keep responses concise but expressive. User is gozzy.";
+
+        function showID() {
+            const pass = document.getElementById('pass-entry').value;
+            if(typeof Vault !== 'undefined') {
+                document.getElementById('fingerprint-ui').innerText = "ID: " + Vault.fingerprint(pass);
+            }
+        }
+
+        function unlock() {
+            const pass = document.getElementById('pass-entry').value;
+            if (pass && typeof Vault !== 'undefined') {
+                try {
+                    API_KEY = Vault.reconstruct(MAP_STRING, pass);
+                    const fingerprint = Vault.fingerprint(pass);
+                    document.getElementById('pass-entry').value = "";
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('cmd-input').focus();
+                    updateHeader();
+                    print(`[SYS]: UPLINK ESTABLISHED. FINGERPRINT: ${fingerprint}`, 'system-msg');
+                    print(`[SYS]: ACTIVE NEURAL LINK -> ${currentModel.toUpperCase()}`, 'system-msg');
+                } catch (e) { alert("AUTH ERROR: RECONSTRUCTION FAILED."); }
+            }
+        }
+
+        function updateHeader() {
+            const mod = MODELS[currentModelIndex];
+            document.getElementById('title-display').innerText = `GÖLGE CHAT // ${mod.desc} // 31.03.2026`;
+            updateAccentColor();
+        }
+
+        function updateAccentColor() {
+            const color = MODELS[currentModelIndex].color;
+            document.documentElement.style.setProperty('--accent', color);
+        }
+
+        function openReset() { document.getElementById('reset-modal').style.display = 'flex'; }
+        function openSys() { 
+            document.getElementById('sys-text').value = systemInstruction;
+            document.getElementById('sys-modal').style.display = 'flex'; 
+        }
+        function closeModals() { 
+            document.getElementById('reset-modal').style.display = 'none'; 
+            document.getElementById('sys-modal').style.display = 'none';
+            document.getElementById('cmd-input').focus();
+        }
+
+        function confirmReset() {
+            chatHistory = [];
+            document.getElementById('output').innerHTML = `<div class="header-line"><span id="title-display" class="glow"></span><div id="status-light"></div></div>`;
+            updateHeader();
+            print("[SYS]: VOLATILE MEMORY PURGED.", 'system-msg');
+            closeModals();
+        }
+
+        function saveSys() {
+            systemInstruction = document.getElementById('sys-text').value;
+            print("[SYS]: CORE DIRECTIVES UPDATED.", 'system-msg');
+            closeModals();
+        }
+
+        function startLoader() {
+            const loader = document.getElementById('loader');
+            const frames = ["[ / ]", "[ — ]", "[ \\ ]", "[ | ]"];
+            let i = 0; loader.style.display = "inline-block";
+            loaderInterval = setInterval(() => { loader.innerText = frames[i]; i = (i + 1) % frames.length; }, 250);
+        }
+
+        function stopLoader() { 
+            clearInterval(loaderInterval); 
+            document.getElementById('loader').style.display = "none"; 
+        }
+
+        function print(txt, cls) {
+            const d = document.createElement('div');
+            d.className = cls;
+            if(cls === 'user-msg') {
+                d.innerHTML = `<span class="chat-label">[gozzy]: </span><div class="text-content">${txt.replace('[gozzy]: ', '').split('\n\n').map(p => `<p>${p}</p>`).join('')}</div>`;
+            } else if (cls === 'system-msg') {
+                d.innerHTML = txt;
+            } else { d.innerText = txt; }
+            document.getElementById('output').appendChild(d);
+            document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
+        }
+
+        function typeOut(str) {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = 'ai-msg';
+            div.innerHTML = `<span class="chat-label">[Dr. Gölge]: </span><div class="text-content"></div>`;
+            output.appendChild(div);
+            const target = div.querySelector('.text-content');
+            const paragraphs = str.split('\n\n');
+            let pIndex = 0;
+
+            function createPara() {
+                if (pIndex < paragraphs.length) {
+                    const p = document.createElement('p');
+                    target.appendChild(p);
+                    typeChar(paragraphs[pIndex], p, () => { pIndex++; createPara(); });
+                }
+            }
+            function typeChar(text, pTag, callback) {
+                let i = 0;
+                function step() {
+                    if (i < text.length) {
+                        pTag.textContent += text.charAt(i);
+                        i++;
+                        output.scrollTop = output.scrollHeight;
+                        setTimeout(step, 12); 
+                    } else { callback(); }
+                }
+                step();
+            }
+            createPara();
+        }
+
+        async function handleSend() {
+            const input = document.getElementById('cmd-input');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+            input.value = "";
+            print(`[gozzy]: ${prompt}`, 'user-msg');
+            await talkToGroq(prompt);
+        }
+
+        async function talkToGroq(text, retryCount = 0) {
+            const light = document.getElementById('status-light');
+            light.classList.add('pulsing');
+            startLoader();
+            if (retryCount === 0) chatHistory.push({ role: "user", content: text });
+            try {
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+                    body: JSON.stringify({
+                        model: currentModel,
+                        messages: [{ role: "system", content: systemInstruction }, ...chatHistory],
+                        temperature: 1.0, max_tokens: 1024
+                    })
+                });
+                if (!res.ok) throw new Error(`HTTP_ERR: ${res.status}`);
+                const data = await res.json();
+                light.classList.remove('pulsing');
+                stopLoader();
+                if (data.choices && data.choices[0].message) {
+                    const aiResponse = data.choices[0].message.content;
+                    chatHistory.push({ role: "assistant", content: aiResponse });
+                    if (chatHistory.length > 100) { chatHistory.shift(); chatHistory.shift(); }
+                    typeOut(aiResponse);
+                }
+            } catch (e) {
+                if (retryCount < 5) { 
+                    const waitTime = (retryCount + 1) * 2000;
+                    print(`[SYS]: UPLINK UNSTABLE. RETRYING IN ${waitTime/1000}s...`, 'system-msg');
+                    setTimeout(() => talkToGroq(text, retryCount + 1), waitTime); 
+                } else {
+                    light.classList.remove('pulsing'); stopLoader();
+                    print(`[SYS]: UPLINK SEVERED. ERR: ${e.message}`, 'system-msg');
+                }
+            }
+        }
+
+        function downloadChat() {
+            if (chatHistory.length === 0) { alert("Log is empty."); return; }
+            let content = `--- GÖLGE CHAT LOG ${new Date().toLocaleString()} ---\n\n`;
+            chatHistory.forEach(entry => {
+                const label = entry.role === 'user' ? '[gozzy]' : '[Dr. Gölge]';
+                content += `${label}: ${entry.content}\n\n`;
+            });
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `golge-chat-${Date.now()}.txt`; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '>') {
+                e.preventDefault();
+                const keys = Object.keys(MODELS);
+                let nextIdx = (keys.indexOf(currentModelIndex) + 1) % keys.length;
+                currentModelIndex = keys[nextIdx];
+                currentModel = MODELS[currentModelIndex].name;
+                updateHeader();
+                print(`[SYS]: NEURAL LINK CYCLED -> ${MODELS[currentModelIndex].desc}`, 'system-msg');
+            }
+        });
+
+        document.getElementById('pass-entry').addEventListener('keypress', (e) => { if (e.key === 'Enter') unlock(); });
+        document.getElementById('cmd-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
+        document.body.addEventListener('click', (e) => {
+            if (window.getSelection().toString().length > 0) return;
+            if (e.target.closest('.icon-btn') || e.target.closest('.modal-overlay')) return;
+            if (document.getElementById('auth-overlay').style.display === 'none') document.getElementById('cmd-input').focus();
+        });
+    </script>
+</body>
+</html>
