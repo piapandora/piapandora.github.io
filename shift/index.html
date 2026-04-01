@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PIA SHIFT</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; background: #050505; color: #00ff41; overflow: hidden; font-family: monospace; }
+        #gate { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #drop-zone { width: 80%; max-width: 400px; padding: 80px 20px; border: 1px dashed #00ff4133; text-align: center; cursor: pointer; transition: all 0.3s; letter-spacing: 2px; }
+        #drop-zone.hover { background: #00ff4111; border-color: #00ff41; box-shadow: 0 0 20px #00ff4111; }
+        .status { margin-top: 20px; font-size: 11px; opacity: 0.4; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+    <div id="gate">
+        <div id="drop-zone">DROP TO SHIFT</div>
+        <div class="status" id="msg">> SYSTEM READY</div>
+    </div>
+
+    <script>
+        const zone = document.getElementById('drop-zone');
+        const msg = document.getElementById('msg');
+
+        // Hex signatures
+        const SIGN_PFS = [80, 70, 83, 45];
+        const SIGN_ZIP = [80, 75, 3, 4];
+
+        window.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('hover'); });
+        window.addEventListener('dragleave', () => zone.classList.remove('hover'));
+        window.addEventListener('drop', async e => {
+            e.preventDefault();
+            zone.classList.remove('hover');
+            const file = e.dataTransfer.files[0];
+            if (file) shiftFile(file);
+        });
+
+        async function shiftFile(file) {
+            msg.innerText = "> SHIFTING...";
+            
+            const buffer = await file.arrayBuffer();
+            const view = new Uint8Array(buffer);
+            const name = file.name.toLowerCase();
+
+            let targetHeader, newExt;
+
+            if (name.endsWith('.pfs')) {
+                targetHeader = SIGN_ZIP;
+                newExt = 'zip';
+            } else {
+                targetHeader = SIGN_PFS;
+                newExt = 'pfs';
+            }
+
+            for(let i=0; i<4; i++) view[i] = targetHeader[i];
+
+            const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            const newName = `${baseName}.${newExt}`;
+
+            const blob = new Blob([view], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = newName;
+            a.click();
+            
+            msg.innerText = `> CONVERTED TO ${newExt.toUpperCase()}`;
+            setTimeout(() => { msg.innerText = "> SYSTEM READY"; }, 3000);
+        }
+    </script>
+</body>
+</html>
