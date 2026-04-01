@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PIA PLAY</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; background: #050505; color: #00ff41; overflow: hidden; font-family: monospace; }
+        #gate { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; border: 1px solid #00ff4133; }
+        .status { margin-top: 20px; font-size: 12px; opacity: 0.5; letter-spacing: 1px; }
+        #drop-zone { width: 80%; max-width: 400px; padding: 60px; border: 1px dashed #00ff4166; text-align: center; cursor: pointer; transition: 0.3s; }
+        #drop-zone.hover { background: #00ff4111; border-color: #00ff41; }
+    </style>
+</head>
+<body>
+    <div id="gate">
+        <div id="drop-zone">INSERT DATA</div>
+        <div class="status" id="msg">> SYSTEM IDLE</div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const msg = document.getElementById('msg');
+
+        window.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('hover'); });
+        window.addEventListener('dragleave', () => dropZone.classList.remove('hover'));
+        window.addEventListener('drop', async e => {
+            e.preventDefault();
+            dropZone.classList.remove('hover');
+            const file = e.dataTransfer.files[0];
+            if (file) bootSystem(file);
+        });
+
+        async function bootSystem(file) {
+            const key = prompt("KEY:");
+            if (!key) return;
+
+            msg.innerText = "> MOUNTING...";
+            try {
+                const buffer = await file.arrayBuffer();
+                let view = new Uint8Array(buffer);
+
+                if (!(view[0] === 80 && view[1] === 75)) {
+                    msg.innerText = "> SHIFTING BYTES...";
+                    view[0] = 80; view[1] = 75; view[2] = 3; view[3] = 4;
+                }
+
+                const zip = await JSZip.loadAsync(view);
+                const bootFile = zip.file("index.csv");
+                if (!bootFile) throw new Error("index.csv (BOOT) MISSING");
+
+                const encryptedSource = await bootFile.async("string");
+                msg.innerText = "> RECONSTRUCTING...";
+                
+                const appSource = Vault.reconstruct(encryptedSource, key);
+                if (!appSource) throw new Error("DECRYPTION FAILED");
+
+                window.PIA = { pfs: zip, key: key };
+
+                msg.innerText = "> EXECUTING...";
+                document.open();
+                document.write(appSource);
+                document.close();
+
+            } catch (err) {
+                msg.innerText = "> ERR: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
