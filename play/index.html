@@ -2,72 +2,257 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PIA PLAY</title>
     <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
-    <script src="https://piapandora.com/box/vault.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; background: #050505; color: #00ff41; overflow: hidden; font-family: monospace; }
-        #gate { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; border: 1px solid #00ff4133; }
-        .status { margin-top: 20px; font-size: 12px; opacity: 0.5; letter-spacing: 1px; }
-        #drop-zone { width: 80%; max-width: 400px; padding: 60px; border: 1px dashed #00ff4166; text-align: center; cursor: pointer; transition: 0.3s; }
-        #drop-zone.hover { background: #00ff4111; border-color: #00ff41; }
+        body, html {
+            margin: 0; padding: 0;
+            background: #000; color: #eee;
+            font-family: sans-serif;
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            transition: cursor 0.2s;
+        }
+
+        /* ───────── Cursor Stealth ───────── */
+        .no-cursor { cursor: none; }
+
+        /* ───────── Start Screen ───────── */
+        #hub {
+            display: flex;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            background: #111;
+        }
+        .drop-zone {
+            width: 260px; height: 260px;
+            border: 2px dashed #333;
+            border-radius: 20px;
+            display: flex;
+            align-items: center; justify-content: center;
+            font-size: 1.8rem; font-weight: bold;
+            color: #444; cursor: pointer;
+            transition: 0.3s;
+        }
+        .drop-zone:hover { border-color: #f1c40f; color: #f1c40f; background: #1a1a1a; }
+
+        /* ───────── Viewports ───────── */
+        .view-container { display: none; height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; }
+
+        .img-engine {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+            display: block;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .multi-view { flex-direction: row; }
+        .column { 
+            flex: 1; 
+            height: 100vh;
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
     </style>
 </head>
-<body>
-    <div id="gate">
-        <div id="drop-zone">INSERT DATA</div>
-        <div class="status" id="msg">> SYSTEM IDLE</div>
-    </div>
+<body id="main-body">
 
-    <script>
-        const dropZone = document.getElementById('drop-zone');
-        const msg = document.getElementById('msg');
+<main id="hub">
+    <div class="drop-zone" id="btn-solo">Solo</div>
+    <div class="drop-zone" id="btn-duo">Duo</div>
+    <div class="drop-zone" id="btn-trio">Trio</div>
+</main>
 
-        window.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('hover'); });
-        window.addEventListener('dragleave', () => dropZone.classList.remove('hover'));
-        window.addEventListener('drop', async e => {
-            e.preventDefault();
-            dropZone.classList.remove('hover');
-            const file = e.dataTransfer.files[0];
-            if (file) bootSystem(file);
-        });
+<section id="solo-view" class="view-container">
+    <img id="solo-img" class="img-engine" src="">
+</section>
 
-        async function bootSystem(file) {
-            const key = prompt("KEY:");
-            if (!key) return;
+<section id="duo-view" class="view-container multi-view">
+    <div class="column"><img id="d1" class="duo-port img-engine" src=""></div>
+    <div class="column"><img id="d2" class="duo-port img-engine" src=""></div>
+</section>
 
-            msg.innerText = "> MOUNTING...";
-            try {
-                const buffer = await file.arrayBuffer();
-                let view = new Uint8Array(buffer);
+<section id="trio-view" class="view-container multi-view">
+    <div class="column"><img id="t1" class="trio-port img-engine" src=""></div>
+    <div class="column"><img id="t2" class="trio-port img-engine" src=""></div>
+    <div class="column"><img id="t3" class="trio-port img-engine" src=""></div>
+</section>
 
-                if (!(view[0] === 80 && view[1] === 75)) {
-                    msg.innerText = "> SHIFTING BYTES...";
-                    view[0] = 80; view[1] = 75; view[2] = 3; view[3] = 4;
-                }
+<script>
+    let currentMode = "";
+    let mainPool = [];
+    let galIndex = 0;
+    let globalKey = "";
+    let mouseTimer;
 
-                const zip = await JSZip.loadAsync(view);
-                const bootFile = zip.file("index.csv");
-                if (!bootFile) throw new Error("index.csv (BOOT) MISSING");
+    const body = document.getElementById('main-body');
+    const elHub = document.getElementById('hub');
+    const elSolo = document.getElementById('solo-view');
+    const elDuo = document.getElementById('duo-view');
+    const elTrio = document.getElementById('trio-view');
+    const elSoloImg = document.getElementById('solo-img');
+    const elDuoImgs = document.querySelectorAll('.duo-port');
+    const elTrioImgs = document.querySelectorAll('.trio-port');
 
-                const encryptedSource = await bootFile.async("string");
-                msg.innerText = "> RECONSTRUCTING...";
-                
-                const appSource = Vault.reconstruct(encryptedSource, key);
-                if (!appSource) throw new Error("DECRYPTION FAILED");
+    /* ───────── Cursor Auto-Hide ───────── */
+    function resetMouseTimer() {
+        body.classList.remove('no-cursor');
+        clearTimeout(mouseTimer);
+        mouseTimer = setTimeout(() => {
+            if (currentMode !== "") body.classList.add('no-cursor');
+        }, 1000);
+    }
+    window.addEventListener('mousemove', resetMouseTimer);
 
-                window.PIA = { pfs: zip, key: key };
+    /* ───────── Decryption ───────── */
+    function xorCore(t, k) {
+        let r = "";
+        for (let i = 0; i < t.length; i++) r += String.fromCharCode(t.charCodeAt(i) ^ k.charCodeAt(i % k.length));
+        return r;
+    }
 
-                msg.innerText = "> EXECUTING...";
-                document.open();
-                document.write(appSource);
-                document.close();
+    function decodePangea(json, k) {
+        try {
+            const data = JSON.parse(json);
+            const meta = JSON.parse(xorCore(atob(data.m), k));
+            const blob = xorCore(atob(data.b), k);
+            return `data:${meta.t};base64,${blob}`;
+        } catch(e) { return null; }
+    }
 
-            } catch (err) {
-                msg.innerText = "> ERR: " + err.message;
+    /* ───────── File Processing ───────── */
+    async function unpackFiles(fileList) {
+        let results = [];
+        let hasPangea = fileList.some(f => f.name.toLowerCase().match(/\.(json|zip|pfs)$/));
+
+        if (hasPangea) {
+            globalKey = prompt("Enter Key:");
+            if (!globalKey) return [];
+        }
+
+        for (const f of fileList) {
+            const name = f.name.toLowerCase();
+            if (name.endsWith('.zip') || name.endsWith('.pfs')) {
+                const buf = await f.arrayBuffer();
+                let view = new Uint8Array(buf);
+                if (view[0] !== 80) { view[0]=80; view[1]=75; view[2]=3; view[3]=4; }
+                try {
+                    const zip = await JSZip.loadAsync(view);
+                    for (let path in zip.files) {
+                        if (path.toLowerCase().endsWith('.json')) {
+                            const str = await zip.files[path].async("string");
+                            const src = decodePangea(str, globalKey);
+                            if (src) results.push(src);
+                        }
+                    }
+                } catch(e) {}
+            } 
+            else if (name.endsWith('.json')) {
+                const txt = await f.text();
+                const src = decodePangea(txt, globalKey);
+                if (src) results.push(src);
+            }
+            else if (name.match(/\.(png|jpe?g|webp|gif|bmp)$/i)) {
+                results.push(await new Promise(r => {
+                    const fr = new FileReader();
+                    fr.onload = () => r(fr.result);
+                    fr.readAsDataURL(f);
+                }));
             }
         }
-    </script>
+        return results;
+    }
+
+    /* ───────── Mode Management ───────── */
+    function switchMode(newMode) {
+        if (!mainPool.length && newMode !== "") return;
+        currentMode = newMode;
+        elHub.style.display = 'none';
+        [elSolo, elDuo, elTrio].forEach(el => el.style.display = 'none');
+
+        if (newMode === "solo") { elSolo.style.display = 'flex'; setSolo(galIndex); }
+        else if (newMode === "duo") { elDuo.style.display = 'flex'; setMultiAll(elDuoImgs); }
+        else if (newMode === "trio") { elTrio.style.display = 'flex'; setMultiAll(elTrioImgs); }
+    }
+
+    const setupZone = (id, mode) => {
+        const zone = document.getElementById(id);
+        zone.addEventListener('dragover', e => e.preventDefault());
+        zone.addEventListener('drop', async e => {
+            e.preventDefault();
+            const files = Array.from(e.dataTransfer.files);
+            if (!files.length) return;
+            mainPool = await unpackFiles(files);
+            if (mainPool.length) switchMode(mode);
+        });
+    };
+
+    setupZone('btn-solo', 'solo');
+    setupZone('btn-duo', 'duo');
+    setupZone('btn-trio', 'trio');
+
+    function setSolo(idx) {
+        if(idx < 0) idx = mainPool.length - 1;
+        if(idx >= mainPool.length) idx = 0;
+        galIndex = idx;
+        elSoloImg.src = mainPool[galIndex];
+    }
+
+    function setMultiAll(nodeList) {
+        nodeList.forEach(img => setMultiOne(img));
+    }
+
+    function setMultiOne(img) {
+        if (!img) return;
+        img.style.opacity = 0;
+        setTimeout(() => {
+            img.src = mainPool[Math.floor(Math.random() * mainPool.length)];
+            img.style.opacity = 1;
+        }, 150);
+    }
+
+    /* ───────── Controls ───────── */
+    document.addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        if (e.ctrlKey && (e.key === '1' || e.key === '2' || e.key === '3')) {
+            e.preventDefault();
+            if (e.key === '1') switchMode('solo');
+            if (e.key === '2') switchMode('duo');
+            if (e.key === '3') switchMode('trio');
+            return;
+        }
+
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if(currentMode === "solo") setSolo(Math.floor(Math.random() * mainPool.length));
+            else if(currentMode === "duo") setMultiAll(elDuoImgs);
+            else if(currentMode === "trio") setMultiAll(elTrioImgs);
+        }
+        
+        if(k === 'a') {
+            if(currentMode === "solo") setSolo(galIndex - 1);
+            else if(currentMode === "duo") setMultiOne(elDuoImgs[0]);
+            else if(currentMode === "trio") setMultiOne(elTrioImgs[0]);
+        }
+        if(k === 'd') {
+            if(currentMode === "solo") setSolo(galIndex + 1);
+            else if(currentMode === "duo") setMultiOne(elDuoImgs[1]);
+            else if(currentMode === "trio") setMultiOne(elTrioImgs[2]);
+        }
+        if(k === 's' && currentMode === "trio") setMultiOne(elTrioImgs[1]);
+        if(k === 'w') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    });
+
+    elDuoImgs.forEach(img => img.onclick = () => setMultiOne(img));
+    elTrioImgs.forEach(img => img.onclick = () => setMultiOne(img));
+
+</script>
 </body>
 </html>
