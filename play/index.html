@@ -40,6 +40,41 @@
         }
         .drop-zone:hover { border-color: #f1c40f; color: #f1c40f; background: #1a1a1a; }
 
+        /* ───────── Key Modal ───────── */
+        #key-dialog {
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #key-dialog::backdrop { background: rgba(0,0,0,0.8); }
+        #key-input {
+            background: #000;
+            color: #f1c40f;
+            border: 1px solid #444;
+            padding: 12px;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            width: 240px;
+            outline: none;
+            text-align: center;
+        }
+        #key-submit {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 25px;
+            background: #333;
+            color: #eee;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #key-submit:hover { background: #444; color: #fff; }
+
         /* ───────── Viewports ───────── */
         .view-container { display: none; height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; }
 
@@ -63,6 +98,11 @@
     </style>
 </head>
 <body id="main-body">
+
+<dialog id="key-dialog">
+    <input type="password" id="key-input" placeholder="••••••••">
+    <button id="key-submit">ENTER KEY</button>
+</dialog>
 
 <main id="hub">
     <div class="drop-zone" id="btn-solo">Solo</div>
@@ -127,13 +167,31 @@
         } catch(e) { return null; }
     }
 
+    /* ───────── The Key Promise ───────── */
+    async function getKey() {
+        const dialog = document.getElementById('key-dialog');
+        const input = document.getElementById('key-input');
+        const btn = document.getElementById('key-submit');
+        dialog.showModal();
+        return new Promise((resolve) => {
+            const finish = () => {
+                const val = input.value;
+                input.value = "";
+                dialog.close();
+                resolve(val);
+            };
+            btn.onclick = finish;
+            input.onkeydown = (e) => { if(e.key === 'Enter') finish(); };
+        });
+    }
+
     /* ───────── File Processing ───────── */
     async function unpackFiles(fileList) {
         let results = [];
         let hasPangea = fileList.some(f => f.name.toLowerCase().match(/\.(json|zip|pfs)$/));
 
         if (hasPangea) {
-            globalKey = prompt("Enter Key:");
+            globalKey = await getKey();
             if (!globalKey) return [];
         }
 
@@ -142,7 +200,15 @@
             if (name.endsWith('.zip') || name.endsWith('.pfs')) {
                 const buf = await f.arrayBuffer();
                 let view = new Uint8Array(buf);
-                if (view[0] !== 80) { view[0]=80; view[1]=75; view[2]=3; view[3]=4; }
+                const isStandardZip = view[0] === 80 && view[1] === 75 && view[2] === 3 && view[3] === 4;
+                
+                if (!isStandardZip) {
+                    view[0] = 80;
+                    view[1] = 75;
+                    view[2] = 3;
+                    view[3] = 4;
+                }
+
                 try {
                     const zip = await JSZip.loadAsync(view);
                     for (let path in zip.files) {
@@ -152,14 +218,16 @@
                             if (src) results.push(src);
                         }
                     }
-                } catch(e) {}
+                } catch(e) {
+                    console.error("Archive error:", e);
+                }
             } 
             else if (name.endsWith('.json')) {
                 const txt = await f.text();
                 const src = decodePangea(txt, globalKey);
                 if (src) results.push(src);
             }
-            else if (name.match(/\.(png|jpe?g|webp|gif|bmp)$/i)) {
+            else if (name.match(/\.(png|jpg|jpeg|webp|gif|bmp)$/i)) {
                 results.push(await new Promise(r => {
                     const fr = new FileReader();
                     fr.onload = () => r(fr.result);
@@ -172,8 +240,18 @@
 
     /* ───────── Mode Management ───────── */
     function switchMode(newMode) {
-        if (!mainPool.length && newMode !== "") return;
         currentMode = newMode;
+        
+        // Handle reset to Hub
+        if (newMode === "") {
+            elHub.style.display = 'flex';
+            [elSolo, elDuo, elTrio].forEach(el => el.style.display = 'none');
+            body.classList.remove('no-cursor');
+            return;
+        }
+
+        if (!mainPool.length) return;
+        
         elHub.style.display = 'none';
         [elSolo, elDuo, elTrio].forEach(el => el.style.display = 'none');
 
@@ -221,6 +299,13 @@
     /* ───────── Controls ───────── */
     document.addEventListener('keydown', e => {
         const k = e.key.toLowerCase();
+
+        // Escape to Hub
+        if (e.key === 'Escape') {
+            switchMode("");
+            return;
+        }
+
         if (e.ctrlKey && (e.key === '1' || e.key === '2' || e.key === '3')) {
             e.preventDefault();
             if (e.key === '1') switchMode('solo');
