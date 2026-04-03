@@ -2,71 +2,201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PIA SHIFT</title>
-    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIA SHIFT v3.4</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; background: #050505; color: #00ff41; overflow: hidden; font-family: monospace; }
-        #gate { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #drop-zone { width: 80%; max-width: 400px; padding: 80px 20px; border: 1px dashed #00ff4133; text-align: center; cursor: pointer; transition: all 0.3s; letter-spacing: 2px; }
-        #drop-zone.hover { background: #00ff4111; border-color: #00ff41; box-shadow: 0 0 20px #00ff4111; }
-        .status { margin-top: 20px; font-size: 11px; opacity: 0.4; letter-spacing: 1px; }
+        :root { --accent: #00f2ff; --bg: #0a0a0c; --card: #16161e; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e6; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        #app { background: var(--card); border: 2px dashed #333; padding: 40px; text-align: center; border-radius: 16px; width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.3s; }
+        #app.dragover { border-color: var(--accent); background: #1a1a24; transform: scale(1.02); }
+        h2 { margin-top: 0; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; font-size: 1.1rem; }
+        p { color: #888; font-size: 0.85rem; margin-bottom: 20px; line-height: 1.4; }
+        input[type="password"] { background: #000; border: 1px solid #333; color: var(--accent); padding: 12px; width: 85%; border-radius: 8px; text-align: center; outline: none; margin-bottom: 20px; font-size: 1rem; }
+        input[type="password"]:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+        input[type="password"]:disabled { opacity: 0.5; cursor: not-allowed; }
+        progress { width: 100%; height: 6px; border-radius: 3px; appearance: none; margin: 15px 0; }
+        progress::-webkit-progress-bar { background-color: #000; border-radius: 3px; }
+        progress::-webkit-progress-value { background-color: var(--accent); border-radius: 3px; box-shadow: 0 0 10px var(--accent); }
+        button { background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+        button:hover:not(:disabled) { opacity: 0.9; box-shadow: 0 0 15px var(--accent); }
+        button:active:not(:disabled) { transform: scale(0.98); }
+        button:disabled { background: #333; color: #666; cursor: wait; }
+        #status { margin-top: 15px; font-size: 0.8rem; color: #555; min-height: 1.2em; font-family: monospace; text-transform: uppercase; }
+        .disclaimer { font-size: 0.6rem; color: #555; margin-top: 20px; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
-    <div id="gate">
-        <div id="drop-zone">DROP TO SHIFT</div>
-        <div class="status" id="msg">> SYSTEM READY</div>
-    </div>
 
-    <script>
-        const zone = document.getElementById('drop-zone');
-        const msg = document.getElementById('msg');
+<div id="app">
+    <h2>PIA SHIFT v3.4</h2>
+    <p id="file-label">Drag & Drop<br>ZIP / PFS</p>
+    
+    <input type="password" id="password" placeholder="MASTER KEY" autocomplete="current-password" />
 
-        // Hex signatures
-        const SIGN_PFS = [80, 70, 83, 45];
-        const SIGN_ZIP = [80, 75, 3, 4];
+    <button id="processBtn">Initiate Shift</button>
+    <progress id="progress" value="0" max="100"></progress>
+    <div id="status">Ready</div>
+    <div class="disclaimer">V3.4 HARDENED | NO RECOVERY POSSIBLE</div>
+</div>
 
-        window.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('hover'); });
-        window.addEventListener('dragleave', () => zone.classList.remove('hover'));
-        window.addEventListener('drop', async e => {
-            e.preventDefault();
-            zone.classList.remove('hover');
-            const file = e.dataTransfer.files[0];
-            if (file) shiftFile(file);
-        });
+<script>
+const CHUNK_SIZE = 64 * 1024;
+const TAG_SIZE = 16;
+const HEADER_SIZE = 128;
+const VERSION_BYTE = 0x34;
+const enc = new TextEncoder();
 
-        async function shiftFile(file) {
-            msg.innerText = "> SHIFTING...";
+function buildNonce(masterNonce, counter) {
+    const nonce = new Uint8Array(12);
+    nonce.set(masterNonce.slice(0, 8));
+    new DataView(nonce.buffer).setUint32(8, counter, false);
+    return nonce;
+}
+
+function buildAAD(index, isFinal) {
+    const buf = new Uint8Array(5);
+    const dv = new DataView(buf.buffer);
+    dv.setUint32(0, index, false);
+    dv.setUint8(4, isFinal ? 1 : 0);
+    return buf;
+}
+
+function getMarker(salt) {
+    const base = [0xAA, 0xBB, 0xCC, 0xDD];
+    return base.map((b, i) => b ^ salt[i]);
+}
+
+async function deriveKey(password, salt) {
+    const normalized = password.normalize("NFKC");
+    const base = await crypto.subtle.importKey("raw", enc.encode(normalized), {name:"PBKDF2"}, false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 300000, 
+        hash: "SHA-512"
+    }, base, {name: "AES-GCM", length: 256}, false, ["encrypt", "decrypt"]);
+}
+
+async function encrypt(file, password) {
+    const salt = crypto.getRandomValues(new Uint8Array(32));
+    const masterNonce = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+
+    const header = new Uint8Array(HEADER_SIZE);
+    header.set(salt, 0);
+    header.set(masterNonce, 32);
+    header.set(getMarker(salt), 44);
+    header[48] = VERSION_BYTE;
+
+    const chunks = [header];
+    const reader = file.stream().getReader();
+    let index = 0; 
+    let bytesProcessed = 0;
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        for (let i = 0; i < value.length; i += CHUNK_SIZE) {
+            const chunk = value.slice(i, i + CHUNK_SIZE);
+            bytesProcessed += chunk.length;
             
-            const buffer = await file.arrayBuffer();
-            const view = new Uint8Array(buffer);
-            const name = file.name.toLowerCase();
-
-            let targetHeader, newExt;
-
-            if (name.endsWith('.pfs')) {
-                targetHeader = SIGN_ZIP;
-                newExt = 'zip';
-            } else {
-                targetHeader = SIGN_PFS;
-                newExt = 'pfs';
-            }
-
-            for(let i=0; i<4; i++) view[i] = targetHeader[i];
-
-            const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-            const newName = `${baseName}.${newExt}`;
-
-            const blob = new Blob([view], { type: 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = newName;
-            a.click();
+            const isFinal = (bytesProcessed >= file.size);
+            index++; 
             
-            msg.innerText = `> CONVERTED TO ${newExt.toUpperCase()}`;
-            setTimeout(() => { msg.innerText = "> SYSTEM READY"; }, 3000);
+            const nonce = buildNonce(masterNonce, index);
+            const aad = buildAAD(index, isFinal);
+            
+            const encrypted = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: nonce, additionalData: aad },
+                key, chunk
+            );
+            chunks.push(new Uint8Array(encrypted));
+            updateProgress(bytesProcessed, file.size);
         }
-    </script>
+    }
+    return new Blob(chunks);
+}
+
+async function decrypt(file, password) {
+    const headerBuf = new Uint8Array(await file.slice(0, HEADER_SIZE).arrayBuffer());
+    if (headerBuf[48] !== VERSION_BYTE) throw new Error("VERSION_MISMATCH: Required v3.4");
+
+    const salt = headerBuf.slice(0, 32);
+    const masterNonce = headerBuf.slice(32, 44);
+    const marker = headerBuf.slice(44, 48);
+
+    if (marker.some((b, i) => b !== getMarker(salt)[i])) throw new Error("AUTH_FAIL: Invalid Marker");
+
+    const key = await deriveKey(password, salt);
+    let decryptedChunks = [];
+    let index = 0;
+    let offset = HEADER_SIZE;
+
+    while (offset < file.size) {
+        const remaining = file.size - offset;
+        const isFinal = (offset + CHUNK_SIZE + TAG_SIZE >= file.size);
+        const currentSliceSize = isFinal ? remaining : (CHUNK_SIZE + TAG_SIZE);
+        
+        const encryptedBuf = await file.slice(offset, offset + currentSliceSize).arrayBuffer();
+        index++; 
+
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: buildNonce(masterNonce, index), additionalData: buildAAD(index, isFinal) },
+            key, encryptedBuf
+        );
+        
+        decryptedChunks.push(new Uint8Array(decrypted));
+        offset += encryptedBuf.byteLength;
+        updateProgress(offset, file.size);
+    }
+    return new Blob(decryptedChunks, { type: "application/zip" });
+}
+
+let droppedFile = null;
+const app = document.getElementById("app");
+const btn = document.getElementById("processBtn");
+const passInput = document.getElementById("password");
+
+app.addEventListener("dragover", e => { e.preventDefault(); app.classList.add("dragover"); });
+app.addEventListener("dragleave", () => app.classList.remove("dragover"));
+app.addEventListener("drop", e => {
+    e.preventDefault();
+    app.classList.remove("dragover");
+    droppedFile = e.dataTransfer.files[0];
+    document.getElementById("file-label").innerHTML = `<strong>${droppedFile.name}</strong>`;
+});
+
+btn.onclick = async () => {
+    if (!droppedFile || !passInput.value) return alert("File and password required.");
+    
+    btn.disabled = true;
+    passInput.disabled = true;
+    updateStatus("Processing...");
+
+    try {
+        const isPfs = droppedFile.name.toLowerCase().endsWith(".pfs");
+        const result = isPfs ? await decrypt(droppedFile, passInput.value) : await encrypt(droppedFile, passInput.value);
+        
+        const name = isPfs ? droppedFile.name.replace(/\.pfs$/i, ".zip") : droppedFile.name + ".pfs";
+        const url = URL.createObjectURL(result);
+        const a = document.createElement("a");
+        a.href = url; a.download = name; a.click();
+        
+        updateStatus("Complete");
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+    } catch (e) {
+        console.error(e);
+        updateStatus("ERROR: Operation Aborted");
+        alert("Verification Failed. Password or file may be incorrect.");
+    } finally {
+        btn.disabled = false;
+        passInput.disabled = false;
+    }
+};
+
+function updateStatus(msg) { document.getElementById("status").innerText = msg; }
+function updateProgress(val, max) { document.getElementById("progress").value = (val / max) * 100; }
+</script>
 </body>
 </html>
