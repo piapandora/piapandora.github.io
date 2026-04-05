@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gist Scratchpad</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #121212; color: #efefef; display: flex; flex-direction: column; height: 100vh; }
+        header { padding: 10px 20px; background: #1f1f1f; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        #editor { flex: 1; width: 100%; border: none; padding: 20px; background: transparent; color: #ddd; font-family: 'Courier New', monospace; font-size: 16px; resize: none; outline: none; box-sizing: border-box; }
+        .controls { display: flex; gap: 10px; }
+        button { padding: 6px 12px; cursor: pointer; background: #3498db; border: none; color: white; border-radius: 4px; }
+        button:hover { background: #2980b9; }
+        .settings-panel { position: fixed; top: 50px; right: 20px; background: #2c3e50; padding: 15px; border-radius: 8px; display: none; flex-direction: column; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        input { padding: 8px; border-radius: 4px; border: 1px solid #444; background: #121212; color: white; }
+    </style>
+</head>
+<body>
+
+<header>
+    <strong>Scratchpad</strong>
+    <div class="controls">
+        <span id="status" style="font-size: 12px; color: #888; align-self: center; margin-right: 10px;"></span>
+        <button onclick="saveGist()">Save</button>
+        <button onclick="toggleSettings()" style="background: #555;">⚙️</button>
+    </div>
+</header>
+
+<div id="settings" class="settings-panel">
+    <input type="password" id="ghToken" placeholder="GitHub PAT Token">
+    <input type="text" id="gistId" placeholder="Gist ID">
+    <button onclick="saveSettings()">Apply Settings</button>
+</div>
+
+<textarea id="editor" placeholder="Start typing..."></textarea>
+
+<script>
+    const editor = document.getElementById('editor');
+    const status = document.getElementById('status');
+
+    // Load credentials from localStorage
+    let TOKEN = localStorage.getItem('gh_token');
+    let GIST_ID = localStorage.getItem('gist_id');
+
+    async function loadGist() {
+        if (!TOKEN || !GIST_ID) {
+            status.innerText = "Set Token & Gist ID in ⚙️";
+            return;
+        }
+        status.innerText = "Loading...";
+        try {
+            const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                headers: { 'Authorization': `token ${TOKEN}` }
+            });
+            const data = await resp.json();
+            // Assumes your gist has a file named "scratchpad.txt"
+            const filename = Object.keys(data.files)[0];
+            editor.value = data.files[filename].content;
+            status.innerText = "Synced";
+        } catch (err) {
+            status.innerText = "Load failed";
+        }
+    }
+
+    async function saveGist() {
+        if (!TOKEN || !GIST_ID) return alert("Setup credentials first!");
+        status.innerText = "Saving...";
+        
+        const filename = "scratchpad.txt"; // It will create this file if it doesn't exist
+        const body = {
+            files: { [filename]: { content: editor.value } }
+        };
+
+        try {
+            const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                method: 'PATCH',
+                headers: { 
+                    'Authorization': `token ${TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (resp.ok) status.innerText = "Saved!";
+            else status.innerText = "Save Error";
+        } catch (err) {
+            status.innerText = "Error";
+        }
+    }
+
+    function toggleSettings() {
+        const s = document.getElementById('settings');
+        s.style.display = s.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function saveSettings() {
+        localStorage.setItem('gh_token', document.getElementById('ghToken').value);
+        localStorage.setItem('gist_id', document.getElementById('gistId').value);
+        location.reload();
+    }
+
+    // Initial Load
+    document.getElementById('ghToken').value = TOKEN;
+    document.getElementById('gistId').value = GIST_ID;
+    loadGist();
+
+    // Optional: Ctrl+S to save
+    window.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            saveGist();
+        }
+    });
+</script>
+</body>
+</html>
