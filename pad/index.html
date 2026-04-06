@@ -3,112 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gist Scratchpad</title>
+    <title>PIA PAD</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #121212; color: #efefef; display: flex; flex-direction: column; height: 100vh; }
-        header { padding: 10px 20px; background: #1f1f1f; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        #editor { flex: 1; width: 100%; border: none; padding: 20px; background: transparent; color: #ddd; font-family: 'Courier New', monospace; font-size: 16px; resize: none; outline: none; box-sizing: border-box; }
-        .controls { display: flex; gap: 10px; }
-        button { padding: 6px 12px; cursor: pointer; background: #3498db; border: none; color: white; border-radius: 4px; }
-        button:hover { background: #2980b9; }
-        .settings-panel { position: fixed; top: 50px; right: 20px; background: #2c3e50; padding: 15px; border-radius: 8px; display: none; flex-direction: column; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        input { padding: 8px; border-radius: 4px; border: 1px solid #444; background: #121212; color: white; }
+        :root { --accent: #2ecc71; --bg: #1a1a1a; --panel: #242424; --text: #e0e0e0; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Header */
+        header { padding: 12px 20px; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        #statusText { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Editor */
+        #editor { flex: 1; width: 100%; border: none; padding: 25px; background: transparent; color: #fff; font-family: 'Fira Code', 'Courier New', monospace; font-size: 16px; resize: none; outline: none; box-sizing: border-box; display: none; line-height: 1.6; }
+        
+        /* Auth Overlay */
+        .auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 20px; }
+        .auth-card { background: var(--panel); padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #333; }
+        
+        input { padding: 12px; border-radius: 6px; border: 1px solid #444; background: #121212; color: white; width: 220px; text-align: center; font-size: 16px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--accent); }
+        
+        button { padding: 10px 24px; cursor: pointer; background: var(--accent); border: none; color: #000; border-radius: 6px; font-weight: 600; transition: opacity 0.2s; font-size: 14px; }
+        button:hover { opacity: 0.9; }
+        
+        /* Elements */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; display: inline-block; margin-right: 10px; }
+        #info { font-size: 11px; color: #777; font-family: monospace; margin-top: 5px; }
+        #saveBtn { padding: 6px 15px; }
     </style>
 </head>
 <body>
 
-<header>
-    <strong>Scratchpad</strong>
-    <div class="controls">
-        <span id="status" style="font-size: 12px; color: #888; align-self: center; margin-right: 10px;"></span>
-        <button onclick="saveGist()">Save</button>
-        <button onclick="toggleSettings()" style="background: #555;">⚙️</button>
+<div id="auth" class="auth-overlay">
+    <div class="auth-card">
+        <div style="font-weight: 600; font-size: 18px; margin-bottom: 5px;">SCRATCHPAD</div>
+        <input type="password" id="passInput" placeholder="Password" autofocus>
+        <div id="info">ID: <span id="fp">----</span></div>
+        <button id="unlockBtn">Unlock & Sync</button>
     </div>
-</header>
-
-<div id="settings" class="settings-panel">
-    <input type="password" id="ghToken" placeholder="GitHub PAT Token">
-    <input type="text" id="gistId" placeholder="Gist ID">
-    <button onclick="saveSettings()">Apply Settings</button>
 </div>
+
+<header>
+    <div><span id="syncDot" class="status-dot"></span><strong style="letter-spacing: 0.5px;">SCRATCHPAD</strong></div>
+    <div id="statusText">Awaiting Credentials</div>
+    <button id="saveBtn" style="display:none;" onclick="saveGist()">Save</button>
+</header>
 
 <textarea id="editor" placeholder="Start typing..."></textarea>
 
 <script>
-    const editor = document.getElementById('editor');
-    const status = document.getElementById('status');
+    const MAP_TOKEN = "238,16,96,93,93,159,195,121,3,125,143,138,11,12,182,235,56,74,184,69,177,146,183,146,212,7,112,85,71,44,51,217,69,46,147,62,205,115,11,198"; 
+    const MAP_GIST_ID = "26,255,181,238,22,67,30,31,167,15,173,77,111,192,105,11,189,159,51,16,39,51,44,10,17,210,40,40,30,173,8,24";
+    const FILENAME = "scratchpad.txt";
 
-    // Load credentials from localStorage
-    let TOKEN = localStorage.getItem('gh_token');
-    let GIST_ID = localStorage.getItem('gist_id');
+    let ACTIVE_TOKEN = "";
+    let ACTIVE_GIST_ID = "";
+
+    const editor = document.getElementById('editor');
+    const statusText = document.getElementById('statusText');
+    const syncDot = document.getElementById('syncDot');
+
+    document.getElementById('passInput').addEventListener('input', (e) => {
+        document.getElementById('fp').innerText = Vault.fingerprint(e.target.value);
+    });
+
+    document.getElementById('unlockBtn').addEventListener('click', unlock);
+    document.getElementById('passInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') unlock(); });
+
+    async function unlock() {
+        const pass = document.getElementById('passInput').value;
+        if (!pass) return;
+        try {
+            ACTIVE_TOKEN = Vault.reconstruct(MAP_TOKEN, pass);
+            ACTIVE_GIST_ID = Vault.reconstruct(MAP_GIST_ID, pass);
+            document.getElementById('auth').style.display = 'none';
+            editor.style.display = 'block';
+            document.getElementById('saveBtn').style.display = 'block';
+            loadGist();
+        } catch (e) { console.error("Unlock failed"); }
+    }
 
     async function loadGist() {
-        if (!TOKEN || !GIST_ID) {
-            status.innerText = "Set Token & Gist ID in ⚙️";
-            return;
-        }
-        status.innerText = "Loading...";
+        updateStatus("Syncing...", "#f1c40f");
         try {
-            const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                headers: { 'Authorization': `token ${TOKEN}` }
+            const resp = await fetch(`https://api.github.com/gists/${ACTIVE_GIST_ID}`, {
+                headers: { 'Authorization': `token ${ACTIVE_TOKEN}` }
             });
             const data = await resp.json();
-            // Assumes your gist has a file named "scratchpad.txt"
-            const filename = Object.keys(data.files)[0];
-            editor.value = data.files[filename].content;
-            status.innerText = "Synced";
-        } catch (err) {
-            status.innerText = "Load failed";
-        }
+            editor.value = data.files[FILENAME] ? data.files[FILENAME].content : "";
+            updateStatus("Synced", "#2ecc71");
+        } catch (err) { updateStatus("Error", "#e74c3c"); }
     }
 
     async function saveGist() {
-        if (!TOKEN || !GIST_ID) return alert("Setup credentials first!");
-        status.innerText = "Saving...";
-        
-        const filename = "scratchpad.txt"; // It will create this file if it doesn't exist
-        const body = {
-            files: { [filename]: { content: editor.value } }
-        };
-
+        updateStatus("Saving...", "#f1c40f");
+        const body = { files: { [FILENAME]: { content: editor.value } } };
         try {
-            const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+            const resp = await fetch(`https://api.github.com/gists/${ACTIVE_GIST_ID}`, {
                 method: 'PATCH',
-                headers: { 
-                    'Authorization': `token ${TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Authorization': `token ${ACTIVE_TOKEN}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            if (resp.ok) status.innerText = "Saved!";
-            else status.innerText = "Save Error";
-        } catch (err) {
-            status.innerText = "Error";
-        }
+            if (resp.ok) updateStatus("Saved", "#2ecc71");
+        } catch (err) { updateStatus("Failed", "#e74c3c"); }
     }
 
-    function toggleSettings() {
-        const s = document.getElementById('settings');
-        s.style.display = s.style.display === 'flex' ? 'none' : 'flex';
+    function updateStatus(msg, color) {
+        statusText.innerText = msg;
+        syncDot.style.background = color;
     }
 
-    function saveSettings() {
-        localStorage.setItem('gh_token', document.getElementById('ghToken').value);
-        localStorage.setItem('gist_id', document.getElementById('gistId').value);
-        location.reload();
-    }
-
-    // Initial Load
-    document.getElementById('ghToken').value = TOKEN;
-    document.getElementById('gistId').value = GIST_ID;
-    loadGist();
-
-    // Optional: Ctrl+S to save
     window.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.key === 's') {
-            e.preventDefault();
-            saveGist();
-        }
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveGist(); }
     });
 </script>
 </body>
