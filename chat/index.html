@@ -2,344 +2,361 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PIA CHAT</title>
-    <link rel="icon" type="image/png" href="https://www.piapandora.com/box/misc/green-icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIA CHAT v2</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/piapandora/micro-logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://piapandora.com/box/vault.js"></script>
     <style>
-        :root { --green: #00ff41; --bg: #050505; --dim: #003311; --user-msg: #dddddd; --pure-white: #ffffff; }
-        * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--green); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #000; }
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; } 
+        #auth-overlay.hidden { opacity: 0; pointer-events: none; }
         
-        ::selection { background: var(--dim); color: var(--green); }
-        ::-moz-selection { background: var(--dim); color: var(--green); }
-
-        #output::-webkit-scrollbar { width: 5px; height: 0; }
-        #output::-webkit-scrollbar-track { background: transparent; }
-        #output::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
-        #output::-webkit-scrollbar-thumb:hover { background: var(--dim); }
-        #output::-webkit-scrollbar-corner { background: transparent; }
-
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #auth-overlay { z-index: 1200; }
-        .modal-overlay h2 { letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; }
-        .modal-overlay p { margin-bottom: 30px; letter-spacing: 1px; }
-
-        #terminal { padding: 25px 25px 5px 25px; height: 100vh; display: flex; flex-direction: column; position: relative; }
+        #avatar-img { transition: opacity 0.4s ease-in-out; cursor: pointer; }
         
-        #output { 
-            white-space: pre-wrap; 
-            word-wrap: break-word;
-            flex-grow: 1; 
-            overflow-y: auto; 
-            overflow-x: hidden; 
-            scroll-behavior: smooth; 
-            padding-right: 20px; 
-            user-select: text; 
+        .icon-btn {
+            background: transparent; color: #d4d4d8; cursor: pointer; padding: 6px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; border: 1px solid transparent; border-radius: 6px;
         }
+        .icon-btn:hover { color: #fff; border-color: #3f3f46; background: #18181b; }
+        .icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
         
-        .user-msg, .ai-msg { line-height: 1.4; margin-bottom: 20px; font-weight: normal; } 
-        .text-content { display: inline; }
-        .text-content p { margin: 15px 0; }
-        .text-content p:first-child { display: inline; }
-        
-        .user-msg { color: var(--user-msg); margin-top: 15px; }
-        .ai-msg { color: var(--green); }
-        
-        .system-msg { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: block; } 
-        .chat-label { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: inline; }
-        .glow { text-shadow: 0 0 8px var(--green); }
-        
-        .input-area { display: flex; align-items: flex-start; border-top: 1px solid var(--dim); padding-top: 15px; min-height: 80px; position: relative; margin-bottom: 10px; }
-        
-        #cmd-input, #sys-text { 
-            background: transparent; border: none; color: var(--user-msg); 
-            font-family: inherit; font-size: 1.1rem; outline: none; 
-            width: 100%; resize: none; line-height: 1.3;
-        }
-        
-        #cmd-input { padding-right: 95px; height: 55px; overflow: hidden; }
-        #sys-text { border: 1px solid var(--dim); padding: 15px; height: 150px; width: 80%; max-width: 600px; color: var(--green); margin-bottom: 20px; }
-
-        #fingerprint-ui { color: #888; font-size: 0.8rem; margin-top: 9px; font-weight: bold; }
-        #pass-entry::placeholder { color: #444; opacity: 1; }
-
-        #status-light { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; margin-left: 10px; opacity: 0; }
-        .pulsing { animation: pulse 1s infinite; opacity: 1 !important; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        
-        #loader { color: var(--green); font-weight: bold; margin-right: 10px; min-width: 45px; display: none; font-size: 0.9rem; padding-top: 4px; }
-
-        .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: absolute; right: 0; top: 15px; }
-        .icon-btn { 
-            background: transparent; border: 1px solid var(--dim); 
-            color: var(--green); cursor: pointer; padding: 6px; 
-            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-        }
-        .icon-btn:hover { border-color: var(--green); background: var(--dim); }
-        .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
-
-        .action-btn { background: var(--green); border: none; padding: 10px 30px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; margin: 10px; color: var(--bg); }
-        .cancel-btn { background: transparent; border: 1px solid var(--dim); color: var(--green); padding: 10px 30px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; margin: 10px; }
+        .field-tag { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: #71717a; margin-bottom: 4px; display: block; font-weight: 600; }
     </style>
 </head>
-<body>
+<body class="bg-black text-[#fafafa] antialiased overflow-hidden h-screen flex flex-col">
 
-    <div id="auth-overlay" class="modal-overlay">
-        <h2 class="glow">CHAT AUTHORIZATION</h2>
-        <p class="system-msg">ENTER PASSWORD TO DECRYPT UPLINK</p>
-        <input type="password" id="pass-entry" autofocus 
-               style="text-align: center; border: none; border-bottom: 1px solid var(--green); background: transparent; color: var(--user-msg); width: 320px; padding: 10px 0; font-size: 1.2rem; outline: none; font-family: inherit;" 
-               placeholder="••••••••" oninput="showID()">
-        <div id="fingerprint-ui">ID: ----</div>
-        <button class="action-btn" onclick="unlock()">INITIALIZE</button>
+    <div id="auth-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6 transition-opacity duration-700">
+        <h1 class="text-xs font-light tracking-[0.5em] text-zinc-400 mb-8 uppercase text-center">Uplink Required</h1>
+        <input type="password" id="pass-entry" 
+               class="bg-transparent border-b border-zinc-700 p-2 text-xl outline-none text-center w-64 focus:border-zinc-400 transition-all text-white"
+               placeholder="••••••••" autofocus autocomplete="off">
     </div>
 
-    <div id="reset-modal" class="modal-overlay" style="display:none;">
-        <h2 class="glow">RESET CURRENT SESSION</h2>
-        <p class="system-msg">ERASE CHAT AND RESET PIA'S MEMORY?</p>
-        <div>
-            <button class="action-btn" onclick="confirmReset()">CONFIRM</button>
-            <button class="cancel-btn" onclick="closeModals()">CLOSE</button>
-        </div>
-    </div>
+    <main id="app-shell" class="flex flex-1 flex-row overflow-hidden">
+        <section class="flex-[2] flex flex-col relative border-zinc-800 border-x bg-zinc-950/10">
+            <header class="flex-none p-4 border-b border-zinc-800 flex justify-between items-center bg-black">
+                <div class="flex items-center gap-3">
+                    <div id="status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></div>
+                    <span id="display-ai-name" class="text-sm font-bold tracking-[0.2em] text-zinc-300 uppercase">System</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="icon-btn" title="Reset Session" onclick="resetChat()">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    </button>
+                    <button class="icon-btn" title="Download Log" onclick="downloadChat()">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4m4-10l5 5 5-5m-5 5V3"></path></svg>
+                    </button>
+                    <button class="icon-btn" title="System Settings" onclick="openSettings()">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
+                </div>
+            </header>
 
-    <div id="sys-modal" class="modal-overlay" style="display:none;">
-        <h2 class="glow">SYSTEM INSTRUCTIONS</h2>
-        <p class="system-msg">DEFINE PIA'S PERSONALITY</p>
-        <textarea id="sys-text" spellcheck="false"></textarea>
-        <div>
-            <button class="action-btn" onclick="saveSys()">UPDATE</button>
-            <button class="cancel-btn" onclick="closeModals()">CLOSE</button>
-        </div>
-    </div>
+            <div id="chat-output" class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <div id="uplink-desc" class="text-[10px] tracking-widest text-zinc-600 uppercase text-center py-2 border-b border-zinc-800/30">Secure Uplink v1.4.3</div>
+            </div>
 
-    <div id="terminal">
-        <div id="output"><span class="glow">PIA CHAT ONLINE // 30.03.2026</span><div id="status-light"></div></div>
-        
-        <div class="input-area">
-            <span id="loader">[ / ]</span>
-            <span style="margin-right: 10px; font-weight: bold; color: var(--green); padding-top: 4px; white-space: nowrap;">beyazkus@chat:~$</span>
-            <textarea id="cmd-input" spellcheck="false" autocomplete="off" rows="2"></textarea>
+            <footer class="flex-none p-4 bg-black border-t border-zinc-800 pb-8">
+                <div class="max-w-3xl mx-auto flex gap-3 items-center">
+                    <textarea id="cmd-input" rows="1" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-3 focus:outline-none focus:border-zinc-500 resize-none text-zinc-200 text-sm transition-colors" placeholder="Type message..."></textarea>
+                    <button onclick="handleSend()" class="p-3 bg-zinc-100 text-black rounded-lg hover:bg-white transition-all active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke-width="2.5"></path></svg>
+                    </button>
+                </div>
+            </footer>
+        </section>
+
+        <aside class="flex-1 min-w-[280px] h-full bg-black flex flex-col relative overflow-hidden">
+            <div id="avatar-container" class="flex-1 flex items-center justify-center bg-black p-4 transition-all">
+                <img id="avatar-img" onclick="manualAvatarSwap()" src="" class="max-w-full max-h-full object-contain opacity-0 shadow-2xl" title="Click to rotate avatar">
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
+                <div class="flex items-center gap-2 mb-1">
+                    <div id="thinking-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-600"></div>
+                    <p id="avatar-status" class="text-[10px] tracking-[0.4em] uppercase text-zinc-400 font-bold">Standby</p>
+                </div>
+                <h2 id="avatar-label" class="text-lg font-light text-zinc-100 tracking-wide">---</h2>
+            </div>
+        </aside>
+    </main>
+
+    <div id="settings-modal" class="hidden fixed inset-0 z-[110] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-zinc-950 border border-zinc-800 p-8 rounded-xl w-full max-w-sm space-y-4 shadow-2xl">
+            <h3 class="text-[10px] font-bold tracking-[0.3em] text-zinc-400 uppercase mb-2 border-b border-zinc-900 pb-2">Settings</h3>
             
-            <div class="control-grid">
-                <button class="icon-btn" title="Download Log" onclick="downloadChat()">
-                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4m4-10l5 5 5-5m-5 5V3"></path></svg>
-                </button>
-                <button class="icon-btn" title="Send Message" onclick="handleSend()">
-                    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
-                </button>
-                <button class="icon-btn" title="Reset Session" onclick="openReset()">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                </button>
-                <button class="icon-btn" title="System Instructions" onclick="openSys()">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                </button>
+            <div class="space-y-4">
+                <div>
+                    <label class="field-tag">User Name</label>
+                    <input id="set-user-name" type="text" placeholder="What is your name?" class="w-full bg-black border border-zinc-800 p-2.5 rounded focus:border-zinc-500 outline-none text-zinc-300 text-xs">
+                </div>
+                <div>
+                    <label class="field-tag">AI Name</label>
+                    <input id="set-ai-name" type="text" placeholder="What is the AI's name?" class="w-full bg-black border border-zinc-800 p-2.5 rounded focus:border-zinc-500 outline-none text-zinc-300 text-xs">
+                </div>
+                <div>
+                    <label class="field-tag">AI Personality</label>
+                    <textarea id="set-sys" rows="4" placeholder="Describe the AI's personality." class="w-full bg-black border border-zinc-800 p-2.5 rounded focus:border-zinc-500 outline-none resize-none text-zinc-300 text-xs"></textarea>
+                </div>
+                <div class="pt-1">
+                    <label class="field-tag">AI Model</label>
+                    <select id="set-model" class="w-full bg-black border border-zinc-800 p-2.5 rounded focus:border-zinc-500 outline-none text-zinc-300 text-xs">
+                        <option value="1">GPT-OSS 120B</option>
+                        <option value="2">Llama 3.3 70B</option>
+                        <option value="3">Llama 4 Scout 17B</option>
+                        <option value="4">Llama 3.1 8B</option>
+                        <option value="5">Qwen 3 32B</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 pt-4 border-t border-zinc-900">
+                <button onclick="applySettings()" class="flex-1 bg-zinc-200 text-black py-2.5 font-bold rounded hover:bg-white transition-colors uppercase text-[10px] tracking-widest">Save</button>
+                <button onclick="closeSettings()" class="flex-1 border border-zinc-800 py-2.5 rounded text-zinc-400 hover:text-zinc-200 transition-colors uppercase text-[10px] tracking-widest">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="reset-modal" class="hidden fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-zinc-950 border border-zinc-800 p-8 rounded-xl w-full max-w-xs space-y-6 shadow-2xl text-center">
+            <h3 class="text-[10px] font-bold tracking-[0.3em] text-zinc-500 uppercase">System Notice</h3>
+            <p class="text-sm text-zinc-200 tracking-wide">Reset current session?</p>
+            <div class="flex gap-2 pt-2">
+                <button onclick="confirmReset()" class="flex-1 bg-red-900/20 border border-red-900/50 text-red-500 py-2 rounded hover:bg-red-900/40 transition-colors uppercase text-[10px] tracking-widest font-bold">Reset</button>
+                <button onclick="closeReset()" class="flex-1 border border-zinc-800 py-2 rounded text-zinc-400 hover:text-zinc-200 transition-colors uppercase text-[10px] tracking-widest">Cancel</button>
             </div>
         </div>
     </div>
 
     <script>
-        const MAP_STRING = "87,144,122,101,76,159,83,129,222,169,114,46,16,91,43,106,228,231,193,48,254,74,236,194,184,121,173,67,103,40,145,50,92,105,111,142,221,0,65"; 
-        const MODEL_NAME = "gemini-3-flash-preview";
+        const MAP_STRING = "238,27,102,93,132,140,22,114,203,75,62,194,133,4,109,208,161,82,213,156,188,132,140,168,190,135,90,137,43,157,192,177,42,205,194,238,119,143,59,46,29,42,72,60,36,31,121,230,49,55,173,97,142,25,50,238";
         let API_KEY = "";
-        let loaderInterval;
-        let chatHistory = []; 
-        let systemInstruction = "You are Pia Pandora. A witty and supportive, double braided, red haired girlfriend with a cute, girlish charm and playful, devoted personality. Keep responses concise but expressive and make sure to occasionally use naughty emojis. User is beyazkus.";
+        let chatHistory = [];
+        let currentAvatarIndex = 0;
+        let preloadedImages = [];
 
-        function showID() {
-            const pass = document.getElementById('pass-entry').value;
-            if(typeof Vault !== 'undefined') document.getElementById('fingerprint-ui').innerText = "ID: " + Vault.fingerprint(pass);
+        const MODELS = {
+            "1": { name: "openai/gpt-oss-120b", color: "#00ff41", desc: "GPT-OSS // 120B MoE" },
+            "2": { name: "llama-3.3-70b-versatile", color: "#00d4ff", desc: "LLAMA 3.3 // 70B" },
+            "3": { name: "meta-llama/llama-4-scout-17b-16e-instruct", color: "#ff00d4", desc: "LLAMA 4 // SCOUT" },
+            "4": { name: "llama-3.1-8b-instant", color: "#ffcc00", desc: "LLAMA 3.1 // 8B" },
+            "5": { name: "qwen/qwen3-32b", color: "#ff0000", desc: "QWEN 3 // 32B" }
+        };
+
+        let config = {
+            activeModelId: "1",
+            aiName: "Pia Pandora",
+            userName: "beyazkus",
+            personality: "A witty, supportive partner with girlish charm and a devoted personality; she responds concisely but with high expression.",
+            avatars: [
+                "https://piapandora.com/tickletrio/images/red/red01.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde01.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark01.jpg",
+                "https://piapandora.com/tickletrio/images/red/red02.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde02.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark02.jpg",
+                "https://piapandora.com/tickletrio/images/red/red03.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde03.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark03.jpg",
+                "https://piapandora.com/tickletrio/images/red/red04.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde04.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark04.jpg",
+                "https://piapandora.com/tickletrio/images/red/red05.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde05.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark05.jpg",
+                "https://piapandora.com/tickletrio/images/red/red06.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde06.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark06.jpg",
+                "https://piapandora.com/tickletrio/images/red/red07.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde07.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark07.jpg",
+                "https://piapandora.com/tickletrio/images/red/red08.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde08.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark08.jpg",
+                "https://piapandora.com/tickletrio/images/red/red09.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde09.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark09.jpg",
+                "https://piapandora.com/tickletrio/images/red/red10.jpg", 
+                "https://piapandora.com/tickletrio/images/blonde/blonde10.jpg", 
+                "https://piapandora.com/tickletrio/images/dark/dark10.jpg"
+            ]
+        };
+
+        function preloadAvatars() {
+            preloadedImages = config.avatars.map(url => {
+                const img = new Image();
+                img.src = url;
+                return img;
+            });
         }
 
         function unlock() {
             const pass = document.getElementById('pass-entry').value;
-            if (pass && typeof Vault !== 'undefined') {
-                try {
-                    API_KEY = Vault.reconstruct(MAP_STRING, pass);
-                    document.getElementById('pass-entry').value = "";
-                    document.querySelector('#output .glow').innerText = `PIA CHAT ONLINE // ${getFormattedDate()}`;
-                    document.getElementById('auth-overlay').style.display = 'none';
-                    document.getElementById('cmd-input').focus();
-                    print(`[SYS]: UPLINK RECONSTRUCTED. FINGERPRINT: ${Vault.fingerprint(pass)}`, 'system-msg');
-                } catch (e) { 
-                    alert("AUTH ERROR: RECONSTRUCTION FAILED."); 
-                }
-            }
+            if(!pass) return;
+            try {
+                API_KEY = Vault.reconstruct(MAP_STRING, pass);
+                document.getElementById('auth-overlay').classList.add('hidden');
+                preloadAvatars();
+                setTimeout(initUI, 100);
+            } catch(e) { alert("Access Denied."); }
         }
 
-        function getFormattedDate() {
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            return `${dd}.${mm}.${yyyy}`;
-        }
-        function openReset() { document.getElementById('reset-modal').style.display = 'flex'; }
-        function openSys() { 
-            document.getElementById('sys-text').value = systemInstruction;
-            document.getElementById('sys-modal').style.display = 'flex'; 
-        }
-        function closeModals() { 
-            document.getElementById('reset-modal').style.display = 'none'; 
-            document.getElementById('sys-modal').style.display = 'none';
+        function initUI() {
+            const model = MODELS[config.activeModelId];
+            document.getElementById('display-ai-name').innerText = config.aiName;
+            document.getElementById('avatar-label').innerText = config.aiName;
+            document.getElementById('avatar-status').innerText = "Active";
+            document.getElementById('uplink-desc').innerText = model.desc;
+            document.getElementById('status-dot').style.backgroundColor = model.color;
+            document.getElementById('status-dot').style.boxShadow = `0 0 8px ${model.color}`;
+            
+            const img = document.getElementById('avatar-img');
+            img.src = config.avatars[currentAvatarIndex];
+            img.style.opacity = '1';
+            
             document.getElementById('cmd-input').focus();
+        }
+
+        function manualAvatarSwap() {
+            const img = document.getElementById('avatar-img');
+            img.style.opacity = '0';
+            currentAvatarIndex = (currentAvatarIndex + 1) % config.avatars.length;
+            setTimeout(() => {
+                img.src = config.avatars[currentAvatarIndex];
+                img.style.opacity = '1';
+            }, 400);
+        }
+
+        function resetChat() {
+            document.getElementById('reset-modal').classList.remove('hidden');
         }
 
         function confirmReset() {
             chatHistory = [];
-            document.getElementById('output').innerHTML = 
-                `<span class="glow">PIA CHAT ONLINE // RESET COMPLETE // ${getFormattedDate()}</span>` +
-                `<div id="status-light"></div>`;
-            closeModals();
+            document.getElementById('chat-output').innerHTML = '<div id="uplink-desc" class="text-[10px] tracking-widest text-zinc-600 uppercase text-center py-2 border-b border-zinc-800/30">Secure Uplink v1.4.3</div>';
+            closeReset();
         }
 
-        function saveSys() {
-            systemInstruction = document.getElementById('sys-text').value;
-            print("[SYS]: CORE DIRECTIVES UPDATED.", 'system-msg');
-            closeModals();
-        }
-
-        function startLoader() {
-            const loader = document.getElementById('loader');
-            const frames = ["[ / ]", "[ — ]", "[ \\ ]", "[ | ]"];
-            let i = 0;
-            loader.style.display = "inline-block";
-            loaderInterval = setInterval(() => {
-                loader.innerText = frames[i];
-                i = (i + 1) % frames.length;
-            }, 250);
-        }
-
-        function stopLoader() {
-            clearInterval(loaderInterval);
-            document.getElementById('loader').style.display = "none";
+        function closeReset() {
+            document.getElementById('reset-modal').classList.add('hidden');
         }
 
         function downloadChat() {
-            if (chatHistory.length === 0) { alert("Log is empty."); return; }
-            const timestamp = Date.now();
-            const readableDate = new Date().toLocaleString();
-            let content = `--- PIA CHAT LOG ${readableDate} ---\n\n`;
-            chatHistory.forEach(entry => {
-                const label = entry.role === 'user' ? '[beyazkus]' : '[Pia Pandora]';
-                content += `${label}: ${entry.parts[0].text}\n\n`;
-            });
+            if (chatHistory.length === 0) return;
+            let content = `--- PIA CHAT LOG [${new Date().toLocaleString()}] ---\n\n`;
+            chatHistory.forEach(m => { content += `[${m.role === 'user' ? config.userName : config.aiName}]: ${m.content}\n\n`; });
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `pia-chat-${timestamp}.txt`;
+            a.download = `chat-log-${Date.now()}.txt`;
             a.click();
             URL.revokeObjectURL(url);
         }
 
         async function handleSend() {
             const input = document.getElementById('cmd-input');
-            const prompt = input.value.trim();
-            if (!prompt) return;
+            const text = input.value.trim();
+            if(!text) return;
             input.value = "";
-            print(`[beyazkus]: ${prompt}`, 'user-msg');
-            await talkToGemini(prompt);
+            appendMsg(config.userName, text, 'user');
+            setThinkingState(true);
+            await talkToGroq(text);
         }
 
-        document.getElementById('pass-entry').addEventListener('keypress', (e) => { if (e.key === 'Enter') unlock(); });
-        document.getElementById('cmd-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-        });
+        async function talkToGroq(text, retryCount = 0) {
+            if (retryCount === 0) chatHistory.push({ role: "user", content: text });
+            const modelName = MODELS[config.activeModelId].name;
+            const masterInstruction = `You are ${config.aiName}. ${config.personality} User is ${config.userName}.`;
 
-        async function talkToGemini(text, retryCount = 0) {
-            const light = document.getElementById('status-light');
-            light.classList.add('pulsing');
-            startLoader();
-            if (retryCount === 0) chatHistory.push({ role: "user", parts: [{ text: text }] });
-            
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
-                const res = await fetch(url, {
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
                     body: JSON.stringify({
-                        system_instruction: { parts: [{ text: systemInstruction }] },
-                        contents: chatHistory,
-                        generationConfig: { temperature: 1.0, maxOutputTokens: 1024, topP: 0.95 }
+                        model: modelName,
+                        messages: [{ role: "system", content: masterInstruction }, ...chatHistory],
+                        temperature: 1.0, max_tokens: 1024
                     })
                 });
-
-                if (!res.ok) throw new Error("Connection Error");
+                if (!res.ok) throw new Error();
                 const data = await res.json();
-                light.classList.remove('pulsing');
-                stopLoader();
-
-                if (data.candidates && data.candidates[0].content) {
-                    const aiResponse = data.candidates[0].content.parts[0].text;
-                    chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
-                    if (chatHistory.length > 100) chatHistory.shift();
-                    typeOut(aiResponse);
-                }
-            } catch (e) {
-                if (retryCount < 5) { setTimeout(() => talkToGemini(text, retryCount + 1), (retryCount + 1) * 2000); } 
-                else {
-                    light.classList.remove('pulsing');
-                    stopLoader();
-                    print("[SYS]: UPLINK LOST.", 'system-msg');
-                }
+                const aiRes = data.choices[0].message.content;
+                chatHistory.push({ role: "assistant", content: aiRes });
+                typeOut(aiRes);
+            } catch(e) {
+                if (retryCount < 5) { setTimeout(() => talkToGroq(text, retryCount + 1), (retryCount + 1) * 2000); } 
+                else { appendMsg("System", "Uplink Severed.", 'ai'); setThinkingState(false); }
             }
         }
 
         function typeOut(str) {
-            const output = document.getElementById('output');
+            const container = document.getElementById('chat-output');
             const div = document.createElement('div');
-            div.className = 'ai-msg';
-            div.innerHTML = `<span class="chat-label">[Pia Pandora]: </span><div class="text-content"></div>`;
-            output.appendChild(div);
-            const target = div.querySelector('.text-content');
-            
-            const paragraphs = str.split('\n\n');
-            let pIndex = 0;
-            
-            function createPara() {
-                if (pIndex < paragraphs.length) {
-                    const p = document.createElement('p');
-                    target.appendChild(p);
-                    typeChar(paragraphs[pIndex], p, () => {
-                        pIndex++;
-                        createPara();
-                    });
+            div.className = `flex flex-col items-start transition-all duration-300`;
+            div.innerHTML = `<span class="text-xs text-zinc-300 mb-1 tracking-widest font-bold">${config.aiName}</span><div class="msg-body max-w-[85%] p-4 rounded-lg text-sm leading-relaxed bg-zinc-900 text-zinc-100 border border-zinc-800"></div>`;
+            container.appendChild(div);
+            const target = div.querySelector('.msg-body');
+            setThinkingState(false);
+            let i = 0;
+            function step() {
+                if (i < str.length) {
+                    target.textContent += str.charAt(i);
+                    i++;
+                    container.scrollTop = container.scrollHeight;
+                    setTimeout(step, 8);
                 }
             }
-
-            function typeChar(text, pTag, callback) {
-                let i = 0;
-                function step() {
-                    if (i < text.length) {
-                        pTag.textContent += text.charAt(i);
-                        i++;
-                        output.scrollTop = output.scrollHeight;
-                        setTimeout(step, 15);
-                    } else { callback(); }
-                }
-                step();
-            }
-            createPara();
+            step();
         }
 
-        function print(txt, cls) {
-            const d = document.createElement('div');
-            d.className = cls;
-            if(cls === 'user-msg') {
-                d.innerHTML = `<span class="chat-label">[beyazkus]: </span><div class="text-content">${txt.replace('[beyazkus]: ', '').split('\n\n').map(p => `<p>${p}</p>`).join('')}</div>`;            } else if (cls === 'system-msg') {
-                d.innerHTML = txt;
+        function appendMsg(sender, text, role) {
+            const container = document.getElementById('chat-output');
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${role === 'user' ? 'items-end' : 'items-start'} transition-all duration-300`;
+            div.innerHTML = `<span class="text-xs text-zinc-300 mb-1 tracking-widest font-bold">${sender}</span><div class="max-w-[85%] p-4 rounded-lg text-sm leading-relaxed ${role === 'user' ? 'bg-zinc-100 text-black font-semibold' : 'bg-zinc-900 text-zinc-100 border border-zinc-800'}">${text}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function setThinkingState(isThinking) {
+            const status = document.getElementById('avatar-status');
+            const dot = document.getElementById('thinking-dot');
+            const activeColor = MODELS[config.activeModelId].color;
+            if (isThinking) {
+                status.innerText = "Thinking...";
+                dot.style.backgroundColor = activeColor;
             } else {
-                d.innerText = txt;
+                status.innerText = "Active";
+                dot.style.backgroundColor = '';
             }
-            document.getElementById('output').appendChild(d);
-            document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
         }
 
-        document.body.addEventListener('click', (e) => {
-            if (window.getSelection().toString().length > 0) return;
-            if (e.target.closest('.icon-btn') || e.target.closest('.modal-overlay')) return;
-            if (document.getElementById('auth-overlay').style.display === 'none') document.getElementById('cmd-input').focus();
+        function openSettings() {
+            document.getElementById('set-user-name').value = config.userName;
+            document.getElementById('set-ai-name').value = config.aiName;
+            document.getElementById('set-sys').value = config.personality;
+            document.getElementById('set-model').value = config.activeModelId;
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function applySettings() {
+            config.userName = document.getElementById('set-user-name').value;
+            config.aiName = document.getElementById('set-ai-name').value;
+            config.personality = document.getElementById('set-sys').value;
+            config.activeModelId = document.getElementById('set-model').value;
+            initUI();
+            closeSettings();
+        }
+
+        function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+        document.getElementById('pass-entry').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+        document.getElementById('cmd-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
         });
     </script>
 </body>

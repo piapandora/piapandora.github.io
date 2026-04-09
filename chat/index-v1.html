@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PIA CHAT</title>
+    <link rel="icon" type="image/png" href="https://www.piapandora.com/box/misc/green-icon.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <style>
+        :root { --green: #00ff41; --bg: #050505; --dim: #003311; --user-msg: #dddddd; --pure-white: #ffffff; }
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--green); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        
+        ::selection { background: var(--dim); color: var(--green); }
+        ::-moz-selection { background: var(--dim); color: var(--green); }
+
+        #output::-webkit-scrollbar { width: 5px; height: 0; }
+        #output::-webkit-scrollbar-track { background: transparent; }
+        #output::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
+        #output::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+        #output::-webkit-scrollbar-corner { background: transparent; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #auth-overlay { z-index: 1200; }
+        .modal-overlay h2 { letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; }
+        .modal-overlay p { margin-bottom: 30px; letter-spacing: 1px; }
+
+        #terminal { padding: 25px 25px 5px 25px; height: 100vh; display: flex; flex-direction: column; position: relative; }
+        
+        #output { 
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+            flex-grow: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            scroll-behavior: smooth; 
+            padding-right: 20px; 
+            user-select: text; 
+        }
+        
+        .user-msg, .ai-msg { line-height: 1.4; margin-bottom: 20px; font-weight: normal; } 
+        .text-content { display: inline; }
+        .text-content p { margin: 15px 0; }
+        .text-content p:first-child { display: inline; }
+        
+        .user-msg { color: var(--user-msg); margin-top: 15px; }
+        .ai-msg { color: var(--green); }
+        
+        .system-msg { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: block; } 
+        .chat-label { color: var(--pure-white); font-size: 0.9rem; font-weight: normal; display: inline; }
+        .glow { text-shadow: 0 0 8px var(--green); }
+        
+        .input-area { display: flex; align-items: flex-start; border-top: 1px solid var(--dim); padding-top: 15px; min-height: 80px; position: relative; margin-bottom: 10px; }
+        
+        #cmd-input, #sys-text { 
+            background: transparent; border: none; color: var(--user-msg); 
+            font-family: inherit; font-size: 1.1rem; outline: none; 
+            width: 100%; resize: none; line-height: 1.3;
+        }
+        
+        #cmd-input { padding-right: 95px; height: 55px; overflow: hidden; }
+        #sys-text { border: 1px solid var(--dim); padding: 15px; height: 150px; width: 80%; max-width: 600px; color: var(--green); margin-bottom: 20px; }
+
+        #fingerprint-ui { color: #888; font-size: 0.8rem; margin-top: 9px; font-weight: bold; }
+        #pass-entry::placeholder { color: #444; opacity: 1; }
+
+        #status-light { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; margin-left: 10px; opacity: 0; }
+        .pulsing { animation: pulse 1s infinite; opacity: 1 !important; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        #loader { color: var(--green); font-weight: bold; margin-right: 10px; min-width: 45px; display: none; font-size: 0.9rem; padding-top: 4px; }
+
+        .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: absolute; right: 0; top: 15px; }
+        .icon-btn { 
+            background: transparent; border: 1px solid var(--dim); 
+            color: var(--green); cursor: pointer; padding: 6px; 
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .icon-btn:hover { border-color: var(--green); background: var(--dim); }
+        .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        .action-btn { background: var(--green); border: none; padding: 10px 30px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; margin: 10px; color: var(--bg); }
+        .cancel-btn { background: transparent; border: 1px solid var(--dim); color: var(--green); padding: 10px 30px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; margin: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay" class="modal-overlay">
+        <h2 class="glow">CHAT AUTHORIZATION</h2>
+        <p class="system-msg">ENTER PASSWORD TO DECRYPT UPLINK</p>
+        <input type="password" id="pass-entry" autofocus 
+               style="text-align: center; border: none; border-bottom: 1px solid var(--green); background: transparent; color: var(--user-msg); width: 320px; padding: 10px 0; font-size: 1.2rem; outline: none; font-family: inherit;" 
+               placeholder="••••••••" oninput="showID()">
+        <div id="fingerprint-ui">ID: ----</div>
+        <button class="action-btn" onclick="unlock()">INITIALIZE</button>
+    </div>
+
+    <div id="reset-modal" class="modal-overlay" style="display:none;">
+        <h2 class="glow">RESET CURRENT SESSION</h2>
+        <p class="system-msg">ERASE CHAT AND RESET PIA'S MEMORY?</p>
+        <div>
+            <button class="action-btn" onclick="confirmReset()">CONFIRM</button>
+            <button class="cancel-btn" onclick="closeModals()">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="sys-modal" class="modal-overlay" style="display:none;">
+        <h2 class="glow">SYSTEM INSTRUCTIONS</h2>
+        <p class="system-msg">DEFINE PIA'S PERSONALITY</p>
+        <textarea id="sys-text" spellcheck="false"></textarea>
+        <div>
+            <button class="action-btn" onclick="saveSys()">UPDATE</button>
+            <button class="cancel-btn" onclick="closeModals()">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="terminal">
+        <div id="output"><span class="glow">PIA CHAT ONLINE // 30.03.2026</span><div id="status-light"></div></div>
+        
+        <div class="input-area">
+            <span id="loader">[ / ]</span>
+            <span style="margin-right: 10px; font-weight: bold; color: var(--green); padding-top: 4px; white-space: nowrap;">beyazkus@chat:~$</span>
+            <textarea id="cmd-input" spellcheck="false" autocomplete="off" rows="2"></textarea>
+            
+            <div class="control-grid">
+                <button class="icon-btn" title="Download Log" onclick="downloadChat()">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4m4-10l5 5 5-5m-5 5V3"></path></svg>
+                </button>
+                <button class="icon-btn" title="Send Message" onclick="handleSend()">
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                </button>
+                <button class="icon-btn" title="Reset Session" onclick="openReset()">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                </button>
+                <button class="icon-btn" title="System Instructions" onclick="openSys()">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MAP_STRING = "87,144,122,101,76,159,83,129,222,169,114,46,16,91,43,106,228,231,193,48,254,74,236,194,184,121,173,67,103,40,145,50,92,105,111,142,221,0,65"; 
+        const MODEL_NAME = "gemini-3-flash-preview";
+        let API_KEY = "";
+        let loaderInterval;
+        let chatHistory = []; 
+        let systemInstruction = "You are Pia Pandora. A witty and supportive, double braided, red haired girlfriend with a cute, girlish charm and playful, devoted personality. Keep responses concise but expressive and make sure to occasionally use naughty emojis. User is beyazkus.";
+
+        function showID() {
+            const pass = document.getElementById('pass-entry').value;
+            if(typeof Vault !== 'undefined') document.getElementById('fingerprint-ui').innerText = "ID: " + Vault.fingerprint(pass);
+        }
+
+        function unlock() {
+            const pass = document.getElementById('pass-entry').value;
+            if (pass && typeof Vault !== 'undefined') {
+                try {
+                    API_KEY = Vault.reconstruct(MAP_STRING, pass);
+                    document.getElementById('pass-entry').value = "";
+                    document.querySelector('#output .glow').innerText = `PIA CHAT ONLINE // ${getFormattedDate()}`;
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('cmd-input').focus();
+                    print(`[SYS]: UPLINK RECONSTRUCTED. FINGERPRINT: ${Vault.fingerprint(pass)}`, 'system-msg');
+                } catch (e) { 
+                    alert("AUTH ERROR: RECONSTRUCTION FAILED."); 
+                }
+            }
+        }
+
+        function getFormattedDate() {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            return `${dd}.${mm}.${yyyy}`;
+        }
+        function openReset() { document.getElementById('reset-modal').style.display = 'flex'; }
+        function openSys() { 
+            document.getElementById('sys-text').value = systemInstruction;
+            document.getElementById('sys-modal').style.display = 'flex'; 
+        }
+        function closeModals() { 
+            document.getElementById('reset-modal').style.display = 'none'; 
+            document.getElementById('sys-modal').style.display = 'none';
+            document.getElementById('cmd-input').focus();
+        }
+
+        function confirmReset() {
+            chatHistory = [];
+            document.getElementById('output').innerHTML = 
+                `<span class="glow">PIA CHAT ONLINE // RESET COMPLETE // ${getFormattedDate()}</span>` +
+                `<div id="status-light"></div>`;
+            closeModals();
+        }
+
+        function saveSys() {
+            systemInstruction = document.getElementById('sys-text').value;
+            print("[SYS]: CORE DIRECTIVES UPDATED.", 'system-msg');
+            closeModals();
+        }
+
+        function startLoader() {
+            const loader = document.getElementById('loader');
+            const frames = ["[ / ]", "[ — ]", "[ \\ ]", "[ | ]"];
+            let i = 0;
+            loader.style.display = "inline-block";
+            loaderInterval = setInterval(() => {
+                loader.innerText = frames[i];
+                i = (i + 1) % frames.length;
+            }, 250);
+        }
+
+        function stopLoader() {
+            clearInterval(loaderInterval);
+            document.getElementById('loader').style.display = "none";
+        }
+
+        function downloadChat() {
+            if (chatHistory.length === 0) { alert("Log is empty."); return; }
+            const timestamp = Date.now();
+            const readableDate = new Date().toLocaleString();
+            let content = `--- PIA CHAT LOG ${readableDate} ---\n\n`;
+            chatHistory.forEach(entry => {
+                const label = entry.role === 'user' ? '[beyazkus]' : '[Pia Pandora]';
+                content += `${label}: ${entry.parts[0].text}\n\n`;
+            });
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pia-chat-${timestamp}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function handleSend() {
+            const input = document.getElementById('cmd-input');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+            input.value = "";
+            print(`[beyazkus]: ${prompt}`, 'user-msg');
+            await talkToGemini(prompt);
+        }
+
+        document.getElementById('pass-entry').addEventListener('keypress', (e) => { if (e.key === 'Enter') unlock(); });
+        document.getElementById('cmd-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+        });
+
+        async function talkToGemini(text, retryCount = 0) {
+            const light = document.getElementById('status-light');
+            light.classList.add('pulsing');
+            startLoader();
+            if (retryCount === 0) chatHistory.push({ role: "user", parts: [{ text: text }] });
+            
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        system_instruction: { parts: [{ text: systemInstruction }] },
+                        contents: chatHistory,
+                        generationConfig: { temperature: 1.0, maxOutputTokens: 1024, topP: 0.95 }
+                    })
+                });
+
+                if (!res.ok) throw new Error("Connection Error");
+                const data = await res.json();
+                light.classList.remove('pulsing');
+                stopLoader();
+
+                if (data.candidates && data.candidates[0].content) {
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                    if (chatHistory.length > 100) chatHistory.shift();
+                    typeOut(aiResponse);
+                }
+            } catch (e) {
+                if (retryCount < 5) { setTimeout(() => talkToGemini(text, retryCount + 1), (retryCount + 1) * 2000); } 
+                else {
+                    light.classList.remove('pulsing');
+                    stopLoader();
+                    print("[SYS]: UPLINK LOST.", 'system-msg');
+                }
+            }
+        }
+
+        function typeOut(str) {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = 'ai-msg';
+            div.innerHTML = `<span class="chat-label">[Pia Pandora]: </span><div class="text-content"></div>`;
+            output.appendChild(div);
+            const target = div.querySelector('.text-content');
+            
+            const paragraphs = str.split('\n\n');
+            let pIndex = 0;
+            
+            function createPara() {
+                if (pIndex < paragraphs.length) {
+                    const p = document.createElement('p');
+                    target.appendChild(p);
+                    typeChar(paragraphs[pIndex], p, () => {
+                        pIndex++;
+                        createPara();
+                    });
+                }
+            }
+
+            function typeChar(text, pTag, callback) {
+                let i = 0;
+                function step() {
+                    if (i < text.length) {
+                        pTag.textContent += text.charAt(i);
+                        i++;
+                        output.scrollTop = output.scrollHeight;
+                        setTimeout(step, 15);
+                    } else { callback(); }
+                }
+                step();
+            }
+            createPara();
+        }
+
+        function print(txt, cls) {
+            const d = document.createElement('div');
+            d.className = cls;
+            if(cls === 'user-msg') {
+                d.innerHTML = `<span class="chat-label">[beyazkus]: </span><div class="text-content">${txt.replace('[beyazkus]: ', '').split('\n\n').map(p => `<p>${p}</p>`).join('')}</div>`;            } else if (cls === 'system-msg') {
+                d.innerHTML = txt;
+            } else {
+                d.innerText = txt;
+            }
+            document.getElementById('output').appendChild(d);
+            document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
+        }
+
+        document.body.addEventListener('click', (e) => {
+            if (window.getSelection().toString().length > 0) return;
+            if (e.target.closest('.icon-btn') || e.target.closest('.modal-overlay')) return;
+            if (document.getElementById('auth-overlay').style.display === 'none') document.getElementById('cmd-input').focus();
+        });
+    </script>
+</body>
+</html>
