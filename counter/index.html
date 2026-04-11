@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Counter App</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <style>
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #ffffff;
+            --accent: #ff4d4d; /* Red accent for the spin state */
+            --btn-bg: #333;
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: var(--bg);
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: var(--text);
+        }
+
+        .container {
+            text-align: center;
+            background: var(--card);
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+
+        #slot {
+            font-size: 5rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            margin: 1rem 0;
+            min-width: 200px;
+            letter-spacing: -2px;
+            transition: color 0.2s ease;
+        }
+
+        #slot.spinning {
+            color: var(--accent);
+        }
+
+        button {
+            background-color: var(--btn-bg);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #444;
+            transform: translateY(-1px);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="slot">000</div>
+        <button id="spinBtn">Spin</button>
+    </div>
+
+    <script>
+        (() => {
+            const btn = document.getElementById('spinBtn');
+            const slot = document.getElementById('slot');
+
+            const min = 1;
+            const max = 999;
+            const spinDurationMs = 1200;
+            const tickMs = 40;
+
+            let spinning = false;
+
+            function randInt(a, b) {
+                return Math.floor(Math.random() * (b - a + 1)) + a;
+            }
+
+            btn.addEventListener('click', () => {
+                if (spinning) return;
+                
+                spinning = true;
+                btn.disabled = true;
+                slot.classList.add('spinning');
+
+                const finalNumber = randInt(min, max);
+                const start = performance.now();
+
+                const timer = setInterval(() => {
+                    // Visual update during spin
+                    slot.textContent = randInt(min, max).toString().padStart(3, '0');
+
+                    if (performance.now() - start >= spinDurationMs) {
+                        clearInterval(timer);
+                        
+                        // Set final result
+                        slot.textContent = finalNumber.toString().padStart(3, '0');
+                        
+                        btn.disabled = false;
+                        spinning = false;
+                        slot.classList.remove('spinning');
+                    }
+                }, tickMs);
+            });
+        })();
+    </script>
+</body>
+</html>
