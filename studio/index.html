@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIA STUDIO // FLUX</title>
+    <title>PIA STUDIO</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/piapandora/micro-logo.png">
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://piapandora.com/box/vault.js"></script>
@@ -17,24 +18,16 @@
             width: 100vw;
             overflow: hidden;
         }
-        
-        /* Layout Utilities */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .column-border { border-color: #18181b; }
-
-        /* Smooth Image Transitions */
         #main-img { 
             transition: opacity 0.5s ease-in-out; 
             will-change: opacity;
         }
-
-        /* Fixed the Shadow Syntax */
         .canvas-shadow { 
             box-shadow: 0 0 100px rgba(255, 77, 77, 0.08); 
         }
-
         .studio-bg {
             background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
             background-size: 40px 40px;
@@ -85,7 +78,7 @@
                     <span class="label-text text-[9px] uppercase tracking-[0.2em] font-bold text-zinc-500">Fixed Aesthetic</span>
                 </label>
                 <textarea id="styleInput" 
-                        class="textarea textarea-bordered h-16 bg-black border-zinc-800 focus:border-primary text-sm leading-relaxed resize-none">cute red-haired girl with double-braids, high detail skin, 8k</textarea>
+                        class="textarea textarea-bordered h-16 bg-black border-zinc-800 focus:border-primary text-sm leading-relaxed resize-none">Hyper-realistic portrait of a stunningly beautiful young lady with vibrant red double-braids, combining hyper-detailed textures with stylized, slightly anime-proportioned features. Intricate skin, visible pores, light freckles, and fine peach fuzz. Soft cinematic lighting, 85mm f/1.8, bokeh, with exceptionally sharp, slightly larger-than-life green eyes. Perfected, hyper-detailed doll-like aesthetic. 8k highly detailed textures.</textarea>
             </div>
 
             <button id="genBtn" onclick="generate()" class="btn btn-primary btn-block no-animation text-[10px] tracking-[0.3em] uppercase font-black mt-4">
@@ -100,14 +93,11 @@
 
     <section class="w-1/2 h-full bg-black relative flex items-center justify-center p-12 studio-bg">
         <div id="canvas-wrap" class="relative max-w-full max-h-full">
-            
             <div id="loader" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md rounded-lg border border-white/5">
                 <span class="loading loading-infinity loading-lg text-primary"></span>
                 <p class="mt-4 text-[9px] tracking-[0.6em] text-primary uppercase font-black animate-pulse">Manifesting</p>
             </div>
-            
             <img id="main-img" src="" class="max-w-full max-h-[85vh] object-contain rounded-sm canvas-shadow opacity-0" />
-            
             <div id="empty-ui" class="text-center opacity-20 hover:opacity-40 transition-opacity cursor-default">
                 <h2 class="text-zinc-100 text-[10vw] font-black tracking-tighter leading-none select-none">PIA</h2>
                 <p class="text-zinc-400 text-[10px] tracking-[1.2em] uppercase mt-4">Ready for input</p>
@@ -119,14 +109,11 @@
         <header class="p-6 border-b column-border bg-black">
             <span class="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-500">Session History</span>
         </header>
-
-        <div id="history-grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 auto-rows-min gap-4 no-scrollbar">
-            </div>
+        <div id="history-grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 auto-rows-min gap-4 no-scrollbar"></div>
     </aside>
 
     <script>
         const MAP_STRING = "21,95,42,7,245,131,206,254,239,224,240,119,214,111,202,65,36,246,76,59,158,229,188,133,112,163,57,22,83,121,120,91,56,202,202";
-
         const vaultPass = document.getElementById('vaultPass');
         const fingerprint = document.getElementById('fingerprint');
         const genBtn = document.getElementById('genBtn');
@@ -135,39 +122,50 @@
         const emptyUI = document.getElementById('empty-ui');
         const historyGrid = document.getElementById('history-grid');
 
-        // Update ID fingerprint as user types
+        // FLAG: Prevents historical clicks from re-adding themselves to history
+        let isHistoricalView = false;
+
         vaultPass.addEventListener('input', () => {
             if (typeof Vault !== 'undefined') {
-                const fp = Vault.fingerprint(vaultPass.value);
-                fingerprint.innerText = `ID: ${fp}`;
+                fingerprint.innerText = `ID: ${Vault.fingerprint(vaultPass.value)}`;
             }
         });
 
+        // Set up the load listener once
+        mainImg.onload = () => {
+            loader.classList.add('hidden');
+            mainImg.style.opacity = '1';
+            genBtn.disabled = false;
+            genBtn.innerText = "Initiate Render";
+            
+            // Only add to history if this was a fresh generation
+            if (!isHistoricalView && mainImg.src) {
+                addToHistory(mainImg.src);
+            }
+            // Reset flag for next interaction
+            isHistoricalView = false;
+        };
+
         async function generate() {
             const pass = vaultPass.value;
-            if (!pass) {
-                alert("Vault decryption key required.");
-                return;
-            }
+            if (!pass) return alert("Vault decryption key required.");
 
             let apiKey = "";
             try {
                 apiKey = Vault.reconstruct(MAP_STRING, pass);
                 if (!apiKey) throw new Error();
             } catch (e) {
-                alert("Access denied. Incorrect vault password.");
-                return;
+                return alert("Access denied. Incorrect vault password.");
             }
 
             const prompt = document.getElementById('promptInput').value || "meditative gaze";
             const style = document.getElementById('styleInput').value.replace(/\n/g, ', ');
             const h = document.getElementById('heightInput').value;
             const w = document.getElementById('widthInput').value;
-            
             const fullPrompt = `${prompt}, ${style}`;
             const seed = Math.floor(Math.random() * 9000000) + 1000000;
 
-            // UI Feedback
+            isHistoricalView = false; // This is a new generation
             genBtn.disabled = true;
             genBtn.innerText = "Processing...";
             loader.classList.remove('hidden');
@@ -178,20 +176,10 @@
                 const response = await fetch(`https://gen.pollinations.ai/image/${encodeURIComponent(fullPrompt)}?model=flux&seed=${seed}&width=${w}&height=${h}&nologo=true`, {
                     headers: { 'Authorization': `Bearer ${apiKey}` }
                 });
-
                 if (!response.ok) throw new Error("Connection Failure");
 
                 const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-
-                mainImg.src = url;
-                mainImg.onload = () => {
-                    loader.classList.add('hidden');
-                    mainImg.style.opacity = '1';
-                    genBtn.disabled = false;
-                    genBtn.innerText = "Initiate Render";
-                    addToHistory(url);
-                };
+                mainImg.src = URL.createObjectURL(blob);
             } catch (err) {
                 alert("Studio Error: " + err.message);
                 genBtn.disabled = false;
@@ -206,8 +194,8 @@
             container.innerHTML = `<img src="${url}" class="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity">`;
             
             container.onclick = () => {
+                isHistoricalView = true; // Set flag so it doesn't duplicate
                 mainImg.src = url;
-                mainImg.style.opacity = '1';
                 emptyUI.classList.add('hidden');
             };
 
@@ -215,7 +203,6 @@
             if (historyGrid.children.length > 20) historyGrid.lastChild.remove();
         }
 
-        // Hotkeys (Cmd/Ctrl + Enter)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
