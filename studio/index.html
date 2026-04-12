@@ -48,7 +48,7 @@
         <div class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
             <div class="form-control">
                 <label class="label pt-0 pb-1">
-                    <span class="label-text text-[9px] uppercase tracking-[0.2em] font-bold text-zinc-500">Vault Access</span>
+                    <span class="label-text text-[9px] uppercase tracking-[0.2em] font-bold text-zinc-500">App Password</span>
                 </label>
                 <input type="password" id="vaultPass" placeholder="••••••••" 
                        class="input input-bordered input-sm bg-black border-zinc-800 focus:border-primary text-white" />
@@ -56,7 +56,7 @@
 
             <div class="form-control">
                 <label class="label pt-0 pb-1">
-                    <span class="label-text text-[9px] uppercase tracking-[0.2em] font-bold text-zinc-500">Core Concept</span>
+                    <span class="label-text text-[9px] uppercase tracking-[0.2em] font-bold text-zinc-500">Main Prompt</span>
                 </label>
                 <textarea id="promptInput" class="textarea textarea-bordered h-24 bg-black border-zinc-800 focus:border-primary text-sm leading-relaxed resize-none" 
                           placeholder="Describe the action, clothing, or environment..."></textarea>
@@ -75,32 +75,28 @@
 
             <div class="form-control">
                 <label class="label pt-0 pb-1">
-                    <span class="label-text text-[9px] uppercase tracking-[0.2em] font-bold text-zinc-500">Fixed Aesthetic</span>
+                    <span class="label-text text-[9px] uppercase tracking-[0.2em] font-bold text-zinc-500">Style Prompt</span>
                 </label>
                 <textarea id="styleInput" 
-                        class="textarea textarea-bordered h-16 bg-black border-zinc-800 focus:border-primary text-sm leading-relaxed resize-none">Hyper-realistic portrait of a stunningly beautiful young lady with vibrant red double-braids, combining hyper-detailed textures with stylized, slightly anime-proportioned features. Intricate skin, visible pores, light freckles, and fine peach fuzz. Soft cinematic lighting, 85mm f/1.8, bokeh, with exceptionally sharp, slightly larger-than-life green eyes. Perfected, hyper-detailed doll-like aesthetic. 8k highly detailed textures.</textarea>
+                        class="textarea textarea-bordered h-16 bg-black border-zinc-800 focus:border-primary text-sm leading-relaxed resize-none">cute red-haired young lady with double-braided hair</textarea>
             </div>
 
             <button id="genBtn" onclick="generate()" class="btn btn-primary btn-block no-animation text-[10px] tracking-[0.3em] uppercase font-black mt-4">
-                Initiate Render
+                Generate Image
             </button>
         </div>
-        
-        <footer class="p-4 border-t column-border bg-black text-center">
-            <p class="text-[8px] text-zinc-700 tracking-[0.4em] uppercase font-bold">System Online</p>
-        </footer>
     </aside>
 
     <section class="w-1/2 h-full bg-black relative flex items-center justify-center p-12 studio-bg">
         <div id="canvas-wrap" class="relative max-w-full max-h-full">
             <div id="loader" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md rounded-lg border border-white/5">
                 <span class="loading loading-infinity loading-lg text-primary"></span>
-                <p class="mt-4 text-[9px] tracking-[0.6em] text-primary uppercase font-black animate-pulse">Manifesting</p>
+                <p class="mt-4 text-[9px] tracking-[0.6em] text-primary uppercase font-black animate-pulse">Generating</p>
             </div>
-            <img id="main-img" src="" class="max-w-full max-h-[85vh] object-contain rounded-sm canvas-shadow opacity-0" />
+            <img id="main-img" onclick="downloadImage(this.src)" src="" class="max-w-full max-h-[85vh] object-contain rounded-sm canvas-shadow opacity-0 cursor-pointer" />
             <div id="empty-ui" class="text-center opacity-20 hover:opacity-40 transition-opacity cursor-default">
                 <h2 class="text-zinc-100 text-[10vw] font-black tracking-tighter leading-none select-none">PIA</h2>
-                <p class="text-zinc-400 text-[10px] tracking-[1.2em] uppercase mt-4">Ready for input</p>
+                <p class="text-zinc-400 text-[15px] tracking-[1.2em] uppercase mt-0 ml-2.5">STUDIO</p>
             </div>
         </div>
     </section>
@@ -121,8 +117,6 @@
         const loader = document.getElementById('loader');
         const emptyUI = document.getElementById('empty-ui');
         const historyGrid = document.getElementById('history-grid');
-
-        // FLAG: Prevents historical clicks from re-adding themselves to history
         let isHistoricalView = false;
 
         vaultPass.addEventListener('input', () => {
@@ -131,41 +125,37 @@
             }
         });
 
-        // Set up the load listener once
         mainImg.onload = () => {
             loader.classList.add('hidden');
             mainImg.style.opacity = '1';
             genBtn.disabled = false;
-            genBtn.innerText = "Initiate Render";
-            
-            // Only add to history if this was a fresh generation
+            genBtn.innerText = "Generate Image";
             if (!isHistoricalView && mainImg.src) {
                 addToHistory(mainImg.src);
             }
-            // Reset flag for next interaction
             isHistoricalView = false;
         };
 
         async function generate() {
             const pass = vaultPass.value;
-            if (!pass) return alert("Vault decryption key required.");
+            if (!pass) return alert("Password required.");
 
             let apiKey = "";
             try {
                 apiKey = Vault.reconstruct(MAP_STRING, pass);
                 if (!apiKey) throw new Error();
             } catch (e) {
-                return alert("Access denied. Incorrect vault password.");
+                return alert("Access denied. Incorrect password.");
             }
 
-            const prompt = document.getElementById('promptInput').value || "meditative gaze";
+            const prompt = document.getElementById('promptInput').value || "teen gaze";
             const style = document.getElementById('styleInput').value.replace(/\n/g, ', ');
             const h = document.getElementById('heightInput').value;
             const w = document.getElementById('widthInput').value;
             const fullPrompt = `${prompt}, ${style}`;
             const seed = Math.floor(Math.random() * 9000000) + 1000000;
 
-            isHistoricalView = false; // This is a new generation
+            isHistoricalView = false;
             genBtn.disabled = true;
             genBtn.innerText = "Processing...";
             loader.classList.remove('hidden');
@@ -177,13 +167,12 @@
                     headers: { 'Authorization': `Bearer ${apiKey}` }
                 });
                 if (!response.ok) throw new Error("Connection Failure");
-
                 const blob = await response.blob();
                 mainImg.src = URL.createObjectURL(blob);
             } catch (err) {
                 alert("Studio Error: " + err.message);
                 genBtn.disabled = false;
-                genBtn.innerText = "Retry Render";
+                genBtn.innerText = "Generate Image";
                 loader.classList.add('hidden');
             }
         }
@@ -192,15 +181,23 @@
             const container = document.createElement('div');
             container.className = "aspect-square bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden cursor-pointer hover:border-primary transition-all active:scale-95 group shadow-lg";
             container.innerHTML = `<img src="${url}" class="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity">`;
-            
             container.onclick = () => {
-                isHistoricalView = true; // Set flag so it doesn't duplicate
+                isHistoricalView = true;
                 mainImg.src = url;
                 emptyUI.classList.add('hidden');
             };
-
             historyGrid.prepend(container);
             if (historyGrid.children.length > 20) historyGrid.lastChild.remove();
+        }
+
+        function downloadImage(url) {
+            if (!url) return;
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `pia-studio-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         document.addEventListener('keydown', (e) => {
