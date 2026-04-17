@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIA MUNDO</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <style>
+        :root { --accent: #2ecc71; --bg: #050505; --panel: #111; --text: #00ff41; }
+        body { 
+            margin: 0; padding: 0; width: 100%; height: 100vh;
+            background: var(--bg); color: var(--text); 
+            font-family: "Courier New", Courier, monospace;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+        .terminal { 
+            background: var(--panel); padding: 30px; border-radius: 4px; 
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.2); border: 1px solid #222;
+            width: 450px; display: flex; flex-direction: column; gap: 15px;
+            position: relative;
+        }
+        .terminal::before {
+            content: "SECURE ACCESS TERMINAL";
+            position: absolute; top: -10px; left: 20px;
+            background: var(--bg); padding: 0 10px;
+            font-size: 10px; color: #444; letter-spacing: 2px;
+        }
+        h2 { font-size: 14px; color: var(--accent); margin: 0; display: flex; justify-content: space-between; }
+        .fingerprint { color: #555; font-size: 12px; }
+        
+        .drop-zone {
+            border: 1px solid #333; padding: 50px 20px; border-radius: 2px;
+            cursor: pointer; transition: all 0.3s ease;
+            background: rgba(0,0,0,0.3); text-align: center;
+        }
+        .drop-zone.dragover { border-color: var(--accent); background: rgba(46, 204, 113, 0.05); }
+        .drop-zone p { font-size: 12px; color: var(--accent); margin: 0; opacity: 0.7; }
+        
+        .output-box {
+            background: #000; padding: 15px; border: 1px solid #222;
+            min-height: 40px; font-size: 13px; word-break: break-all;
+            display: flex; align-items: center; justify-content: center;
+            color: #555;
+        }
+        .unlocked { color: var(--accent); text-shadow: 0 0 8px var(--accent); }
+        
+        #status-line { font-size: 10px; color: #555; text-transform: uppercase; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="terminal">
+    <h2>
+        // PIA MUNDO v1.0
+        <span class="fingerprint" id="id-tag">ID: ----</span>
+    </h2>
+    
+    <label class="drop-zone" id="dropZone" for="fileInput">
+        <p id="prompt-text">INSERT AUTHENTICATOR</p>
+        <input type="file" id="fileInput">
+    </label>
+
+    <div id="status-line">System: Ready</div>
+    
+    <div class="output-box" id="result-display">
+        [ ENCRYPTED DATA ]
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const resultDisplay = document.getElementById('result-display');
+    const statusLine = document.getElementById('status-line');
+    const idTag = document.getElementById('id-tag');
+
+    const MAP_STRING = "10,9,41,150,31,7,189,38,43,112,202,163,131,209,45,181,219,140,195,241,30,236,232,174,135,218,58,173,232,172,0,182,3,15";
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
+        dropZone.addEventListener(name, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) processKey(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) processKey(e.target.files[0]);
+    });
+
+    async function processKey(file) {
+        updateStatus("EXTRACTING ORGANIC SEED...");
+        
+        const reader = new FileReader();
+        reader.onload = async () => {
+            try {
+                const b64 = reader.result.split(',')[1];
+                
+                const finger = Vault.fingerprint(b64);
+                idTag.innerText = `ID: ${finger}`;
+
+                updateStatus("SHUFFLING TABLE / DECRYPTING...");
+                const decrypted = Vault.reconstruct(MAP_STRING, b64);
+                
+                resultDisplay.innerText = decrypted;
+                resultDisplay.classList.add('unlocked');
+                updateStatus("ACCESS GRANTED");
+            } catch (err) {
+                console.error(err);
+                updateStatus("ERR: RECONSTRUCTION FAILED.");
+                resultDisplay.innerText = "DATA CORRUPTED";
+                resultDisplay.classList.remove('unlocked');
+            }
+        };
+        
+        reader.readAsDataURL(file);
+    }
+
+    function updateStatus(msg) {
+        statusLine.innerText = `System: ${msg}`;
+    }
+</script>
+
+</body>
+</html>
