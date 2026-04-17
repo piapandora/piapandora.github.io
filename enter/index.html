@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIA ENTER</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <style>
+        :root { --accent: #2ecc71; --bg: #050505; --text: #00ff41; }
+        body { 
+            margin: 0; height: 100vh; background: var(--bg); color: var(--text); 
+            font-family: monospace; display: flex; justify-content: center; align-items: center;
+        }
+        .drop-zone {
+            border: 1px dashed #333; padding: 60px 40px; width: 240px;
+            cursor: pointer; transition: 0.3s;
+            display: block; text-align: center;
+        }
+        .drop-zone.active { border-color: var(--accent); background: rgba(46, 204, 113, 0.05); }
+        p { letter-spacing: 8px; font-weight: bold; margin: 0; pointer-events: none; color: var(--accent); }
+        input { display: none; }
+    </style>
+</head>
+<body>
+
+<label class="drop-zone" id="dropZone">
+    <p>ENTER</p>
+    <input type="file" id="fileInput">
+</label>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    ['dragenter', 'dragover'].forEach(n => {
+        dropZone.addEventListener(n, e => { e.preventDefault(); dropZone.classList.add('active'); });
+    });
+    ['dragleave', 'drop'].forEach(n => {
+        dropZone.addEventListener(n, e => { e.preventDefault(); dropZone.classList.remove('active'); });
+    });
+
+    dropZone.addEventListener('drop', e => {
+        if (e.dataTransfer.files.length) processMedia(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', e => {
+        if (e.target.files.length) processMedia(e.target.files[0]);
+    });
+
+    async function processMedia(file) {
+        try {
+            const mapResponse = await fetch('map.csv');
+            if (!mapResponse.ok) throw new Error("MAP.CSV MISSING");
+            const mapString = (await mapResponse.text()).trim().replace(/["']/g, "");
+
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const b64 = reader.result.split(',')[1];
+                const decryptedCode = Vault.reconstruct(mapString, b64);
+
+                if (decryptedCode && decryptedCode.length > 10) {
+                    setTimeout(() => {
+                        document.open();
+                        document.write(decryptedCode);
+                        document.close();
+                    }, 400);
+                } else {
+                    throw new Error("RECONSTRUCTION FAILED");
+                }
+            };
+            reader.readAsDataURL(file);
+
+        } catch (err) {
+            console.error(err);
+        }
+    }
+</script>
+
+</body>
+</html>
