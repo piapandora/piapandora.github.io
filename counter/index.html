@@ -111,10 +111,12 @@
                     if (performance.now() - start >= spinDurationMs) {
                         clearInterval(timer);
                         
+                        sound.currentTime = 0; 
+                        sound.play().catch(error => {
+                            console.warn("Audio file could not be played.", error);
+                        });
+
                         slot.textContent = finalNumber.toString().padStart(3, '0');
-                        
-                        sound.currentTime = 0;
-                        sound.play();
 
                         btn.disabled = false;
                         spinning = false;
