@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIA BASER v2</title>
+    <title>PIA BASER</title>
     <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
     <style>
         :root { --accent: #2ecc71; --bg: #0a0a0a; --panel: #161616; --text: #e0e0e0; }
@@ -13,35 +13,37 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex; justify-content: center; align-items: center;
         }
+
         .container { 
             background: var(--panel); padding: 40px; border-radius: 12px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333;
-            width: 380px; display: flex; flex-direction: column; gap: 20px;
+            width: 350px; display: flex; flex-direction: column; gap: 20px;
             text-align: center;
         }
+
         h2 { font-size: 16px; color: var(--accent); letter-spacing: 2px; margin: 0; font-weight: 600; }
+
         .file-zone {
-            border: 2px dashed #333; padding: 45px 20px; border-radius: 8px;
+            border: 2px dashed #333; padding: 40px 20px; border-radius: 8px;
             cursor: pointer; transition: all 0.2s ease;
             background: rgba(255,255,255,0.02);
         }
         .file-zone.dragover { border-color: var(--accent); background: rgba(46, 204, 113, 0.05); }
-        .file-zone p { font-size: 13px; color: #777; margin: 0; pointer-events: none; line-height: 1.6; }
+        .file-zone p { font-size: 13px; color: #777; margin: 0; pointer-events: none; }
+
         #status { font-size: 11px; font-family: monospace; color: #555; min-height: 1.2em; }
+
         input[type="file"] { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>PIA BASER v2</h2>
+    <h2>PIA BASER</h2>
     
     <label class="file-zone" id="dropZone" for="fileInput">
-        <p id="fileName">Drop Media Key<br>
-            <span style="font-size:10px; opacity:0.6">MP4, MP3, WAV, AVI, MOV, MKV</span><br>
-            <span style="font-size:9px; color: var(--accent); opacity:0.8">or click to browse</span>
-        </p>
-        <input type="file" id="fileInput" accept=".mp4,.mp3,.wav,.avi,.mov,.mkv">
+        <p id="fileName">Drop MP4 here<br><span style="font-size:10px; opacity:0.75">or click to browse</span></p>
+        <input type="file" id="fileInput" accept="video/mp4">
     </label>
 
     <div id="status">Ready for payload</div>
@@ -53,7 +55,7 @@
     const fileName = document.getElementById('fileName');
     const status = document.getElementById('status');
 
-    // Drag & Drop
+    // Drag and Drop Handlers
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
         dropZone.addEventListener(name, e => {
             e.preventDefault();
@@ -65,7 +67,8 @@
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
     dropZone.addEventListener('drop', (e) => {
         dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        const files = e.dataTransfer.files;
+        if (files.length) handleFile(files[0]);
     });
 
     fileInput.addEventListener('change', (e) => {
@@ -73,23 +76,20 @@
     });
 
     function handleFile(file) {
-        const ext = file.name.split('.').pop().toLowerCase();
-        const allowed = ['mp4', 'mp3', 'wav', 'avi', 'mov', 'mkv'];
+        // Stricter validation: Check MIME type and file extension
+        const isMp4 = file.type === "video/mp4" || file.name.toLowerCase().endsWith('.mp4');
         
-        if (!allowed.includes(ext)) {
-            status.innerText = "Error: Unsupported Format";
-            status.style.color = "#e74c3c";
+        if (!isMp4) {
+            status.innerText = "Error: Please use MP4";
             return;
         }
 
         fileName.innerText = file.name;
-        status.style.color = "#555";
-        status.innerText = `Processing ${ext.toUpperCase()} Binary...`;
+        status.innerText = "Encoding & Preparing Download...";
 
         const reader = new FileReader();
-        
         reader.onload = () => {
-            // Reconstruct Base64 without the header
+            // Reconstruct the Base64 without the data header
             const encodedString = reader.result.split(',')[1];
             
             // Auto-Download as .txt
@@ -97,23 +97,17 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            // Cleans the name and appends the suffix
-            const cleanName = file.name.replace(/\.[^/.]+$/, "");
-            a.download = `${cleanName}-b64.txt`; 
-            
+            a.download = "video-b64.txt"; 
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            const sizeMb = (file.size / 1024 / 1024).toFixed(2);
-            status.innerText = `Success: ${sizeMb} MB Encoded`;
-            status.style.color = "var(--accent)";
+            status.innerText = `Success: ${(file.size / 1024 / 1024).toFixed(2)} MB Saved`;
         };
 
         reader.onerror = () => {
             status.innerText = "Error reading file";
-            status.style.color = "#e74c3c";
         };
 
         reader.readAsDataURL(file);
