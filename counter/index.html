@@ -10,10 +10,9 @@
             --bg: #121212;
             --card: #1e1e1e;
             --text: #ffffff;
-            --accent: #ff4d4d; /* Red accent for the spin state */
+            --accent: #ff4d4d; 
             --btn-bg: #333;
         }
-
         body {
             margin: 0;
             display: flex;
@@ -24,7 +23,6 @@
             font-family: 'Inter', -apple-system, sans-serif;
             color: var(--text);
         }
-
         .container {
             text-align: center;
             background: var(--card);
@@ -33,7 +31,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             border: 1px solid #333;
         }
-
         #slot {
             font-size: 5rem;
             font-weight: 800;
@@ -43,11 +40,9 @@
             letter-spacing: -2px;
             transition: color 0.2s ease;
         }
-
         #slot.spinning {
             color: var(--accent);
         }
-
         button {
             background-color: var(--btn-bg);
             color: white;
@@ -61,19 +56,16 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
         button:hover:not(:disabled) {
             background-color: #444;
             transform: translateY(-1px);
         }
-
         button:active:not(:disabled) {
             transform: translateY(0);
         }
-
         button:disabled {
             opacity: 0.5;
-            cursor: none;
+            cursor: default;
         }
     </style>
 </head>
@@ -84,10 +76,13 @@
         <button id="spinBtn">Spin</button>
     </div>
 
+    <audio id="finishSound" src="https://assets.piapandora.com/play/ding.wav" preload="auto"></audio>
+
     <script>
         (() => {
             const btn = document.getElementById('spinBtn');
             const slot = document.getElementById('slot');
+            const sound = document.getElementById('finishSound');
 
             const min = 1;
             const max = 999;
@@ -102,7 +97,7 @@
 
             btn.addEventListener('click', () => {
                 if (spinning) return;
-                
+
                 spinning = true;
                 btn.disabled = true;
                 slot.classList.add('spinning');
@@ -111,15 +106,16 @@
                 const start = performance.now();
 
                 const timer = setInterval(() => {
-                    // Visual update during spin
                     slot.textContent = randInt(min, max).toString().padStart(3, '0');
 
                     if (performance.now() - start >= spinDurationMs) {
                         clearInterval(timer);
                         
-                        // Set final result
                         slot.textContent = finalNumber.toString().padStart(3, '0');
                         
+                        sound.currentTime = 0;
+                        sound.play();
+
                         btn.disabled = false;
                         spinning = false;
                         slot.classList.remove('spinning');
