@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIA VN v9.7 - Triple Option Restore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #000; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        #top-wrap { flex: 3.5; display: flex; flex-direction: row; border-bottom: 1px solid #18181b; }
+        
+        #text-sector { 
+            flex: 1; padding: 2.5rem; border-right: 1px solid #18181b; 
+            display: flex; flex-direction: column; justify-content: flex-start; 
+            background: #050505; position: relative;
+        }
+
+        #img-sector { 
+            flex: 1; position: relative; background-size: cover; background-position: center; 
+            background-color: #020202; transition: background-image 1s ease-in-out;
+        }
+
+        #control-panel { flex: 1.2; background: #080808; display: flex; gap: 1px; }
+
+        .choice-pane {
+            flex: 1; padding: 1.2rem; display: flex; flex-direction: column; justify-content: center;
+            align-items: center; cursor: pointer; transition: all 0.2s ease;
+            background: #0a0a0a; text-align: center; opacity: 0; outline: none; border: 1px solid transparent;
+        }
+
+        .choice-pane.flash-active { background: #fff !important; }
+        .choice-pane.selected-glow {
+            background: #0f1714 !important;
+            box-shadow: inset 0 0 30px rgba(16, 185, 129, 0.2);
+            border-top: 2px solid #10b981;
+        }
+
+        .pane-label { font-size: 8px; letter-spacing: 0.4em; text-transform: uppercase; color: #3f3f46; margin-bottom: 0.4rem; }
+        .pane-text { font-size: 0.85rem; font-weight: 300; color: #a1a1aa; line-height: 1.4; max-width: 85%; }
+
+        #thinking-line { position: absolute; top: 0; left: 0; height: 1px; width: 0%; background: #10b981; z-index: 20; transition: width 0.4s; }
+        #auth-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        #img-loader {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.85); z-index: 5; opacity: 0; transition: opacity 0.4s; pointer-events: none;
+        }
+        #img-loader.active { opacity: 1; }
+    </style>
+</head>
+<body class="text-zinc-100 antialiased">
+
+    <div id="auth-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6 transition-opacity duration-700">
+        <h1 class="text-[10px] font-bold tracking-[0.8em] text-zinc-500 mb-8 uppercase text-center">Uplink Required</h1>
+        <input type="password" id="pass-entry" class="bg-transparent border-b border-zinc-800 p-2 text-xl outline-none text-center w-64 focus:border-emerald-500 transition-all text-white font-light" placeholder="••••••••" autofocus>
+    </div>
+
+    <div id="top-wrap">
+        <section id="text-sector">
+            <div id="thinking-line"></div>
+            <div id="speaker" class="text-emerald-500 text-[9px] font-bold tracking-[0.5em] uppercase mb-6 opacity-60">LINK_STATUS: IDLE</div>
+            <div id="dialogue-text" class="text-lg font-light leading-relaxed text-zinc-400 max-w-lg">Initiate sequence to visualize the narrative.</div>
+        </section>
+
+        <section id="img-sector">
+            <div id="img-loader">
+                <span class="text-[8px] tracking-[0.6em] uppercase text-emerald-600 animate-pulse">Syncing_Flux_Buffer</span>
+            </div>
+        </section>
+    </div>
+
+    <div id="control-panel">
+        <div id="choice-0" class="choice-pane"></div>
+        <div id="choice-1" class="choice-pane"></div>
+        <div id="choice-2" class="choice-pane"></div>
+    </div>
+
+    <script>
+        const GROQ_MAP = "238,27,102,93,132,140,22,114,203,75,62,194,133,4,109,208,161,82,213,156,188,132,140,168,190,135,90,137,43,157,192,177,42,205,194,238,119,143,59,46,29,42,72,60,36,31,121,230,49,55,173,97,142,25,50,238";
+        const IMAGE_MAP = "21,95,42,7,245,131,206,254,239,224,240,119,214,111,202,65,36,246,76,59,158,229,188,133,112,163,57,22,83,121,120,91,56,202,202";
+
+        let GROQ_KEY = "", IMAGE_KEY = "";
+        let chatHistory = [], currentChoices = [];
+
+        const config = {
+            systemPrompt: `You are a Visual Novel Engine. Respond ONLY with a JSON object.
+            Characters: User is Jimmy Samaritana. Pia Pandora is a cute red-haired lady with double braids.
+            Context: Cinematic, cerebral, dark aesthetics.
+            IMPORTANT: Always provide exactly 3 choices.
+            Format: {"speaker": "Name", "text": "Narrative", "bg_prompt": "Visual prompt", "choices": [{"btn": "Label", "action": "Jimmy's action"}, {"btn": "Label", "action": "Jimmy's action"}, {"btn": "Label", "action": "Jimmy's action"}]}`
+        };
+
+        function unlock() {
+            const pass = document.getElementById('pass-entry').value;
+            if(!pass) return;
+            try {
+                GROQ_KEY = Vault.reconstruct(GROQ_MAP, pass);
+                IMAGE_KEY = Vault.reconstruct(IMAGE_MAP, pass);
+                document.getElementById('auth-overlay').classList.add('hidden');
+                renderStoryStep(`Start the session. Present the first scene with Jimmy and Pia.`);
+            } catch(e) { alert("Auth Error."); }
+        }
+
+        async function triggerChoice(index) {
+            if (!currentChoices[index]) return;
+            const pane = document.getElementById(`choice-${index}`);
+            pane.classList.add('flash-active', 'selected-glow');
+            setTimeout(() => {
+                pane.classList.remove('flash-active');
+                renderStoryStep(currentChoices[index].action);
+            }, 400); 
+        }
+
+        async function renderStoryStep(userInput) {
+            setThinking(true);
+            currentChoices = []; 
+            chatHistory.push({ role: "user", content: userInput });
+
+            try {
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [{ role: "system", content: config.systemPrompt }, ...chatHistory.slice(-10)],
+                        temperature: 0.8,
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                const data = await res.json();
+                const vnData = JSON.parse(data.choices[0].message.content);
+                chatHistory.push({ role: "assistant", content: data.choices[0].message.content });
+
+                updateBackground(vnData.bg_prompt);
+                document.getElementById('speaker').innerText = vnData.speaker;
+                
+                typeOut(vnData.text, () => {
+                    populateChoices(vnData.choices);
+                    currentChoices = vnData.choices;
+                });
+            } catch(e) {
+                document.getElementById('dialogue-text').innerText = "LINK_LOST: Limit reached. Try again later.";
+            } finally { setThinking(false); }
+        }
+
+        async function updateBackground(prompt) {
+            const loader = document.getElementById('img-loader');
+            const sector = document.getElementById('img-sector');
+            const style = "cute red-haired lady, double braids, cinematic, 8k, highly detailed";
+            const seed = Math.floor(Math.random() * 999999);
+            
+            loader.classList.add('active');
+
+            try {
+                // Key moved to query param to avoid CORS issues
+                const url = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt + ", " + style)}?model=flux&seed=${seed}&width=1024&height=1024&nologo=true&key=${IMAGE_KEY}`;
+                const res = await fetch(url);
+                
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const imageUrl = URL.createObjectURL(blob);
+                    const img = new Image();
+                    img.src = imageUrl;
+                    img.onload = () => {
+                        sector.style.backgroundImage = `url('${imageUrl}')`;
+                        loader.classList.remove('active');
+                    };
+                } else { loader.classList.remove('active'); }
+            } catch (err) { loader.classList.remove('active'); }
+        }
+
+        function typeOut(str, callback) {
+            const target = document.getElementById('dialogue-text');
+            clearChoices();
+            target.textContent = "";
+            let i = 0;
+            function step() {
+                if (i < str.length) {
+                    target.textContent += str.charAt(i); i++;
+                    setTimeout(step, 15);
+                } else if (callback) callback();
+            }
+            step();
+        }
+
+        function populateChoices(choices) {
+            choices.slice(0, 3).forEach((c, idx) => {
+                const pane = document.getElementById(`choice-${idx}`);
+                if (pane) {
+                    pane.classList.remove('selected-glow');
+                    pane.innerHTML = `<div class="pane-label">Option ${idx + 1}</div><div class="pane-text">${c.btn}</div>`;
+                    pane.onclick = () => triggerChoice(idx);
+                    pane.style.opacity = "1";
+                }
+            });
+        }
+
+        function clearChoices() {
+            for(let i=0; i<3; i++) {
+                const pane = document.getElementById(`choice-${i}`);
+                pane.innerHTML = ""; pane.onclick = null; pane.style.opacity = "0";
+            }
+        }
+
+        function setThinking(val) { document.getElementById('thinking-line').style.width = val ? "100%" : "0%"; }
+
+        document.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (key === 'w') {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+                else document.exitFullscreen();
+            }
+            if (currentChoices.length === 0) return;
+            if (key === '1' || key === 'a') triggerChoice(0);
+            if (key === '2' || key === 's') triggerChoice(1);
+            if (key === '3' || key === 'd') triggerChoice(2);
+        });
+
+        document.getElementById('pass-entry').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+    </script>
+</body>
+</html>
