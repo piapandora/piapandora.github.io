@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIA VN v9.7 - Triple Option Restore</title>
+    <title>PIA STORY</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://piapandora.com/box/vault.js"></script>
     <style>
@@ -156,7 +157,6 @@
             loader.classList.add('active');
 
             try {
-                // Key moved to query param to avoid CORS issues
                 const url = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt + ", " + style)}?model=flux&seed=${seed}&width=1024&height=1024&nologo=true&key=${IMAGE_KEY}`;
                 const res = await fetch(url);
                 
