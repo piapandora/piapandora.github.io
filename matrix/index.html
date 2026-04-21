@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MATRIX UNICODER</title>
+	<link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: #2ecc71;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Courier New", Courier, monospace;
+            overflow: hidden;
+        }
+
+        #canvas-frame {
+            border: 2px solid #2ecc71;
+            padding: 0; 
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
+            
+            /* The 145x40 Character Grid */
+            width: 145ch;
+            height: calc(40 * 1.1em); 
+            
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        pre {
+            font-size: 16px;
+            line-height: 1.1;
+            margin: 0;
+            white-space: pre;
+            text-shadow: 0 0 5px #2ecc71;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-frame">
+        <pre id="content">SYSTEM READY: DROP TO SKETCH</pre>
+    </div>
+
+    <canvas id="proc" width="145" height="40" style="display:none;"></canvas>
+
+    <script>
+        const content = document.getElementById('content');
+        const canvas = document.getElementById('proc');
+        const ctx = canvas.getContext('2d');
+        const palette = [" ", "░", "▒", "▓", "█"];
+
+        window.addEventListener('dragover', (e) => e.preventDefault());
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                processImage(file);
+            }
+        });
+
+        function processImage(file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const targetW = 145;
+                    const targetH = 40;
+
+                    // STRETCH LOGIC: Ignore aspect ratio. 
+                    // Force the image to fit exactly 145x40.
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(0, 0, targetW, targetH);
+                    ctx.drawImage(img, 0, 0, targetW, targetH);
+
+                    const imageData = ctx.getImageData(0, 0, targetW, targetH);
+                    const pixels = imageData.data;
+                    let output = "";
+
+                    for (let row = 0; row < targetH; row++) {
+                        for (let col = 0; col < targetW; col++) {
+                            const i = (row * targetW + col) * 4;
+                            // High-fidelity Luminance calculation
+                            const luma = (0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2]);
+                            
+                            // Map 256 levels to 5 tones
+                            let charIndex = Math.floor((luma / 256) * 5);
+                            output += palette[charIndex];
+                        }
+                        if (row < targetH - 1) output += "\n";
+                    }
+                    content.textContent = output;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
