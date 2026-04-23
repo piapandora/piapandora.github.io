@@ -8,39 +8,36 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            margin: 0; padding: 0; height: 100vh; width: 100vw;
+            margin: 0; padding: 0; 
+            height: 100vh; height: 100svh; 
+            width: 100vw;
             background-color: #000; overflow: hidden;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            display: flex; flex-direction: column; align-items: center;
         }
-
         .bg-layer {
             position: fixed; inset: 0; background-size: cover;
             background-position: center; background-attachment: fixed; z-index: -1;
         }
-
-        .char-wrapper { position: relative; height: 60vh; aspect-ratio: 1/1; }
+        .char-wrapper { position: relative; height: 55vh; aspect-ratio: 1/1; }
         .char-layer {
             position: absolute; inset: 0; width: 100%; height: 100%;
             object-fit: contain; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.7));
         }
-
         .fade-active { transition: opacity 0.6s ease-in-out; }
         .hidden-layer { opacity: 0; pointer-events: none; }
-
         #mainUI {
             opacity: 0;
             transition: opacity 1s ease-in;
         }
-
         .content-layer {
             position: relative; z-index: 10; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            padding: 2rem; background: rgba(0, 0, 0, 0.4);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 1.5rem; background: rgba(0, 0, 0, 0.4);
         }
+        header { flex-grow: 1; display: flex; align-items: center; }
     </style>
 </head>
 <body>
-
     <div id="bgFront" class="bg-layer fade-active"></div>
     <div id="bgBack" class="bg-layer fade-active hidden-layer"></div>
 
@@ -56,10 +53,10 @@
             <img id="charBack" class="char-layer fade-active hidden-layer" src="" alt="">
         </div>
 
-        <div class="w-full max-w-md bg-black/60 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
+        <div class="w-full max-w-md bg-black/60 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl mb-4">
             <div class="flex flex-col gap-4">
-                <input type="text" id="seedInput" placeholder="Enter a name..." 
-                       class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
+                <input type="text" id="seedInput" placeholder="Enter a name..."
+                        class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
                 <button id="randomBtn" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 rounded-xl transition-transform active:scale-95 uppercase">
                     Generate
                 </button>
@@ -143,7 +140,6 @@
 
         async function handleInteraction() {
             const val = seedInput.value.trim();
-            
             if (val === "" || val === currentSeed) {
                 await fetchFromDB(false);
             } else {
@@ -152,7 +148,6 @@
         }
 
         randomBtn.addEventListener('click', handleInteraction);
-        
         seedInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleInteraction();
         });
