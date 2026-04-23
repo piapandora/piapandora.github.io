@@ -3,134 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pia Pandora | App Collection</title>
-    <link rel="icon" type="image/png" href="piapandora/micro-logo.png">
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <title>Pandora Avatars</title>
+    <link rel="icon" type="image/png" href="misc/icons8-portrait-48.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .app-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        body {
+            margin: 0; padding: 0; height: 100vh; width: 100vw;
+            background-color: #000; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+        }
+
+        .bg-layer {
+            position: fixed; inset: 0; background-size: cover;
+            background-position: center; background-attachment: fixed; z-index: -1;
+        }
+
+        .char-wrapper { position: relative; height: 60vh; aspect-ratio: 1/1; }
+        .char-layer {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: contain; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.7));
+        }
+
+        .fade-active { transition: opacity 0.6s ease-in-out; }
+        .hidden-layer { opacity: 0; pointer-events: none; }
+
+        #mainUI {
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+
+        .content-layer {
+            position: relative; z-index: 10; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            padding: 2rem; background: rgba(0, 0, 0, 0.4);
+        }
     </style>
 </head>
-<body class="min-h-screen transition-colors duration-500">
+<body>
 
-    <div class="max-w-7xl mx-auto px-6 pt-16 pb-8"> 
-        
-        <header class="flex flex-col items-center mb-10"> 
-            <div class="avatar online">
-                <div class="w-28 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 grayscale hover:grayscale-0 transition duration-700">
-                    <img src="piapandora/mini-logo.jpg" alt="Logo" class="rounded-full" />
-                </div>
-            </div>
-            
-            <h1 class="mt-10 text-[2.5rem] font-light tracking-[0.5em] uppercase text-slate-100 leading-none">Pia Pandora</h1>
-            <p class="text-sm tracking-[0.45em] opacity-30 mt-5 uppercase font-semibold">App Collection</p>
+    <div id="bgFront" class="bg-layer fade-active"></div>
+    <div id="bgBack" class="bg-layer fade-active hidden-layer"></div>
+
+    <div id="mainUI" class="content-layer">
+        <header class="text-center">
+            <h1 class="text-5xl font-black italic tracking-tighter text-white drop-shadow-lg uppercase">
+                Pandora <span class="text-emerald-400">Avatars</span>
+            </h1>
         </header>
 
-        <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"></div>
+        <div class="char-wrapper">
+            <img id="charFront" class="char-layer fade-active" src="" alt="">
+            <img id="charBack" class="char-layer fade-active hidden-layer" src="" alt="">
+        </div>
 
-        <footer class="flex flex-col items-center mt-12 border-t border-base-300 pt-8 gap-0">
-            <div class="flex items-center gap-12 mb-4"> 
-                <a href="https://www.instagram.com/pia.pandora" target="_blank" class="flex items-center gap-3 opacity-80 hover:opacity-100 hover:text-primary transition-all text-slate-100">
-                    <img src="piapandora/icons8-instagram-50.png" class="w-6 h-6 brightness-0 invert" alt="Instagram">
-                    <span class="text-base tracking-[0.2em] uppercase font-medium">Instagram</span>
-                </a>
-                <a href="mailto:canaksahin@hotmail.com" class="flex items-center gap-3 opacity-80 hover:opacity-100 hover:text-primary transition-all text-slate-100">
-                    <img src="piapandora/icons8-mail-64.png" class="w-6 h-6 brightness-0 invert" alt="Email">
-                    <span class="text-base tracking-[0.2em] uppercase font-medium">Contact</span>
-                </a>
-            </div> 
-
-            <div class="opacity-50"> 
-                <p class="text-xs tracking-[0.3em] uppercase m-0">
-                    <a href="https://www.canaksahin.com" target="_blank" class="font-bold text-slate-300 hover:text-primary transition-colors">Can Akşahin</a> 
-                    <span class="ml-2 opacity-85">&copy; 2026</span>
-                </p>
+        <div class="w-full max-w-md bg-black/60 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
+            <div class="flex flex-col gap-4">
+                <input type="text" id="seedInput" placeholder="Enter a name..." 
+                       class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
+                <button id="randomBtn" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 rounded-xl transition-transform active:scale-95 uppercase">
+                    Generate
+                </button>
             </div>
-        </footer>
+        </div>
     </div>
 
     <script>
-        const siteTheme = "night"; 
-        document.documentElement.setAttribute('data-theme', siteTheme);
+        const seedInput = document.getElementById('seedInput');
+        const bgFront = document.getElementById('bgFront');
+        const bgBack = document.getElementById('bgBack');
+        const charFront = document.getElementById('charFront');
+        const charBack = document.getElementById('charBack');
+        const randomBtn = document.getElementById('randomBtn');
+        const mainUI = document.getElementById('mainUI');
 
-        const apps = [
-            { name: "Pia Pandora Games", url: "https://piapandora.itch.io", desc: "Our Unreal/Unity games on itch.io", image: "piapandora/games.jpg" },
-            { name: "Sihirli Pencere", url: "https://piapandora.com/sihirlipencere", desc: "A colorful 3D world where painting comes to life", image: "piapandora/sihirlipencere.png" },
-            { name: "CrossView 3D", url: "https://piapandora.com/crossview", desc: "Stereoscopic experiments in digital depth", image: "piapandora/crossview.png" },
-            { name: "Teen Beauty AI", url: "https://app.piapandora.com", desc: "Defining the next generation of digital aesthetics", image: "piapandora/teenbeauty.png" },
-            { name: "Pandora's Tarot", url: "https://piapandora.com/tarot", desc: "Consult the digital cards for reflection", image: "piapandora/tarot.jpg" },
-            { name: "Hugging Color Match", url: "https://piapandora.com/hugmatch", desc: "Cozy color-matching logic gameplay", image: "piapandora/hugmatch.jpg" },
-            { name: "The Tickle Trio", url: "https://piapandora.com/tickletrio", desc: "A whimsical character interaction experiment", image: "piapandora/tickletrio.png" },
-            { name: "Fun Jar", url: "https://piapandora.com/funjar", desc: "Open the jar for a digital surprise", image: "piapandora/funjar.png" },
-            { name: "Impressivo", url: "https://piapandora.com/impressivo", desc: "Empowering your journey to self-confidence", image: "piapandora/impressivo.png" },
-            { name: "Pixie Squares", url: "https://piapandora.com/pixie", desc: "Reimagining your images through a digital lens", image: "piapandora/pixie.png" },            
-			{ name: "Simulacra", url: "https://piapandora.com/simulacra", desc: "An interactive digital echo of personal consciousness", image: "piapandora/simulacra.png" },
-            { name: "Agamograph Maker", url: "https://piapandora.com/agamo", desc: "Turn images into kinetic optical illusions", image: "piapandora/agamo.jpg" },
-            { name: "Pia Pong", url: "https://piapandora.com/pong", desc: "A sleek, modern take on the classic paddle game", image: "piapandora/pong.png" },
-            { name: "Pia Football", url: "https://piapandora.com/football", desc: "Fast-paced browser-based soccer simulator", image: "piapandora/football.png" },
-            { name: "Pia Squash", url: "https://piapandora.com/squash", desc: "High-speed reflex testing against the wall", image: "piapandora/squash.png" },
-            { name: "Puppy Viewer", url: "https://piapandora.com/puppy", desc: "A curated stream of interactive joy", image: "piapandora/puppy.png" },
-            { name: "Pia's Chessboard", url: "https://piapandora.com/chess", desc: "A simple board for timeless strategy", image: "piapandora/chess.png" },
-            { name: "Magic 8 Ball", url: "https://piapandora.com/magic8ball", desc: "The digital oracle for all your questions", image: "piapandora/magic8ball.png" },
-            { name: "Triadic Inspiration", url: "https://piapandora.com/triadic", desc: "Color harmony discovery for artists", image: "piapandora/triadic.png" },
-            { name: "The Trinity Paradox", url: "https://piapandora.com/trinity", desc: "Contemplate the paradox that defies standard logic", image: "piapandora/trinity.png" },
-            { name: "Paper Plane Simulator", url: "https://piapandora.com/paperplane", desc: "Master the aerodynamics of the paper plane", image: "piapandora/paperplane.png" },
-            { name: "Ferdinand The Fish", url: "https://piapandora.com/ferdinand", desc: "Visit your virtual aquatic companion", image: "piapandora/ferdinand.png" },
-            { name: "Cartoon Character Maker", url: "https://piapandora.com/cartoons", desc: "Design and build your own digital avatars", image: "piapandora/cartoons.png" },
-            { name: "To-Do List", url: "https://piapandora.com/todo", desc: "A minimalist space for organized thought", image: "piapandora/todo.png" },            
-			{ name: "Pia's Piano", url: "https://piapandora.com/piano", desc: "Bringing the concert hall to your fingertips", image: "piapandora/piano.png" },
-            { name: "Puzzling Squares", url: "https://piapandora.com/puzzling", desc: "Solve the grid based puzzle", image: "piapandora/puzzling.png" },
-			{ name: "Pia's Chalkboard", url: "https://piapandora.com/draw", desc: "A digital canvas for ephemeral sketches", image: "piapandora/draw.jpg" },
-			{ name: "Animation Scrubber", url: "https://piapandora.com/animscrub", desc: "Mastering the tactile rhythm of motion", image: "piapandora/animscrub.png" },
-			{ name: "Fractal Frenzy", url: "https://piapandora.com/fractal", desc: "Exploring the infinite geometry of chaos" , image: "piapandora/fractal.png" },
-			{ name: "Pia Lab", url: "https://piapandora.com/lab", desc: "A coding laboratory for single-page apps" , image: "" },
-			{ name: "Pia Box", url: "https://piapandora.com/box", desc: "Map generator and reconstructor for API keys" , image: "" },
-			{ name: "Pia Shift", url: "https://piapandora.com/shift", desc: "Secure file transformations for the modern digital nomad" , image: "" },
-			{ name: "Pia Pad", url: "https://piapandora.com/pad", desc: "Digital Scratchpad" , image: "" },
-			{ name: "Pia Chat", url: "https://piapandora.com/chat", desc: "Virtual Chat" , image: "" },
-			{ name: "Dr. Gölge", url: "https://piapandora.com/golge", desc: "Medical advice from a canine" , image: "" },
-			{ name: "Pia Baser", url: "https://piapandora.com/baser", desc: "Video to base64 converter" , image: "" },
-			{ name: "Translator 64", url: "https://piapandora.com/translator", desc: "Ascii to base64 translator" , image: "" },
-			{ name: "Counter", url: "https://piapandora.com/counter", desc: "A randomized counter" , image: "" },
-			{ name: "Green Snakes", url: "https://piapandora.com/snakes", desc: "A visualizer with green snakes" , image: "" },
-			{ name: "Polly PDF", url: "https://piapandora.com/polly", desc: "PDF to JPG converter" , image: "" },
-			{ name: "Pia Studio", url: "https://piapandora.com/studio", desc: "Generate cute Pia portraits" , image: "" },
-			{ name: "Pia Clock", url: "https://piapandora.com/clock", desc: "Matrix-inspired clock" , image: "piapandora/clock.png" },
-			{ name: "Pia Enter", url: "https://piapandora.com/enter", desc: "Gateway into the unknown" , image: "" },
-			{ name: "Pia Portal", url: "https://piapandora.com/portal", desc: "Portal into a wormhole" , image: "" },
-			{ name: "Matrix Unicoder", url: "https://piapandora.com/matrix", desc: "Converts images into low-res unicode" , image: "piapandora/matrix.png" }
-        ];
+        let currentSeed = "";
+        let isTransitioning = false;
 
-        function createAppCard(app) {
-            const { name, url, desc, image } = app;
-            const seed = name.replace(/\s/g, '');
+        async function updateIdentity(newSeed, isInitial = false) {
+            if (newSeed === currentSeed || isTransitioning) return;
             
-            const displayImage = image ? image : `https://picsum.photos/seed/${seed}/400/225`;
+            isTransitioning = true;
+            const seed = encodeURIComponent(newSeed);
 
-            return `
-                <a href="${url}" target="_blank" class="block group h-full">
-                    <div class="card card-compact bg-base-200 shadow-xl app-card group-hover:bg-base-300 group-hover:-translate-y-2 border-2 border-transparent group-hover:border-slate-100 h-full overflow-hidden">
-                        <figure class="px-2 pt-2 pb-0">
-                            <img src="${displayImage}" 
-                                alt="${name}" 
-                                class="rounded-xl opacity-80 group-hover:opacity-100 transition duration-500 shadow-inner object-cover w-full h-[150px]" />
-                        </figure>
-                        <div class="card-body pt-3 pb-5 px-4 gap-1">
-                            <h2 class="card-title text-lg font-bold text-slate-100 tracking-tight leading-tight">${name}</h2>
-                            <p class="text-sm leading-normal opacity-60 font-normal">
-                                ${desc || "Digital Experiment."}
-                            </p>
-                        </div>
-                    </div>
-                </a>
-            `;
+            const nextBg = `https://api.dicebear.com/9.x/glass/svg?seed=${seed}`;
+            const nextChar = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`;
+
+            const loadTasks = [
+                new Promise(r => { const i = new Image(); i.src = nextBg; i.onload = r; }),
+                new Promise(r => { const i = new Image(); i.src = nextChar; i.onload = r; })
+            ];
+
+            await Promise.all(loadTasks);
+
+            if (isInitial) {
+                bgFront.style.backgroundImage = `url('${nextBg}')`;
+                charFront.src = nextChar;
+                currentSeed = newSeed;
+                mainUI.style.opacity = "1"; 
+                isTransitioning = false;
+                return;
+            }
+
+            bgBack.style.backgroundImage = `url('${nextBg}')`;
+            charBack.src = nextChar;
+
+            bgBack.classList.remove('hidden-layer');
+            charBack.classList.remove('hidden-layer');
+            bgFront.classList.add('hidden-layer');
+            charFront.classList.add('hidden-layer');
+
+            setTimeout(() => {
+                [bgFront, bgBack, charFront, charBack].forEach(el => el.classList.remove('fade-active'));
+                bgFront.style.backgroundImage = `url('${nextBg}')`;
+                charFront.src = nextChar;
+                bgFront.classList.remove('hidden-layer');
+                charFront.classList.remove('hidden-layer');
+                bgBack.classList.add('hidden-layer');
+                charBack.classList.add('hidden-layer');
+                void bgFront.offsetWidth;
+                [bgFront, bgBack, charFront, charBack].forEach(el => el.classList.add('fade-active'));
+                currentSeed = newSeed;
+                isTransitioning = false;
+            }, 600);
         }
 
-        const gallery = document.getElementById('gallery');
-        gallery.innerHTML = apps.map(app => createAppCard(app)).join('');
+        async function fetchFromDB(isInitial = false) {
+            try {
+                const res = await fetch('https://randomuser.me/api/');
+                const data = await res.json();
+                const name = data.results[0].name.first;
+                seedInput.value = name;
+                await updateIdentity(name, isInitial);
+            } catch (e) {
+                const rand = Math.random().toString(36).substring(7).toUpperCase();
+                seedInput.value = rand;
+                await updateIdentity(rand, isInitial);
+            }
+        }
+
+        async function handleInteraction() {
+            const val = seedInput.value.trim();
+            
+            if (val === "" || val === currentSeed) {
+                await fetchFromDB(false);
+            } else {
+                await updateIdentity(val, false);
+            }
+        }
+
+        randomBtn.addEventListener('click', handleInteraction);
+        
+        seedInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleInteraction();
+        });
+
+        fetchFromDB(true);
     </script>
 </body>
 </html>
