@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let clickCount = 0;
 let clickTimer;
 const REQUIRED_CLICKS = 13;
-const TIME_WINDOW = 5000; // 5 Seconds to complete the ritual
+const TIME_WINDOW = 3000; // 5 Seconds to complete the ritual
 
 function handleSecretClicks() {
     // Clear the reset timer on every click
