@@ -10,14 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
 let count = 0;
 let timer;
 const reqs = 13;
-const interval = 3000;
+const interval = 2500;
 
 function handle() {
     clearTimeout(timer);
     count++;
     timer = setTimeout(() => {
         if (count > 0) {
-            console.log("zzz");
             count = 0;
         }
     }, interval);
