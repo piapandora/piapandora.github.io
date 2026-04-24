@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let count = 0;
 let timer;
 const reqs = 13;
-const interval = 2500;
+const interval = 2000;
 
 function handle() {
     clearTimeout(timer);
@@ -29,5 +29,5 @@ function handle() {
 }
 
 function openLog() {
-	alert("Loggy log.");
+	window.location.replace("https://piapandora.com/enter");
 }
