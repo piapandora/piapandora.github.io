@@ -30,5 +30,5 @@ function handleSecretClicks() {
 }
 
 function openLog() {
-	alert.log("Loggy log.");
+	alert("Loggy log.");
 }
