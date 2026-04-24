@@ -1,26 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Target the specific logo from your index.html
-    const logo = document.getElementById('logo');
+    const log = document.getElementById('log');
     
-    if (logo) {
-        logo.style.cursor = 'default'; // Keep it looking innocent
-        logo.addEventListener('click', handleSecretClicks);
+    if (log) {
+        log.style.cursor = 'default';
+        log.addEventListener('click', handleSecretClicks);
     }
 });
 
 let clickCount = 0;
 let clickTimer;
 const REQUIRED_CLICKS = 13;
-const TIME_WINDOW = 3000; // 5 Seconds to complete the ritual
+const TIME_WINDOW = 3000;
 
 function handleSecretClicks() {
-    // Clear the reset timer on every click
     clearTimeout(clickTimer);
-    
     clickCount++;
-    
-    // Start a fresh reset timer
-    // If they stop clicking for 2 seconds, reset the count
     clickTimer = setTimeout(() => {
         if (clickCount > 0) {
             console.log("Vault sequence timed out.");
@@ -28,26 +22,13 @@ function handleSecretClicks() {
         }
     }, 2000);
 
-    // Check if the ritual is complete
     if (clickCount >= REQUIRED_CLICKS) {
-        openTheIsland();
+        openLog();
         clickCount = 0;
         clearTimeout(clickTimer);
     }
 }
 
-function openTheIsland() {
-    // This is where you trigger your login overlay
-    const auth = document.getElementById('auth');
-    if (auth) {
-        auth.style.display = 'flex';
-        // If you have a password input, focus it immediately
-        const passInput = document.getElementById('passInput');
-        if (passInput) passInput.focus();
-        
-        console.log("Welcome to the Island.");
-    } else {
-        // Fallback for testing before you add the HTML overlay
-        alert("The hidden gate is open, but the login UI is missing.");
-    }
+function openLog() {
+	alert.log("Loggy log.");
 }
