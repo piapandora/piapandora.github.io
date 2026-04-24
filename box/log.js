@@ -10,7 +10,7 @@ let count = 0;
 let timerStart = false;
 let timer;
 const reqs = 13;
-const interval = 3000;
+const interval = 2000;
 
 function handle() {
     if (!timerStart) {
