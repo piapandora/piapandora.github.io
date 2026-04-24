@@ -3,29 +3,29 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (log) {
         log.style.cursor = 'default';
-        log.addEventListener('click', handleSecretClicks);
+        log.addEventListener('click', handle);
     }
 });
 
-let clickCount = 0;
-let clickTimer;
-const REQUIRED_CLICKS = 13;
-const TIME_WINDOW = 3000;
+let count = 0;
+let timer;
+const reqs = 13;
+const interval = 3000;
 
-function handleSecretClicks() {
-    clearTimeout(clickTimer);
-    clickCount++;
-    clickTimer = setTimeout(() => {
-        if (clickCount > 0) {
-            console.log("Vault sequence timed out.");
-            clickCount = 0;
+function handle() {
+    clearTimeout(timer);
+    count++;
+    timer = setTimeout(() => {
+        if (count > 0) {
+            console.log("zzz");
+            count = 0;
         }
-    }, 2000);
+    }, interval);
 
-    if (clickCount >= REQUIRED_CLICKS) {
+    if (count >= reqs) {
         openLog();
-        clickCount = 0;
-        clearTimeout(clickTimer);
+        count = 0;
+        clearTimeout(timer);
     }
 }
 
