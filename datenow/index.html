@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATE NOW</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <style>
+        :root { 
+            --accent: #2ecc71; 
+            --bg: #1a1a1a; 
+            --panel: #242424; 
+            --text: #e0e0e0; 
+        }
+
+        body { 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        .auth-card { 
+            background: var(--panel); 
+            padding: 30px 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 15px; 
+            border: 1px solid #333; 
+            width: 240px;
+        }
+
+        #output {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 24px;
+            color: #fff;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        button { 
+            padding: 10px 60px; 
+            cursor: pointer; 
+            background: var(--accent); 
+            border: none; 
+            color: #000; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            transition: opacity 0.2s; 
+            font-size: 13px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: fit-content;
+        }
+
+        button:hover { opacity: 0.9; }
+        button:active { transform: scale(0.98); }
+
+    </style>
+</head>
+<body>
+
+<div class="auth-card">
+    <div id="output">0000000000000</div>
+    <button onclick="generatePulse()">Date Now</button>
+</div>
+
+<script>
+    function generatePulse() {
+        const pulse = Date.now();
+        document.getElementById('output').innerText = pulse;
+        navigator.clipboard.writeText(pulse);
+    }
+</script>
+
+</body>
+</html>
