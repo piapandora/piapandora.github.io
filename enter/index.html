@@ -146,7 +146,7 @@
             if (!vaultKey) throw new Error("AUTH_FAIL");
 
             // 2. Fetch PFS
-            const response = await fetch('basic-template.pfs');
+            const response = await fetch('pia-poem-tester.pfs');
             if (!response.ok) throw new Error("FETCH_FAIL");
             const pfsBlob = await response.blob();
 
