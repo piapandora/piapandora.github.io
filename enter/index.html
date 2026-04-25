@@ -116,7 +116,8 @@
 </div>
 
 <script>
-    const MAP_STRING = "2,93,41,198,154,99,196,143,35,98,250,237,189,40";
+    // const MAP_STRING = "2,93,41,198,154,99,196,143,35,98,250,237,189,40"; // DELETEEEEEEEEEEE
+    const MAP_STRING = "23,239,54,97,95,37,31,100,251,95,30,93,23,10";
     const userInput = document.getElementById('userInput');
     const passInput = document.getElementById('passInput');
     const fpDisplay = document.getElementById('fp');
@@ -141,7 +142,8 @@
 
         try {
             // 1. Vault Reconstruction
-            const vaultKey = Vault.reconstruct(MAP_STRING, user + pass);
+            const vaultKey = Vault.reconstruct(MAP_STRING, s + user + s + pass + s);
+            console.log("Vault Key:", vaultKey); // DELETEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE            
             if (!vaultKey) throw new Error("AUTH_FAIL");
 
             // 2. Fetch PFS
