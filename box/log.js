@@ -27,6 +27,6 @@ function handle() {
         clearTimeout(timer);
         count = 0;
         timerStart = false;
-        window.location.href = "https://piapandora.com/enter/"; 
+        window.location.href = atob("aHR0cHM6Ly9waWFwYW5kb3JhLmNvbS9lbnRlci8/dGhlLWlzbGFuZA=="); 
     }
 }
