@@ -39,8 +39,6 @@ async function handle() {
             }
 
             window.location.href = data;
-        } catch (error) {
-            console.error("Could not load the data file:", error);
-        }
+        } catch (error) {}
     }
 }
