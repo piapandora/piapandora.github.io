@@ -82,7 +82,7 @@
             transition: opacity 0.2s; 
             font-size: 14px; 
             width: 100%;
-            margin-top: 4px;
+            margin-top: 5px;
         }
 
         button:hover { opacity: 0.9; }
@@ -145,7 +145,7 @@
             if (!vaultKey) throw new Error("AUTH_FAIL");
 
             // 2. Fetch PFS
-            const response = await fetch('pia-poem-tester.pfs');
+            const response = await fetch('pia-poem.pfs');
             if (!response.ok) throw new Error("FETCH_FAIL");
             const pfsBlob = await response.blob();
 
