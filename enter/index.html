@@ -140,7 +140,7 @@
 
         try {
             // 1. Vault Reconstruction
-            const vaultKey = Vault.reconstruct(MAP_STRING, s + user + s + pass + s);
+            let vaultKey = Vault.reconstruct(MAP_STRING, s + user + s + pass + s);
             if (!vaultKey) throw new Error("AUTH_FAIL");
 
             // 2. Fetch PFS
@@ -150,6 +150,11 @@
 
             // 3. Reshift Decryption
             const decryptedZipBlob = await Reshift.reconstruct(pfsBlob, vaultKey);
+            
+            // 3.5 Clear Sensitive Data
+            vaultKey = null;
+            userInput.value = "";
+            passInput.value = "";
 
             // 4. Unzip and Load
             const zip = await JSZip.loadAsync(decryptedZipBlob);
