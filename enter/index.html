@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pia Pandora | App Collection</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/piapandora/micro-logo.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <!-- <script src="https://piapandora.com/piapandora/home.js"></script> -->
+    <script src="https://piapandora.com/shift/reshift.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <style>
+        :root { 
+            --accent: #2ecc71; 
+            --bg: #1a1a1a; 
+            --panel: #242424; 
+            --text: #e0e0e0; 
+        }
+
+        body { 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        .auth-overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: var(--bg); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 100; 
+            gap: 20px; 
+        }
+
+        .auth-card { 
+            background: var(--panel); 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 15px; 
+            border: 1px solid #333; 
+            width: 300px;
+        }
+
+        input { 
+            padding: 12px; 
+            border-radius: 6px; 
+            border: 1px solid #444; 
+            background: #121212; 
+            color: white; 
+            width: 100%; 
+            text-align: center; 
+            font-size: 16px; 
+            outline: none; 
+            transition: border-color 0.2s; 
+            box-sizing: border-box;
+        }
+
+        input:focus { border-color: var(--accent); }
+
+        button { 
+            padding: 10px 24px; 
+            cursor: pointer; 
+            background: var(--accent); 
+            border: none; 
+            color: #000; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            transition: opacity 0.2s; 
+            font-size: 14px; 
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        button:hover { opacity: 0.9; }
+
+        .brand { 
+            font-weight: 600; 
+            font-size: 22px; 
+            letter-spacing: 4px;
+            margin-bottom: 10px; 
+            color: #fff;
+        }
+
+        #info { 
+            font-size: 11px; 
+            color: #777; 
+            font-family: monospace; 
+            margin-top: 5px; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="auth" class="auth-overlay">
+    <div class="auth-card">
+        <div class="brand">THE ISLAND</div>
+        <input type="text" id="userInput" placeholder="path" autofocus autocomplete="off" spellcheck="false">
+        <input type="password" id="passInput" placeholder="password" autocomplete="off" spellcheck="false">
+        <button id="unlockBtn">Enter</button>
+        <div id="info">ID: <span id="fp">----</span></div>
+    </div>
+</div>
+
+<script>
+    const MAP_STRING = "253,215,84,239,25,76,35,21,25,29,236,226,230,248";
+    
+    // The Manny Map: Links the fingerprint of the 'path' to the actual .pfs filename
+    const manny = {
+        "532F": "1777154159934.pfs", // Example: Fingerprint of pia-poem
+        "FC88": "1777154201002.pfs"  // Example: Fingerprint of basic-template
+    };
+
+    const userInput = document.getElementById('userInput');
+    const passInput = document.getElementById('passInput');
+    const fpDisplay = document.getElementById('fp');
+    let imprint = "";
+
+    userInput.addEventListener('input', (e) => {
+        const normalizedUser = e.target.value.toLowerCase().trim();
+        imprint = Vault.fingerprint(normalizedUser);
+    });
+
+    passInput.addEventListener('input', (e) => {
+        fpDisplay.innerText = Vault.fingerprint(e.target.value);
+    });
+
+    document.getElementById('unlockBtn').onclick = enterIsland;
+    [userInput, passInput].forEach(el => {
+        el.addEventListener('keypress', (e) => { if(e.key === 'Enter') enterIsland(); });
+    });
+
+    async function enterIsland() {
+        const user = userInput.value.toLowerCase().trim();
+        const pass = passInput.value;
+
+        if (!user || !pass) return;
+
+        try {
+            // 1. Resolve Path via Manny
+            // We look up the filename using the fingerprint we generated during input
+            const pfsPath = manny[imprint];
+            if (!pfsPath) throw new Error("PATH_ERR");
+
+            // 2. Vault Reconstruction (Decryption Key)
+            let vaultKey = Vault.reconstruct(MAP_STRING, pass);
+            if (!vaultKey) throw new Error("AUTH_FAIL");
+
+            // 3. Fetch Resolved PFS
+            const response = await fetch(pfsPath);
+            if (!response.ok) throw new Error("FETCH_FAIL");
+            const pfsBlob = await response.blob();
+
+            // 4. Reshift Decryption
+            const decryptedZipBlob = await Reshift.reconstruct(pfsBlob, vaultKey);
+            
+            // 4.5 Clear Sensitive Data
+            vaultKey = null;
+            imprint = ""; // Clear the hidden fingerprint
+            userInput.value = "";
+            passInput.value = "";
+
+            // 5. Unzip and Load
+            const zip = await JSZip.loadAsync(decryptedZipBlob);
+            const htmlFileName = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.html'));
+            if (!htmlFileName) throw new Error("CONTENT_ERR");
+
+            const htmlContent = await zip.file(htmlFileName).async("string");
+
+            // 6. Page Swap
+            document.open();
+            document.write(htmlContent);
+            document.close();
+
+        } catch (e) {
+            console.error(e);
+            userInput.value = "";
+            passInput.value = "";
+            userInput.placeholder = "";
+            passInput.placeholder = "";
+            setTimeout(() => {
+                userInput.placeholder = "username";
+                passInput.placeholder = "password";
+                fpDisplay.innerText = "----";
+            }, 1000);
+        }
+    }
+</script>
+
+</body>
+</html>
