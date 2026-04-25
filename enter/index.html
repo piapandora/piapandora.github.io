@@ -141,8 +141,6 @@
         if (!user || !pass) return;
 
         try {
-            fpDisplay.innerText = "PROCESSING...";
-            
             // 1. Vault Reconstruction
             const vaultKey = Vault.reconstruct(MAP_STRING, user + pass);
             if (!vaultKey) throw new Error("AUTH_FAIL");
