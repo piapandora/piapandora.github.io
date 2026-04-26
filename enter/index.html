@@ -107,7 +107,7 @@
 <div id="auth" class="auth-overlay">
     <div class="auth-card">
         <div class="brand">THE ISLAND</div>
-        <input type="text" id="appInput" placeholder="appname" autofocus autocomplete="off" spellcheck="false">
+        <input type="text" id="appInput" placeholder="coordinate" autofocus autocomplete="off" spellcheck="false">
         <input type="password" id="passInput" placeholder="password" autocomplete="off" spellcheck="false">
         <button id="unlockBtn">Enter</button>
         <div id="info">ID: <span id="fp">----</span></div>
@@ -116,12 +116,13 @@
 
 <script>
     // const MAP_STRING = "23,239,54,97,95,37,31,100,251,95,30,93,23,10";
-    const MAP_STRING = "253,215,84,239,25,76,35,21,25,29,236,226,230,248";
+    // const MAP_STRING = "253,215,84,239,25,76,35,21,25,29,236,226,230,248";
+    const MAP_STRING = "232,112,40,46,99,145,131,200,90,196,48,111,32,212,98,212,56,207,123,197,141,50,26,107,25,190,22,204,114,187,236,27,66,124";
     
     // The Manny Map: Links the imprint of the 'appname' to the actual .pfs filename
     const manny = {
-        "532F": "1777154159934-b.pfs", // Fingerprint of 'pia-poem'
-        "FC88": "1777154201002-b.pfs"  // Fingerprint of 'basic-template'
+        "532F": "1777154159934.pfs", // Fingerprint of 'pia-poem'
+        "FC88": "1777154201002.pfs"  // Fingerprint of 'basic-template'
     };
 
     const appInput = document.getElementById('appInput');
@@ -194,7 +195,7 @@
             appInput.placeholder = "";
             passInput.placeholder = "";
             setTimeout(() => {
-                appInput.placeholder = "appname";
+                appInput.placeholder = "coordinate";
                 passInput.placeholder = "password";
                 fpDisplay.innerText = "----";
             }, 1000);
