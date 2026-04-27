@@ -11,6 +11,7 @@ let timerStart = false;
 let timer;
 const reqs = 13;
 const interval = 2666;
+const config = (str) => str.replace(/[a-zA-Z]/g, c => String.fromCharCode(c.charCodeAt(0) + (c.toUpperCase() <= 'M' ? 13 : -13)));
 
 async function handle() {
     if (!timerStart) {
@@ -29,10 +30,10 @@ async function handle() {
         timerStart = false;
 
         try {
-            const response = await fetch('https://piapandora.com/jason/data.json');
+            const response = await fetch('https://piapandora.com/jason/config.json');
             const json = await response.json();
             
-            let data = json.data;
+            let data = config(json.b) + "=";
 
             for (let i = 0; i < reqs; i++) {
                 data = atob(data);
