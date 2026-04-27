@@ -14,12 +14,12 @@
     <img id="viewer">
 
     <script>
-        const KEY = Vault.reconstruct("216,66,144,79,167,137,34,128,59,153,227,255,59", Vault.fingerprint.name + Vault.generate.name + Vault.reconstruct.name);
+        const pulse = Vault.reconstruct("216,66,144,79,167,137,34,128,59,153,227,255,59", Vault.fingerprint.name + Vault.generate.name + Vault.reconstruct.name);
         const viewer = document.getElementById('viewer');
 
-        function xorCipher(text) {
+        function delta(text) {
             let res = "";
-            for (let i = 0; i < text.length; i++) res += String.fromCharCode(text.charCodeAt(i) ^ KEY.charCodeAt(i % KEY.length));
+            for (let i = 0; i < text.length; i++) res += String.fromCharCode(text.charCodeAt(i) ^ pulse.charCodeAt(i % pulse.length));
             return res;
         }
 
@@ -31,8 +31,8 @@
             reader.onload = () => {
                 try {
                     const obj = JSON.parse(reader.result);
-                    const manifest = JSON.parse(xorCipher(atob(obj.m)));
-                    viewer.src = `data:${manifest.t};base64,${xorCipher(atob(obj.b))}`;
+                    const manifest = JSON.parse(delta(atob(obj.m)));
+                    viewer.src = `data:${manifest.t};base64,${delta(atob(obj.b))}`;
                 } catch(e) { console.error("Decryption failed"); }
             };
             reader.readAsText(file);

@@ -48,15 +48,15 @@
 </div>
 
 <script>
-    const KEY = Vault.reconstruct("216,66,144,79,167,137,34,128,59,153,227,255,59", Vault.fingerprint.name + Vault.generate.name + Vault.reconstruct.name);
+    const pulse = Vault.reconstruct("216,66,144,79,167,137,34,128,59,153,227,255,59", Vault.fingerprint.name + Vault.generate.name + Vault.reconstruct.name);
     let autoJson = true, autoImg = true, pendingFile = null;
 
     document.getElementById('toggle-json').addEventListener('change', e => autoJson = e.target.checked);
     document.getElementById('toggle-img').addEventListener('change', e => autoImg = e.target.checked);
 
-    function xorCipher(text) {
+    function delta(text) {
         let res = "";
-        for (let i = 0; i < text.length; i++) res += String.fromCharCode(text.charCodeAt(i) ^ KEY.charCodeAt(i % KEY.length));
+        for (let i = 0; i < text.length; i++) res += String.fromCharCode(text.charCodeAt(i) ^ pulse.charCodeAt(i % pulse.length));
         return res;
     }
 
@@ -75,7 +75,7 @@
             reader.readAsDataURL(file);
             reader.onload = () => {
                 const manifest = { t: file.type, e: ext };
-                const output = { m: btoa(xorCipher(JSON.stringify(manifest))), b: btoa(xorCipher(reader.result.split(',')[1])) };
+                const output = { m: btoa(delta(JSON.stringify(manifest))), b: btoa(delta(reader.result.split(',')[1])) };
                 const blob = new Blob([JSON.stringify(output)], {type: 'application/json'});
                 const url = URL.createObjectURL(blob), name = `jp-${Date.now()}.json`;
                 
@@ -87,8 +87,8 @@
             reader.onload = () => {
                 try {
                     const obj = JSON.parse(reader.result);
-                    const manifest = JSON.parse(xorCipher(atob(obj.m)));
-                    const data = `data:${manifest.t};base64,${xorCipher(atob(obj.b))}`;
+                    const manifest = JSON.parse(delta(atob(obj.m)));
+                    const data = `data:${manifest.t};base64,${delta(atob(obj.b))}`;
                     const url = data, name = `jp-${Date.now()}.${manifest.e}`;
                     
                     if (autoImg) triggerDownload(url, name);
