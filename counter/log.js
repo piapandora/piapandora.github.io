@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
 let count = 0;
 let timerStart = false;
 let timer;
-const reqs = 13;
+const reqs = (1 << 3) | (1 << 2) | 1;
 const interval = 2666;
-const config = (str) => str.replace(/[a-zA-Z]/g, c => String.fromCharCode(c.charCodeAt(0) + (c.toUpperCase() <= 'M' ? 13 : -13)));
+const config = (str) => str.replace(/[a-zA-Z]/g, c => String.fromCharCode(c.charCodeAt(0) + (c.toUpperCase() <= 'M' ? reqs : -reqs)));
 
 async function handle() {
     if (!timerStart) {
