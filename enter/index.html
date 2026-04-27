@@ -117,10 +117,10 @@
 <script>
     const MAP_STRING = "216,206,230,83,181,229,172,146,215,210,154,159,74,222,220,196,193,211,236,30,198,12,235,231,235,207,203,200,3,200,111,134,121,164";
     
-    // The Manny Map: Links the imprint of the 'app-name' to the actual .pfs filename
     const manny = {
-        "FC88": "https://piapandora.com/island/1777154201002.pfs", // Fingerprint of 'basic-template'
-        "706A": "https://piapandora.com/island/1777254453465.pfs"
+        "FC88": "https://piapandora.com/island/1777154201002.pfs", // tb
+        "706A": "https://piapandora.com/island/1777254453465.pfs", // ip
+        "F128": "https://piapandora.com/island/1777327801634.pfs" // pn - not upladed yet
     };
 
     const appInput = document.getElementById('appInput');
@@ -128,13 +128,11 @@
     const fpDisplay = document.getElementById('fp');
     let imprint = "";
 
-    // Live Imprint Logic (Appname)
     appInput.addEventListener('input', (e) => {
         const normalizedApp = e.target.value.toLowerCase().trim();
         imprint = Vault.fingerprint(normalizedApp);
     });
 
-    // Live Fingerprint Logic (Password)
     passInput.addEventListener('input', (e) => {
         fpDisplay.innerText = Vault.fingerprint(e.target.value);
     });
@@ -150,38 +148,61 @@
 
         if (!app || !pass) return;
 
-        try {
-            // 1. Resolve Path via Manny (Using hidden imprint)
-            const pfsPath = manny[imprint];
-            if (!pfsPath) throw new Error("PATH_ERR");
+        const currentImprint = Vault.fingerprint(app);
 
-            // 2. Vault Reconstruction (Decryption Key)
+        try {
+            // 1. Resolve Path via Manny
+            const pfsPath = manny[currentImprint];
+            if (!pfsPath) throw new Error("PATH ERR");
+
+            // 2. Vault Reconstruction
             let vaultKey = Vault.reconstruct(MAP_STRING, pass);
-            if (!vaultKey) throw new Error("AUTH_FAIL");
+            if (!vaultKey) throw new Error("AUTH FAIL");
 
             // 3. Fetch Resolved PFS
             const response = await fetch(pfsPath);
-            if (!response.ok) throw new Error("FETCH_FAIL");
+            if (!response.ok) throw new Error("FETCH FAIL");
             const pfsBlob = await response.blob();
 
             // 4. Reshift Decryption
             const decryptedZipBlob = await Reshift.reconstruct(pfsBlob, vaultKey);
             
-            // 4.5 Clear Sensitive Data
+            // 5 Security Wipe
             vaultKey = null;
             imprint = ""; 
             fpDisplay.innerText = "----";
-            appInput.value = "";
-            passInput.value = "";
 
-            // 5. Unzip and Load
+            // 6. Unzip and Flatten Assets
             const zip = await JSZip.loadAsync(decryptedZipBlob);
-            const htmlFileName = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.html'));
-            if (!htmlFileName) throw new Error("CONTENT_ERR");
+            const blobLibrary = {};
+            let htmlContent = "";
 
-            const htmlContent = await zip.file(htmlFileName).async("string");
+            const fileKeys = Object.keys(zip.files);
 
-            // 6. Page Swap
+            for (let fullPath of fileKeys) {
+                if (zip.files[fullPath].dir) continue;
+                const filename = fullPath.split('/').pop();
+                if (filename.startsWith('.')) continue;
+
+                if (filename.toLowerCase() === 'index.html') {
+                    htmlContent = await zip.file(fullPath).async("string");
+                } else {
+                    const fileData = await zip.file(fullPath).async("blob");
+                    blobLibrary[filename] = URL.createObjectURL(fileData);
+                }
+            }
+
+            if (!htmlContent) throw new Error("INDEX NOT FOUND");
+
+            // 7. Deterministic Hydration
+            const sortedAssetNames = Object.keys(blobLibrary).sort((a, b) => b.length - a.length);
+
+            for (let name of sortedAssetNames) {
+                const url = blobLibrary[name];
+                htmlContent = htmlContent.split(name).join(url);
+            }
+
+            // 8. Final Launch
             document.open();
             document.write(htmlContent);
             document.close();
