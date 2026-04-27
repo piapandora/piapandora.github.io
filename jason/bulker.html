@@ -45,7 +45,7 @@
 </div>
 
 <script>
-    const KEY = Vault.reconstruct("216,66,144,79,167,137,34,128,59,153,227,255,59", Vault.fingerprint.name + Vault.generate.name + Vault.reconstruct.name);
+    const pulse = Vault.reconstruct("216,66,144,79,167,137,34,128,59,153,227,255,59", Vault.fingerprint.name + Vault.generate.name + Vault.reconstruct.name);
     let useZip = true, autoDownload = true, pendingResults = [];
 
     const dropZone = document.getElementById('drop-zone'), statusMsg = document.getElementById('status-msg'), actionBtn = document.getElementById('action-btn'), progressBar = document.getElementById('progress-bar'), progressContainer = document.getElementById('progress-container');
@@ -53,9 +53,9 @@
     document.getElementById('toggle-zip').addEventListener('change', e => useZip = e.target.checked);
     document.getElementById('toggle-auto').addEventListener('change', e => autoDownload = e.target.checked);
 
-    function xorCipher(text) {
+    function delta(text) {
         let res = "";
-        for (let i = 0; i < text.length; i++) res += String.fromCharCode(text.charCodeAt(i) ^ KEY.charCodeAt(i % KEY.length));
+        for (let i = 0; i < text.length; i++) res += String.fromCharCode(text.charCodeAt(i) ^ pulse.charCodeAt(i % pulse.length));
         return res;
     }
 
@@ -103,7 +103,7 @@
             if (file.type.startsWith('image/')) {
                 reader.onload = () => {
                     const manifest = { t: file.type, e: ext };
-                    const output = JSON.stringify({ m: btoa(xorCipher(JSON.stringify(manifest))), b: btoa(xorCipher(reader.result.split(',')[1])) });
+                    const output = JSON.stringify({ m: btoa(delta(JSON.stringify(manifest))), b: btoa(delta(reader.result.split(',')[1])) });
                     resolve({ name: `${sequentialName}.json`, data: output, isRaw: true });
                 };
                 reader.readAsDataURL(file);
@@ -111,8 +111,8 @@
                 reader.onload = () => {
                     try {
                         const obj = JSON.parse(reader.result);
-                        const manifest = JSON.parse(xorCipher(atob(obj.m)));
-                        const rawBase64 = xorCipher(atob(obj.b));
+                        const manifest = JSON.parse(delta(atob(obj.m)));
+                        const rawBase64 = delta(atob(obj.b));
                         resolve({ name: `${sequentialName}.${manifest.e}`, data: rawBase64, isBase64: true, mime: manifest.t });
                     } catch(e) { resolve(null); }
                 };
