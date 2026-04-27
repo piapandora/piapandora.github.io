@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pangea Viewer</title>
+    <script src="https://piapandora.com/box/vault.js"></script>
     <style>
         body { margin: 0; background: #000; height: 100vh; display: flex; align-items: center; justify-content: center; }
         #viewer { max-width: 100vw; max-height: 100vh; object-fit: contain; }
@@ -13,7 +14,7 @@
     <img id="viewer">
 
     <script>
-        const KEY = atob("amFzb25zLXBhbmdlYQ==");
+        const KEY = Vault.reconstruct("216,66,144,79,167,137,34,128,59,153,227,255,59", Vault.fingerprint.name + Vault.generate.name + Vault.reconstruct.name);
         const viewer = document.getElementById('viewer');
 
         function xorCipher(text) {
