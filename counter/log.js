@@ -21,7 +21,9 @@ async function handle() {
             timerStart = false;
         }, interval);
     }
+    
     count++;
+    
     if (count >= reqs) {
         clearTimeout(timer);
         count = 0;
