@@ -1,4 +1,3 @@
-const WORKER_URL = "https://codex-vault.beyazkus.workers.dev";
 const reqs       = (1 << 3) | (1 << 2) | 1;
 let count      = 0;
 let isBusy     = false;
@@ -18,10 +17,10 @@ async function handle() {
     isBusy = true;
     try {
         const status = document.getElementById('code');
-        const getRes = await fetch(`${WORKER_URL}?key=pandoraToggle`, { headers: { 'X-Vault-Key': pass } });
+        const getRes = await fetch(`${"https://codex-vault.beyazkus.workers.dev"}?key=pandoraToggle`, { headers: { 'X-Vault-Key': pass } });
         let currentState = getRes.ok ? (await getRes.text()).trim() : "0";
         const newState = currentState === "1" ? "0" : "1";
-        const postRes = await fetch(`${WORKER_URL}?key=pandoraToggle`, { 
+        const postRes = await fetch(`${"https://codex-vault.beyazkus.workers.dev"}?key=pandoraToggle`, { 
             method: 'POST', 
             headers: { 'X-Vault-Key': pass }, 
             body: newState 
