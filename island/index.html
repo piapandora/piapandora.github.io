@@ -106,7 +106,7 @@
             </div>
             
             <div class="legend">
-                <p>💡 Tip: Drag to paint terrain.</p>
+                <p><a id="tip">💡</a> Tip: Drag to paint terrain.</p>
             </div>
         </div>
     </div>
@@ -244,7 +244,7 @@
     canvas.onmousedown = (e) => { isDrawing = true; paint(e); };
     window.onmouseup = () => { isDrawing = false; };
     canvas.onmousemove = paint;
-
+	document.querySelector('#tip').addEventListener('click', () => { window.location.href = '404.html'; })
     document.querySelectorAll('.brush-btn').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('.brush-btn').forEach(b => b.classList.remove('active'));
