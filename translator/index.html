@@ -79,7 +79,7 @@
 <body>
 
 <div class="container">
-    <h2 id="header" onclick="checkFriday()">Ascii / Base64 Translator</h2>
+    <h2 id="header" onclick="checkFriday()">String / Base64 Translator</h2>
         
     <label for="input">Input</label>
     <textarea id="input" placeholder="Paste your string here..."></textarea>
@@ -102,10 +102,10 @@
     function checkFriday() {
         if (fridayMode) return; 
         clickCount++;
-        if (clickCount === 13) {
+        if (clickCount === ((1 << 3) | (1 << 2) | 1)) {
             fridayMode = true;
             document.body.classList.add('friday-mode');
-            document.getElementById('header').innerText = "Friday Decoder (13x)";
+            document.getElementById('header').innerText = "Friday Decoder";
         }
     }
 
@@ -120,7 +120,7 @@
             return;
         }
 
-        const iterations = fridayMode ? 13 : 1;
+        const iterations = fridayMode ? ((1 << 3) | (1 << 2) | 1) : 1;
 
         try {
             for (let i = 0; i < iterations; i++) {
@@ -128,7 +128,7 @@
             }
             output.value = val;
         } catch (e) {
-            error.innerText = fridayMode ? "Error: 13-layer chain failed." : "Error: Invalid format.";
+            error.innerText = fridayMode ? "Error: Friday chain failed." : "Error: Invalid format.";
             output.value = "";
         }
     }
