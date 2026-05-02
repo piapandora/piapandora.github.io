@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RUNTIME</title>
+    <title>THE SCROLL</title>
     <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
     <script src="https://piapandora.com/box/style.js"></script>
-    <script src="pandora.js"></script>
+    <script src="https://piapandora.com/box/pandora.js"></script>
 </head>
 <body style="background:#000; margin:0;">
 
     <script>
         async function loadApp() {
-            const key = "the-secret";
-            const auth = pass;
-
             try {
-                const content = await pandoraStorage.getItem(key, auth);
+                const content = await pandoraStorage.getItem("the-scroll", pass);
                 
                 if (content) {
                     document.open();
