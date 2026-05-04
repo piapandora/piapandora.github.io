@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Lounge</title>
+    <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <script src="https://piapandora.com/box/style.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background: #3C3C3C;
+            font-family: Arial, sans-serif;
+            color: #eee;
+            user-select: none;
+        }
+        .menu-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            height: 60px;
+            background-color: #1F2020;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        #game-title {
+            font-size: 20px;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: default;
+        }
+        .menu-btn {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+        }
+        main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 120px);
+        }
+        .portrait-display {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+        }
+        .portrait {
+            width: 360px;
+            height: 480px;
+            border-radius: 15px;
+            border: 10px solid black;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            object-fit: cover;
+            cursor: default;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background: #1F2020;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+        }
+        #refresh-btn {
+            padding: 18px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            background: transparent;
+            color: #ddd;
+            border: none;
+            cursor: pointer;
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out;
+            text-align: center;
+        }
+        #refresh-btn:hover {
+            color: #f1c40f;
+        }
+        #refresh-btn:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="menu-bar">
+    <span id="game-title">Zen Lounge</span>
+    <img src="misc/icons8-fullscreen-32.png" class="menu-btn" id="fullscreen-btn">
+</div>
+
+<main>
+    <div class="portrait-display">
+        <img class="portrait" src="misc/card-back.jpg">
+        <img class="portrait" src="misc/card-back.jpg">
+        <img class="portrait" src="misc/card-back.jpg">
+    </div>
+</main>
+
+<div class="footer">
+    <button id="refresh-btn">Enter</button>
+</div>
+
+<script>
+const GROQ_MAP = "238,27,102,93,132,140,22,114,203,75,62,194,133,4,109,208,161,82,213,156,188,132,140,168,190,135,90,137,43,157,192,177,42,205,194,238,119,143,59,46,29,42,72,60,36,31,121,230,49,55,173,97,142,25,50,238";
+const IMAGE_MAP = "21,95,42,7,245,131,206,254,239,224,240,119,214,111,202,65,36,246,76,59,158,229,188,133,112,163,57,22,83,121,120,91,56,202,202";
+const GROQ_KEY = Vault.reconstruct(GROQ_MAP, pass);
+const IMAGE_KEY = Vault.reconstruct(IMAGE_MAP, pass);
+const portraits = document.querySelectorAll('.portrait');
+const shuffleBtn = document.getElementById('refresh-btn');
+const title = document.getElementById('game-title');
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+let firstCheck = true;
+
+const API = {
+    async generateQuote(key) {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [{ role: "system", content: "Generate a profound quote, maximum 24 words. Return ONLY JSON: {\"quote\": \"...\"}" }],
+                response_format: { type: "json_object" }
+            })
+        });
+        const data = await res.json();
+        return JSON.parse(data.choices[0].message.content).quote;
+    },
+
+    async generateImage(index) {
+        const prompt = "minimalist zen art, cinematic lighting, high detail, 8k";
+        const seed = Math.floor(Math.random() * 999999);
+        const url = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?model=flux&seed=${seed}&width=768&height=1024&nologo=true&key=${IMAGE_KEY}`;
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return URL.createObjectURL(blob);
+    }
+};
+
+async function runSession() {
+    if (!firstCheck) return;
+    firstCheck = false;
+    
+    shuffleBtn.style.color = '#f1c40f';
+    shuffleBtn.style.cursor = 'default';
+    shuffleBtn.innerText = "Seeking wisdom from the universe... please wait patiently.";
+
+    try {
+        const imgUrl = await API.generateImage(0);
+        portraits[0].style.opacity = '0';
+        setTimeout(() => {
+            portraits[0].src = imgUrl;
+            portraits[0].style.opacity = '1';
+        }, 300);
+    } catch (e) {
+        console.error("Image failed to load");
+    }
+    
+    try {
+        const quote = await API.generateQuote(GROQ_KEY);
+        shuffleBtn.style.color = '#ddd';
+        shuffleBtn.innerText = `${quote}`;
+        shuffleBtn.style.opacity = '1';
+    } catch (e) {
+        shuffleBtn.innerText = "Let go your earthly tether. Enter the void. Empty, and become wind.";
+    }
+
+    for (let i = 1; i < portraits.length; i++) {
+        try {
+            const imgUrl = await API.generateImage(i);
+            portraits[i].style.opacity = '0';
+            setTimeout(() => {
+                portraits[i].src = imgUrl;
+                portraits[i].style.opacity = '1';
+            }, 300);
+        } catch (e) {
+            console.error("Image failed to load");
+        }
+    }
+}
+
+shuffleBtn.addEventListener('click', runSession);
+
+fullscreenBtn.addEventListener('mouseenter', function() {
+    this.src = "misc/icons8-fullscreen-yellow-32.png";
+});
+fullscreenBtn.addEventListener('mouseleave', function() {
+    this.src = "misc/icons8-fullscreen-32.png";
+});
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+fullscreenBtn.addEventListener('click', toggleFullscreen);
+</script>
+</body>
+</html>
