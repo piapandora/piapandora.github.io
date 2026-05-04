@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Lounge</title>
+    <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+    <script src="https://piapandora.com/box/vault.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background: #3C3C3C;
+            font-family: Arial, sans-serif;
+            color: #eee;
+            user-select: none;
+        }
+        .menu-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            height: 60px;
+            background-color: #1F2020;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        #game-title {
+            font-size: 20px;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: default;
+        }
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        #pass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 5px 10px;
+            color: #ddd;
+            outline: none;
+            font-size: 14px;
+            transition: border 0.3s;
+            width: 100px;
+        }
+        #pass-input:focus {
+            border-color: #f1c40f;
+        }
+        .menu-btn {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+        }
+        main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 120px);
+        }
+        .portrait-display {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+        }
+        .portrait {
+            width: 360px;
+            height: 480px;
+            border-radius: 15px;
+            border: 10px solid black;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            object-fit: cover;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background: #1F2020;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+        }
+        #refresh-btn {
+            padding: 18px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            background: transparent;
+            color: #ddd;
+            border: none;
+            cursor: pointer;
+            transition: color 0.3s ease-in-out;
+            text-align: center;
+        }
+        #refresh-btn:hover {
+            color: #f1c40f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="menu-bar">
+    <span id="game-title">Zen Lounge</span>
+    <div class="controls-right">
+        <input type="password" id="pass-input" placeholder="Access Key">
+        <img src="misc/icons8-fullscreen-32.png" class="menu-btn" id="fullscreen-btn">
+    </div>
+</div>
+
+<main>
+    <div class="portrait-display">
+        <img class="portrait" src="misc/card-back.jpg">
+        <img class="portrait" src="misc/card-back.jpg">
+        <img class="portrait" src="misc/card-back.jpg">
+    </div>
+</main>
+
+<div class="footer">
+    <button id="refresh-btn">Enter</button>
+</div>
+
+<script>
+const GROQ_MAP = "238,27,102,93,170,90,83,204,186,141,42,75,32,85,1,82,228,109,252,69,47,156,146,183,190,135,90,137,43,157,192,177,182,50,135,69,87,192,201,143,195,21,17,194,232,124,230,225,228,171,210,77,178,61,20,144";
+const IMAGE_MAP = "21,95,42,80,234,231,132,91,192,76,251,194,125,151,136,251,183,204,87,186,87,178,51,233,57,35,8,109,11,17,217,191,167,44,207";
+
+const portraits = document.querySelectorAll('.portrait');
+const shuffleBtn = document.getElementById('refresh-btn');
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+const passInput = document.getElementById('pass-input');
+
+let firstCheck = true;
+
+const API = {
+    async generateQuote(key) {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [{ role: "system", content: "Generate an original, non-generic profound quote, maximum 24 words. Return ONLY JSON: {\"quote\": \"...\"}" }],
+                response_format: { type: "json_object" }
+            })
+        });
+        const data = await res.json();
+        return JSON.parse(data.choices[0].message.content).quote;
+    },
+
+    async generateImage(key, index) {
+        const prompt = "minimalist zen art, cinematic lighting, high detail, 8k";
+        const seed = Math.floor(Math.random() * 999999);
+        const url = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?model=flux&seed=${seed}&width=768&height=1024&nologo=true&key=${key}`;
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return URL.createObjectURL(blob);
+    }
+};
+
+async function runSession() {
+    const pass = passInput.value;
+    if (!pass || Vault.fingerprint(pass) !== atob("MTUzRQ==")) {
+        passInput.value = "";
+        return;
+    }
+
+    if (!firstCheck) return;
+    firstCheck = false;
+    
+    const GROQ_KEY = Vault.reconstruct(GROQ_MAP, pass);
+    const IMAGE_KEY = Vault.reconstruct(IMAGE_MAP, pass);
+
+    shuffleBtn.style.color = '#f1c40f';
+    shuffleBtn.style.cursor = 'default';
+    shuffleBtn.innerText = "Seeking wisdom from the universe... please wait patiently.";
+
+    try {
+        passInput.style.display = 'none';
+        const imgUrl = await API.generateImage(IMAGE_KEY, 0);
+        portraits[0].style.opacity = '0';
+        setTimeout(() => {
+            portraits[0].src = imgUrl;
+            portraits[0].style.opacity = '1';
+        }, 300);
+    } catch (e) { console.error("Image 1 failed"); }
+    
+    try {
+        const quote = await API.generateQuote(GROQ_KEY);
+        shuffleBtn.style.color = '#ddd';
+        shuffleBtn.innerText = `${quote}`;
+    } catch (e) {
+        firstCheck = true;
+        return;
+    }
+
+    for (let i = 1; i < portraits.length; i++) {
+        try {
+            const imgUrl = await API.generateImage(IMAGE_KEY, i);
+            portraits[i].style.opacity = '0';
+            setTimeout(() => {
+                portraits[i].src = imgUrl;
+                portraits[i].style.opacity = '1';
+            }, 300);
+        } catch (e) { console.error(`Image ${i+1} failed`); }
+    }
+}
+
+passInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') runSession();
+});
+
+shuffleBtn.addEventListener('click', runSession);
+
+fullscreenBtn.addEventListener('mouseenter', () => fullscreenBtn.src = "misc/icons8-fullscreen-yellow-32.png");
+fullscreenBtn.addEventListener('mouseleave', () => fullscreenBtn.src = "misc/icons8-fullscreen-32.png");
+fullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+});
+</script>
+</body>
+</html>
