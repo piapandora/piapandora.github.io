@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Scroll</title>
+	<link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <style>
+		* {
+		  margin: 0;
+		  padding: 0;
+		  box-sizing: border-box;
+		}
+
+		body {
+		  font-family: Georgia, serif;
+		  background: #0a0a0a;
+		  color: #ccc;
+		  line-height: 1.8;
+		}
+		
+		::-webkit-scrollbar {
+		  width: 10px;
+		}
+
+		::-webkit-scrollbar-track {
+		  background: #0a0a0a; 
+		}
+
+		::-webkit-scrollbar-thumb {
+		  background: #1e8449;
+		  border-radius: 5px;
+		}
+
+		::-webkit-scrollbar-thumb:hover {
+		  background: #2ecc71;
+		}
+
+		.badge {
+		  position: fixed;
+		  bottom: 24px;
+		  right: 24px;
+		  background: #111;
+		  border: 1px solid #222;
+		  padding: 8px 14px;
+		  border-radius: 20px;
+		  font-family: system-ui, sans-serif;
+		  font-size: 0.85rem;
+		  font-weight: 600;
+		  color: #2ecc71;
+		  z-index: 100;
+		  transition: all 0.2s ease;
+		}
+
+		.badge.complete {
+		  background: #1e8449;
+		  color: #fff;
+		  border-color: #1e8449;
+		}
+
+		.content {
+		  max-width: 640px;
+		  margin: 0 auto;
+		  padding: 80px 24px;
+		}
+
+		h1 {
+		  font-size: 2.2rem;
+		  color: #eee;
+		  margin-bottom: 32px;
+		  line-height: 1.3;
+		}
+
+		h2 {
+		  font-size: 1.4rem;
+		  color: #eee;
+		  margin: 40px 0 20px;
+		}
+
+		p {
+		  color: #2ecc71;
+		  margin-bottom: 20px;
+		  font-size: 1.1rem;
+		}
+
+		.end {
+		  text-align: center;
+		  color: #888;
+		  margin-top: 60px;
+		  font-style: italic;
+		}
+	</style>
+  </head>
+  <body>
+    <div class="badge" id="badge">0% read</div>
+
+	<article class="content">
+        <h1>The Mechanics of Tomorrow</h1>
+
+        <p>
+            Time was once a local phenomenon, tied strictly to the lengthening of shadows and 
+            the heavy transition of seasons. For most of human history, "noon" was simply 
+            when the sun reached its zenith in your specific village, regardless of the 
+            clocks in a town fifty miles to the east.
+        </p>
+
+        <p>
+            The transition from cyclical time—where days were seen as repeating loops—to 
+            linear time changed the fundamental way we perceive our own mortality. We 
+            ceased to be part of a seasonal rhythm and became travelers on a one-way 
+            track toward a specific, measurable future.
+        </p>
+
+        <h2>The Clockwork Revolution</h2>
+
+        <p>
+            The birth of the mechanical clock in the 14th century was the first step in 
+            the "digitalization" of the human experience. By breaking the day into 
+            equal, identical hours, we stripped time of its personality. An hour in 
+            the dead of winter became identical to an hour in the height of harvest.
+        </p>
+
+        <p>
+            This precision was initially a monastic tool, used to ensure prayers 
+            were held at exact intervals. However, it quickly became the heartbeat of 
+            commerce. Synchronized time allowed for the coordination of global 
+            shipping and railway schedules, effectively shrinking the planet into 
+            a single, ticking machine.
+        </p>
+
+        <p>
+            The marine chronometer, in particular, was a masterstroke of engineering. 
+            It allowed sailors to find their longitude by carrying "London time" 
+            across the ocean in a vacuum-sealed box, proving that whoever controlled 
+            the most accurate clock controlled the world.
+        </p>
+
+        <h2>The Atomic Baseline</h2>
+
+        <p>
+            Today, we no longer look to the stars to define a second. Since 1967, 
+            time has been anchored to the internal vibrations of the Cesium atom. 
+            A second is now defined as 9,192,631,770 oscillations of that specific 
+            nucleus—a number so precise it will not drift by a single second in 
+            hundreds of millions of years.
+        </p>
+
+        <p>
+            This absolute precision is the invisible scaffolding of the modern world. 
+            Every GPS satellite overhead is a falling atomic clock, constantly 
+            beaming time signals down to your phone. Without this micro-second 
+            synchronization, the internet, high-frequency trading, and 
+            autonomous navigation would instantly collapse into chaos.
+        </p>
+
+        <p>
+            We have effectively detached time from the Earth itself. The planet's 
+            rotation is actually irregular and slowing down, forcing us to 
+            occasionally insert "leap seconds" to keep our perfect atomic 
+            measurements in line with the messy reality of the cosmos.
+        </p>
+
+        <h2>The Burden of the Instant</h2>
+
+        <p>
+            As our measurements have become more granular, our patience has 
+            shrunk. We now live in the age of the "picosecond," where delays 
+            invisible to the human eye are considered system failures. 
+        </p>
+
+        <p>
+            The psychological cost of this efficiency is a feeling of "time 
+            famine." Because we can measure every moment, we feel a compulsive 
+            need to fill every moment. We have conquered the second, but we 
+            have lost the afternoon. 
+        </p>
+
+        <p>
+            As you have read through this history, several billion atomic 
+            oscillations have occurred. You have spent a fragment of your 
+            linear journey looking backward, perhaps finding a brief 
+            moment of cyclical peace in the middle of a high-speed world.
+        </p>
+
+        <p class="end">— The End —</p>
+    </article>
+	<script>
+		const badge = document.getElementById("badge");
+
+		function updateProgress() {
+		  const scrollTop = window.scrollY;
+		  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+		  const progress = Math.round((scrollTop / docHeight) * 100);
+
+		  badge.textContent = progress + "% read";
+
+		  if (progress >= 100) {
+			badge.classList.add("complete");
+			badge.textContent = "✓ Complete";
+		  } else {
+			badge.classList.remove("complete");
+		  }
+		}
+
+		window.addEventListener("scroll", updateProgress);
+	</script>
+  </body>
+</html>

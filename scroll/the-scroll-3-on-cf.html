@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Scroll</title>
+	<link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <style>
+		* {
+		  margin: 0;
+		  padding: 0;
+		  box-sizing: border-box;
+		}
+
+		body {
+		  font-family: Georgia, serif;
+		  background: #0a0a0a;
+		  color: #ccc;
+		  line-height: 1.8;
+		}
+		
+		::-webkit-scrollbar {
+		  width: 10px;
+		}
+
+		::-webkit-scrollbar-track {
+		  background: #0a0a0a; 
+		}
+
+		::-webkit-scrollbar-thumb {
+		  background: #1e8449;
+		  border-radius: 5px;
+		}
+
+		::-webkit-scrollbar-thumb:hover {
+		  background: #2ecc71;
+		}
+
+		.badge {
+		  position: fixed;
+		  bottom: 24px;
+		  right: 24px;
+		  background: #111;
+		  border: 1px solid #222;
+		  padding: 8px 14px;
+		  border-radius: 20px;
+		  font-family: system-ui, sans-serif;
+		  font-size: 0.85rem;
+		  font-weight: 600;
+		  color: #2ecc71;
+		  z-index: 100;
+		  transition: all 0.2s ease;
+		}
+
+		.badge.complete {
+		  background: #1e8449;
+		  color: #fff;
+		  border-color: #1e8449;
+		}
+
+		.content {
+		  max-width: 640px;
+		  margin: 0 auto;
+		  padding: 80px 24px;
+		}
+
+		h1 {
+		  font-size: 2.2rem;
+		  color: #eee;
+		  margin-bottom: 32px;
+		  line-height: 1.3;
+		}
+
+		h2 {
+		  font-size: 1.4rem;
+		  color: #eee;
+		  margin: 40px 0 20px;
+		}
+
+		p {
+		  color: #2ecc71;
+		  margin-bottom: 20px;
+		  font-size: 1.1rem;
+		}
+
+		.end {
+		  text-align: center;
+		  color: #888;
+		  margin-top: 60px;
+		  font-style: italic;
+		}
+	</style>
+  </head>
+  <body>
+    <div class="badge" id="badge">0% read</div>
+
+    <article class="content">
+      <h1>The Vanishing Point</h1>
+
+        <p>
+            For the ancient navigator, the horizon was a physical wall—a literal edge where the 
+            known world dissolved into the abyss. It was the ultimate boundary, a line that 
+            defined the limits of human courage and cartography.
+        </p>
+
+        <p>
+            The horizon is unique because it is an optical illusion that moves with the observer. 
+            No matter how fast you travel toward it, the distance remains constant. It is the 
+            only physical feature of our world that is defined entirely by where we stand.
+        </p>
+
+        <h2>The Curvature of Knowledge</h2>
+
+        <p>
+            The realization that the horizon was not an edge, but a curve, changed our 
+            entire spiritual orientation. We stopped living on a flat plane of 
+            infinite expansion and started living on a closed loop of 
+            interconnectedness.
+        </p>
+
+        <p>
+            This shifted the human "quest" from a search for the end of the world to a 
+            search for the center of it. We began to understand that every point 
+            on the globe is simultaneously the center of its own horizon. This 
+            geometric truth mirrors the psychological one: we are all the 
+            protagonists of a circle that follows us wherever we go.
+        </p>
+
+        <p>
+            In the maritime era, "scanning the horizon" was a survival skill. It 
+            meant looking for the first mast-tip of a returning ship or the 
+            gathering bruise of a storm. It forced the eyes to focus on the 
+            infinite—a biological habit we are rapidly losing.
+        </p>
+
+        <h2>The Modern Foreground</h2>
+
+        <p>
+            In the 21st century, the horizon has been replaced by the "Middle Distance." 
+            Our lives are lived looking at things three to ten feet away—walls, 
+            windshields, and glowing rectangles. We have traded the long-range 
+            view for the high-definition immediate.
+        </p>
+
+        <p>
+            Ophthalmologists call this the "near-work" trap. When we lose the 
+            habit of looking at the horizon, our eye muscles literally forget 
+            how to relax. We have become a species of the foreground, 
+            hyper-focused on the next step but blind to the landscape.
+        </p>
+
+        <p>
+            The digital "feed" is the ultimate anti-horizon. It provides an 
+            endless stream of content that feels infinite, but it never 
+            requires the eyes to move more than six inches. It offers the 
+            illusion of a vast world while keeping us in a sensory box.
+        </p>
+
+        <h2>Reclaiming the View</h2>
+
+        <p>
+            There is a specific neurological calm that comes from looking at 
+            a distant line where the sky meets the earth. It triggers a 
+            "panoramic awareness" that lowers cortisol and quiets the 
+            analytical mind. 
+        </p>
+
+        <p>
+            To seek the horizon is to practice a form of visual humility. It 
+            reminds us that the world is larger than our current anxieties 
+            and that there is always a "beyond" that we cannot yet see. 
+        </p>
+
+        <p>
+            As you finish these paragraphs, try an experiment. Look away from 
+            your screen. Find the farthest point of light or shadow available 
+            to you. Let your eyes rest there for a moment. You have conquered 
+            the text; now, go find the afternoon.
+        </p>
+
+        <p class="end">— The End —</p>
+    </article>
+	<script>
+		const badge = document.getElementById("badge");
+
+		function updateProgress() {
+		  const scrollTop = window.scrollY;
+		  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+		  const progress = Math.round((scrollTop / docHeight) * 100);
+
+		  badge.textContent = progress + "% read";
+
+		  if (progress >= 100) {
+			badge.classList.add("complete");
+			badge.textContent = "✓ Complete";
+		  } else {
+			badge.classList.remove("complete");
+		  }
+		}
+
+		window.addEventListener("scroll", updateProgress);
+	</script>
+  </body>
+</html>
