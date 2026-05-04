@@ -11,9 +11,11 @@
 <body style="background:#000; margin:0;">
 
     <script>
+		const scrolls = ["the-scroll", "the-scroll-2", "the-scroll-3"];
+		const randomScroll = scrolls[Math.floor(Math.random() * scrolls.length)];
         async function loadApp() {
             try {
-                const content = await pandoraStorage.getItem("the-scroll", pass);
+                const content = await pandoraStorage.getItem(randomScroll, pass);
                 
                 if (content) {
                     document.open();
