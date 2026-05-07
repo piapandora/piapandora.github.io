@@ -94,7 +94,7 @@
 
         function getPct(val) {
           const v = val || 0;
-          return `<span class="pct ${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>`;
+          return `<span class="pct ${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
         }
 
         function render(coins) {
