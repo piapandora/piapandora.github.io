@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zollars Dashboard</title>
+    <link rel="icon" type="image/png" href="misc/icons8-feather-55.png">
+    <style>
+        :root {
+          --bg: #0d0d0d;
+          --card: #141414;
+          --card-hover: #1a1a1a;
+          --border: rgba(232, 165, 75, 0.1);
+          --orange: #e8a54b;
+          --text: #f0ebe3;
+          --text-muted: #555;
+          --up: #34d399;
+          --down: #f87171;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: "Nunito", sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          min-height: 100vh;
+          padding: 20px;
+          display: flex;
+          justify-content: center;
+        }
+
+        .container { width: max-content; min-width: 320px; }
+
+        .header h1 {
+          font-size: 20px;
+          text-align: center;
+          margin-bottom: 20px;
+          color: var(--orange);
+          font-weight: 800;
+          letter-spacing: -0.5px;
+        }
+
+        .coins { display: flex; flex-direction: column; gap: 4px; }
+
+        .coin {
+          display: flex;
+          align-items: center;
+          padding: 10px 14px;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          transition: background 0.2s;
+        }
+
+        .coin:hover { background: var(--card-hover); }
+
+        .coin-icon {
+          width: 18px;
+          height: 18px;
+          margin-right: 12px;
+          flex-shrink: 0;
+        }
+
+        .coin-icon img { width: 100%; height: 100%; border-radius: 50%; filter: grayscale(20%); }
+
+        .name-col { width: 85px; flex-shrink: 0; font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 25px;}
+        .price-col { width: 85px; flex-shrink: 0; font-weight: 700; font-size: 13px; color: var(--orange); text-align: left; }
+        
+        .changes-group { display: flex; justify-content: flex-start; gap: 12px; }
+        .pct { font-size: 11px; font-weight: 800; min-width: 38px; text-align: right; letter-spacing: -0.2px; }
+
+        .up { color: var(--up); }
+        .down { color: var(--down); }
+
+        .loading { text-align: center; color: var(--text-muted); padding-top: 40px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+    </style>
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700,800" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      <header class="header"><h1>Zollars Dashboard 🚀</h1></header>
+      <div class="coins" id="coins"><div class="loading" id="loading">Updating Ledger...</div></div>
+    </div>
+
+    <script>
+        const coinsEl = document.getElementById("coins");
+        const COIN_IDS = ["bitcoin", "ethereum", "solana", "hyperliquid", "memecore", "sui", "tether-gold", "pax-gold"];
+
+        function formatPrice(val) {
+          const opt = val < 10 ? { min: 2, max: 4 } : { min: 2, max: 2 };
+          return "$" + val.toLocaleString(undefined, { minimumFractionDigits: opt.min, maximumFractionDigits: opt.max });
+        }
+
+        function getPct(val) {
+          const v = val || 0;
+          return `<span class="pct ${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+        }
+
+        function render(coins) {
+          const loadingEl = document.getElementById("loading");
+          if(loadingEl) loadingEl.remove();
+          
+          coins.sort((a, b) => COIN_IDS.indexOf(a.id) - COIN_IDS.indexOf(b.id)).forEach(c => {
+            const div = document.createElement("div");
+            div.className = "coin";
+            div.innerHTML = `
+                <div class="coin-icon"><img src="${c.image}"></div>
+                <div class="name-col">${c.name}</div>
+                <div class="price-col">${formatPrice(c.current_price)}</div>
+                <div class="changes-group">
+                  ${getPct(c.price_change_percentage_24h)}
+                  ${getPct(c.price_change_percentage_7d_in_currency)}
+                  ${getPct(c.price_change_percentage_30d_in_currency)}
+                </div>
+            `;
+            coinsEl.appendChild(div);
+          });
+        }
+
+        fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${COIN_IDS.join(",")}&price_change_percentage=24h,7d,30d`)
+          .then(res => res.json())
+          .then(data => render(data))
+          .catch(() => document.getElementById("loading").textContent = "Market sync failed.");
+    </script>
+  </body>
+</html>
