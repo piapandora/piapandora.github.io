@@ -94,12 +94,10 @@
         initLab();
     }
 
-    authInput.addEventListener('keydown', (e) => {
+    authInput.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter') {
             vaultKey = authInput.value;
-            sessionStorage.setItem('vault_key', vaultKey);
-            authOverlay.style.display = 'none';
-            initLab();
+            await initLab(); 
         }
     });
 
@@ -117,6 +115,10 @@
                 db.run(`INSERT INTO codex (FOO, BAR, BAZ, QUX) VALUES ('foo', 'bar', 'baz', 'qux');`);
             }
             refreshTable("SELECT * FROM codex");
+            
+            sessionStorage.setItem('vault_key', vaultKey);
+            authOverlay.style.display = 'none'; 
+            document.getElementById('auth-error').style.display = 'none';
         } catch (err) {
             handleAuthFailure(err.message);
         }
