@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PIA SQL LAB</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <script src="https://piapandora.com/sql/sql-wasm.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: #2ecc71 #000;
+        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #2ecc71; }
+
+        html, body {
+            margin: 0; padding: 0; height: 100vh;
+            background: #000; color: #2ecc71;
+            font-family: monospace; letter-spacing: 2px;
+            overflow: hidden;
+        }
+        body { display: flex; flex-direction: column; }
+
+        /* Login Overlay */
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #auth-input {
+            background: transparent; border: 1px solid #2ecc71;
+            color: #2ecc71; padding: 10px; font-family: inherit;
+            text-align: center; outline: none; width: 250px;
+        }
+
+        #main-view {
+            flex: 1; overflow-y: auto; display: flex;
+            flex-direction: column; align-items: center; padding: 40px 0;
+        }
+        .container { width: 100%; max-width: 800px; text-align: center; }
+        .title { margin-bottom: 30px; font-size: 1.1rem; text-transform: uppercase; opacity: 0.9; }
+
+        table { border-collapse: collapse; width: 100%; border: 1px solid #2ecc71; table-layout: fixed; }
+        th, td { border: 1px solid #2ecc71; padding: 12px 10px; text-align: left; font-size: 0.9rem; word-break: break-all; }
+        th { background: rgba(46, 204, 113, 0.1); text-transform: uppercase; }
+        th:first-child, td:first-child { width: 55px; text-align: center; opacity: 0.8; }
+        tr:hover { background: rgba(46, 204, 113, 0.05); }
+
+        #input-wrapper {
+            min-height: 60px; max-height: 150px; width: 100%;
+            background: #000; border-top: 1px solid rgba(46, 204, 113, 0.3);
+            display: flex; justify-content: center; align-items: center; padding: 10px 0;
+        }
+        #terminal-input {
+            width: 90%; max-width: 900px; background: transparent;
+            border: none; color: #2ecc71; font-family: inherit;
+            font-size: 1rem; outline: none; resize: none;
+        }
+        .error { color: #ff5555; margin-top: 10px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div id="auth-overlay">
+    <div class="title">PIA SQL LAB</div>
+    <input type="password" id="auth-input" placeholder="ENTER KEY" autofocus>
+    <div id="auth-error" class="error" style="display:none">ACCESS DENIED</div>
+</div>
+
+<div id="main-view">
+    <div class="container">
+        <div class="title">PIA SQL LAB</div>
+        <div id="table-output"></div>
+    </div>
+</div>
+
+<div id="input-wrapper">
+    <textarea id="terminal-input" rows="1" placeholder="> ENTER SQL COMMAND..." autocomplete="off"></textarea>
+</div>
+
+<script>
+    let db;
+    let vaultKey = sessionStorage.getItem('vault_key');
+    const WORKER_URL = 'https://sql-gateway.beyazkus.workers.dev';
+
+    // Handle Auth UI
+    const authOverlay = document.getElementById('auth-overlay');
+    const authInput = document.getElementById('auth-input');
+    
+    if (vaultKey) {
+        authOverlay.style.display = 'none';
+        initLab();
+    }
+
+    authInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            vaultKey = authInput.value;
+            sessionStorage.setItem('vault_key', vaultKey);
+            authOverlay.style.display = 'none';
+            initLab();
+        }
+    });
+
+    async function initLab() {
+        const config = { locateFile: file => `https://piapandora.com/sql/${file}` };
+        try {
+            const SQL = await initSqlJs(config);
+            const savedDb = await loadFromKV();
+            
+            if (savedDb) {
+                db = new SQL.Database(new Uint8Array(savedDb));
+            } else {
+                db = new SQL.Database();
+                db.run(`CREATE TABLE codex (ID INTEGER PRIMARY KEY, FOO TEXT, BAR TEXT, BAZ TEXT, QUX TEXT);`);
+                db.run(`INSERT INTO codex (FOO, BAR, BAZ, QUX) VALUES ('foo', 'bar', 'baz', 'qux');`);
+            }
+            refreshTable("SELECT * FROM codex");
+        } catch (err) {
+            handleAuthFailure(err.message);
+        }
+    }
+
+    async function loadFromKV() {
+        const resp = await fetch(WORKER_URL, {
+            headers: { 'X-Vault-Key': vaultKey }
+        });
+        if (resp.status === 401) throw new Error("UNAUTHORIZED");
+        if (!resp.ok) return null;
+        return await resp.arrayBuffer();
+    }
+
+    async function saveToKV() {
+        try {
+            const data = db.export();
+            await fetch(WORKER_URL, {
+                method: 'POST',
+                body: data,
+                headers: { 
+                    'Content-Type': 'application/octet-stream',
+                    'X-Vault-Key': vaultKey 
+                }
+            });
+        } catch (e) { console.error("Save failed"); }
+    }
+
+    function handleAuthFailure(msg) {
+        sessionStorage.removeItem('vault_key');
+        authOverlay.style.display = 'flex';
+        document.getElementById('auth-error').style.display = 'block';
+        document.getElementById('auth-error').textContent = msg;
+    }
+
+    const inputField = document.getElementById('terminal-input');
+    inputField.addEventListener('keydown', async function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const sql = this.value.trim();
+            if (!sql) return;
+            try {
+                if (sql.toUpperCase().startsWith("SELECT")) {
+                    refreshTable(sql);
+                } else {
+                    db.run(sql);
+                    refreshTable("SELECT * FROM codex");
+                    await saveToKV();
+                }
+                this.value = "";
+                this.style.color = "#2ecc71";
+            } catch (err) {
+                this.style.color = "#ff5555";
+            }
+        }
+    });
+
+    function refreshTable(query) {
+        const target = document.getElementById('table-output');
+        try {
+            const res = db.exec(query);
+            if (res.length === 0) {
+                target.innerHTML = "<div>COMMAND EXECUTED</div>";
+                return;
+            }
+            const columns = res[0].columns;
+            const rows = res[0].values;
+            let html = `<table><thead><tr>`;
+            columns.forEach(col => html += `<th>${col}</th>`);
+            html += `</tr></thead><tbody>`;
+            rows.forEach(row => {
+                html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+            });
+            html += `</tbody></table>`;
+            target.innerHTML = html;
+        } catch (e) { target.innerHTML = `<div class="error">${e.message}</div>`; }
+    }
+</script>
+</body>
+</html>
