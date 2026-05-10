@@ -7,6 +7,6 @@ if (s) {
 (function() {
     if (Vault.fingerprint(s) !== '706A') {
         document.documentElement.innerHTML = "";
-        window.location.replace("https://www.piapandora.com/");
+        window.location.replace("https://piapandora.com");
     }
 })();
