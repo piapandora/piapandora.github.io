@@ -15,6 +15,8 @@
             --text-muted: #94a3b8;
             --border: #2e3440;
             --input-bg: #0d0e12;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
         }
 
         * {
@@ -78,13 +80,37 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.75rem;
+            position: relative;
         }
 
-        .item-card h4 {
+        .card-header {
             grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h4 {
             font-size: 0.85rem;
             color: var(--text-muted);
             text-transform: uppercase;
+        }
+
+        .remove-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .remove-btn:hover {
+            color: var(--danger);
+            background-color: rgba(239, 68, 68, 0.1);
         }
 
         .full-width {
@@ -95,6 +121,17 @@
             display: flex;
             flex-direction: column;
             gap: 0.3rem;
+        }
+
+        .beat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            position: relative;
         }
 
         label {
@@ -225,7 +262,7 @@
             .item-card {
                 grid-template-columns: 1fr;
             }
-            .item-card h4, .full-width {
+            .card-header, .full-width {
                 grid-column: span 1;
             }
         }
@@ -240,7 +277,6 @@
     </header>
 
     <form id="storyForm" onsubmit="event.preventDefault(); generatePrompt();">
-        
         <!-- SECTION 1: STORY -->
         <div class="section-header">1. STORY</div>
         <div class="item-card" style="margin-top: 0.5rem;">
@@ -280,15 +316,15 @@
 
     <div class="output-container">
         <div class="output-header">
-            <label>Generated LLM Prompt</label>
-            <button type="button" class="copy-btn" onclick="copyPrompt()">Copy Prompt</button>
+            <label>Story Prompt</label>
+            <button type="button" class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy Prompt</button>
         </div>
         <pre id="promptOutput">Fill in any fields above and click "Generate Prompt"...</pre>
     </div>
 </div>
 
 <script>
-    // Max Capacity Caps
+    // Capacity Caps & State Tracking
     let charCount = 0;
     const MAX_CHARS = 12;
 
@@ -317,8 +353,7 @@
     function randomizeStoryType() {
         const storySelect = document.getElementById('storyType');
         if (storySelect && storySelect.options.length > 0) {
-            const optionsCount = storySelect.options.length;
-            const randomIndex = Math.floor(Math.random() * optionsCount);
+            const randomIndex = Math.floor(Math.random() * storySelect.options.length);
             storySelect.selectedIndex = randomIndex;
         }
     }
@@ -326,13 +361,15 @@
     // Add Character Slot
     function addCharacterSlot() {
         if (charCount >= MAX_CHARS) return;
-        charCount++;
-
+        
         const charContainer = document.getElementById('characterSlots');
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
-            <h4>Character Slot ${charCount}</h4>
+            <div class="card-header">
+                <h4 class="char-title">Character Slot ${charContainer.children.length + 1}</h4>
+                <button type="button" class="remove-btn" onclick="removeCard(this, 'char')" title="Remove Character">×</button>
+            </div>
             <div class="field-group">
                 <label>Name</label>
                 <input type="text" class="char-name" placeholder="Name">
@@ -351,6 +388,7 @@
             </div>
         `;
         charContainer.appendChild(card);
+        charCount = charContainer.children.length;
 
         if (charCount >= MAX_CHARS) {
             const btn = document.getElementById('addCharBtn');
@@ -362,13 +400,15 @@
     // Add Location Slot
     function addLocationSlot() {
         if (locCount >= MAX_LOCS) return;
-        locCount++;
 
         const locContainer = document.getElementById('locationSlots');
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
-            <h4>Location Slot ${locCount}</h4>
+            <div class="card-header">
+                <h4 class="loc-title">Location Slot ${locContainer.children.length + 1}</h4>
+                <button type="button" class="remove-btn" onclick="removeCard(this, 'loc')" title="Remove Location">×</button>
+            </div>
             <div class="field-group">
                 <label>Location Name</label>
                 <input type="text" class="loc-name" placeholder="Location name">
@@ -379,6 +419,7 @@
             </div>
         `;
         locContainer.appendChild(card);
+        locCount = locContainer.children.length;
 
         if (locCount >= MAX_LOCS) {
             const btn = document.getElementById('addLocBtn');
@@ -390,16 +431,19 @@
     // Add Beat Slot
     function addBeatSlot() {
         if (beatCount >= MAX_BEATS) return;
-        beatCount++;
 
         const beatsContainer = document.getElementById('beatSlots');
         const card = document.createElement('div');
-        card.className = 'field-group';
+        card.className = 'beat-card';
         card.innerHTML = `
-            <label>Beat ${beatCount}</label>
+            <div class="card-header">
+                <label class="beat-title">Beat ${beatsContainer.children.length + 1}</label>
+                <button type="button" class="remove-btn" onclick="removeCard(this, 'beat')" title="Remove Beat">×</button>
+            </div>
             <input type="text" class="beat-input" placeholder="Action or turning point">
         `;
         beatsContainer.appendChild(card);
+        beatCount = beatsContainer.children.length;
 
         if (beatCount >= MAX_BEATS) {
             const btn = document.getElementById('addBeatBtn');
@@ -408,11 +452,44 @@
         }
     }
 
-    // Initialize Page
-    randomizeStoryType();
-    addCharacterSlot();
-    addLocationSlot();
-    addBeatSlot();
+    // Remove Card Handler & Precise Renumbering
+    function removeCard(btn, type) {
+        const card = btn.closest('.item-card, .beat-card');
+        if (!card) return;
+        card.remove();
+
+        if (type === 'char') {
+            const charContainer = document.getElementById('characterSlots');
+            charCount = charContainer.children.length;
+            const charBtn = document.getElementById('addCharBtn');
+            charBtn.disabled = false;
+            charBtn.textContent = '+ Add Character Slot';
+            
+            document.querySelectorAll('#characterSlots .char-title').forEach((title, index) => {
+                title.textContent = `Character Slot ${index + 1}`;
+            });
+        } else if (type === 'loc') {
+            const locContainer = document.getElementById('locationSlots');
+            locCount = locContainer.children.length;
+            const locBtn = document.getElementById('addLocBtn');
+            locBtn.disabled = false;
+            locBtn.textContent = '+ Add Location Slot';
+            
+            document.querySelectorAll('#locationSlots .loc-title').forEach((title, index) => {
+                title.textContent = `Location Slot ${index + 1}`;
+            });
+        } else if (type === 'beat') {
+            const beatsContainer = document.getElementById('beatSlots');
+            beatCount = beatsContainer.children.length;
+            const beatBtn = document.getElementById('addBeatBtn');
+            beatBtn.disabled = false;
+            beatBtn.textContent = '+ Add Beat Slot';
+            
+            document.querySelectorAll('#beatSlots .beat-title').forEach((title, index) => {
+                title.textContent = `Beat ${index + 1}`;
+            });
+        }
+    }
 
     function generatePrompt() {
         const storyType = document.getElementById('storyType').value;
@@ -496,21 +573,61 @@ Begin the story directly with no conversational fluff or meta-preface.`;
         document.getElementById('promptOutput').textContent = constructedPrompt;
     }
 
+    function triggerCopyFeedback() {
+        const outputPre = document.getElementById('promptOutput');
+        const copyBtn = document.getElementById('copyBtn');
+        const originalText = copyBtn.textContent;
+
+        outputPre.classList.add('flash-copy');
+        copyBtn.textContent = 'Copied ✓';
+
+        setTimeout(() => {
+            outputPre.classList.remove('flash-copy');
+        }, 300);
+
+        setTimeout(() => {
+            copyBtn.textContent = originalText;
+        }, 1500);
+    }
+
     function copyPrompt() {
         const outputPre = document.getElementById('promptOutput');
         const outputText = outputPre.textContent;
-        if (outputText.startsWith("Fill in any fields")) return;
+        if (!outputText || outputText.startsWith("Fill in any fields")) return;
 
-        navigator.clipboard.writeText(outputText).then(() => {
-            outputPre.classList.add('flash-copy');
-            setTimeout(() => {
-                outputPre.classList.remove('flash-copy');
-            }, 300);
-        }).catch(err => {
-            console.warn('Clipboard write failed:', err);
-        });
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(outputText).then(() => {
+                triggerCopyFeedback();
+            }).catch(() => {
+                fallbackCopyText(outputText);
+            });
+        } else {
+            fallbackCopyText(outputText);
+        }
     }
-</script>
 
+    function fallbackCopyText(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            triggerCopyFeedback();
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    // Initialize Page
+    randomizeStoryType();
+    addCharacterSlot();
+    addLocationSlot();
+    addBeatSlot();
+</script>
 </body>
 </html>
