@@ -311,7 +311,7 @@
         <div class="beats-list" id="beatSlots"></div>
         <button type="button" class="add-btn" id="addBeatBtn" onclick="addBeatSlot()">+ Add Beat Slot</button>
 
-        <button type="submit" class="main-btn">Generate Prompt</button>
+        <button type="submit" class="main-btn">Generate Story Prompt</button>
     </form>
 
     <div class="output-container">
@@ -319,7 +319,7 @@
             <label>Story Prompt</label>
             <button type="button" class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy Prompt</button>
         </div>
-        <pre id="promptOutput">Fill in any fields above and click "Generate Prompt"...</pre>
+        <pre id="promptOutput">Fill in any fields above and click "Generate Story Prompt"...</pre>
     </div>
 </div>
 
@@ -623,11 +623,13 @@ Begin the story directly with no conversational fluff or meta-preface.`;
         document.body.removeChild(textArea);
     }
 
-    // Initialize Page
-    randomizeStoryType();
-    addCharacterSlot();
-    addLocationSlot();
-    addBeatSlot();
+    // Safe Page Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+        randomizeStoryType();
+        addCharacterSlot();
+        addLocationSlot();
+        addBeatSlot();
+    });
 </script>
 </body>
 </html>
