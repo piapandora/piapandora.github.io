@@ -71,6 +71,15 @@
             letter-spacing: 0.05em;
         }
 
+        .item-card, .beat-card {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .item-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
@@ -253,6 +262,17 @@
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
+        pre::-webkit-scrollbar {
+            width: 8px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: var(--input-bg);
+        }
+        pre::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
         pre.flash-copy {
             background-color: #2e3856 !important;
             border-color: #818cf8 !important;
@@ -282,13 +302,7 @@
         <div class="item-card" style="margin-top: 0.5rem;">
             <div class="field-group full-width">
                 <label for="storyType">Story Structure</label>
-                <select id="storyType">
-                    <option value="The Quest / Search">The Quest / Search (Intentional Mission)</option>
-                    <option value="Voyage & Return">Voyage & Return (Accidental Portal/Realm Shift)</option>
-                    <option value="The Mystery / Discovery">The Mystery / Discovery (Uncovering Hidden Truth)</option>
-                    <option value="Overcoming the Monster">Overcoming the Monster (Confronting Threat/Invader)</option>
-                    <option value="Discovery of Self">Discovery of Self (Internal Growth & Hidden Potential)</option>
-                </select>
+                <select id="storyType" onchange="updateKeywordsPlaceholder()"></select>
             </div>
             <div class="field-group full-width">
                 <label for="keywords">Atmospheric Keywords & Style Cues</label>
@@ -334,21 +348,83 @@
     let beatCount = 0;
     const MAX_BEATS = 20;
 
-    // Roles
-    const roles = [
-        'Hero (Main)',
-        'Hero (Secondary)',
-        'Ally / Companion',
-        'Mentor / Guide',
-        'Rival',
-        'Villain (Main)',
-        'Villain (Secondary)',
-        'Minion / Henchman',
-        'NPC / Other'
+    // Single Source of Truth: Story Types
+    const storyTypes = [
+        {
+            id: 'the_quest',
+            optionText: 'The Quest / Search (Intentional Mission)',
+            label: 'The Quest / Search',
+            keywords: 'Vast landscapes, quiet determination, sensory depth, atmospheric travel'
+        },
+        {
+            id: 'voyage_return',
+            optionText: 'Voyage & Return (Accidental Portal/Realm Shift)',
+            label: 'Voyage & Return',
+            keywords: 'Wonder, disorientation, contrasting textures, vivid surrealism'
+        },
+        {
+            id: 'mystery_discovery',
+            optionText: 'The Mystery / Discovery (Uncovering Hidden Truth)',
+            label: 'The Mystery / Discovery',
+            keywords: 'Sharply observed details, lingering shadows, quiet tension, understated subtext'
+        },
+        {
+            id: 'overcoming_monster',
+            optionText: 'Overcoming the Monster (Confronting Threat/Invader)',
+            label: 'Overcoming the Monster',
+            keywords: 'High-contrast atmospheres, visceral presence, escalating tension, sharp focus'
+        },
+        {
+            id: 'discovery_self',
+            optionText: 'Discovery of Self (Internal Growth & Hidden Potential)',
+            label: 'Discovery of Self',
+            keywords: 'Introspective pacing, subtle emotional resonance, tactile surroundings, quiet clarity'
+        }
     ];
 
+    function getStoryType(id) {
+        return storyTypes.find(t => t.id === id);
+    }
+
+    function getStoryTypeOptions() {
+        return storyTypes.map(t => `<option value="${t.id}">${t.optionText}</option>`).join('');
+    }
+
+    function populateStoryTypes() {
+        const storySelect = document.getElementById('storyType');
+        if (storySelect) {
+            storySelect.innerHTML = getStoryTypeOptions();
+        }
+    }
+
+    function updateKeywordsPlaceholder() {
+        const selectedTypeId = document.getElementById('storyType').value;
+        const selectedType = getStoryType(selectedTypeId);
+        const keywordsInput = document.getElementById('keywords');
+        if (selectedType && keywordsInput) {
+            keywordsInput.placeholder = `Default: ${selectedType.keywords}`;
+        }
+    }
+
+    // Roles
+    const roles = [
+        { id: 'hero_main', label: 'Hero (Main)' },
+        { id: 'hero_secondary', label: 'Hero (Secondary)' },
+        { id: 'ally', label: 'Ally / Companion' },
+        { id: 'mentor', label: 'Mentor / Guide' },
+        { id: 'rival', label: 'Rival' },
+        { id: 'villain_main', label: 'Villain (Main)' },
+        { id: 'villain_secondary', label: 'Villain (Secondary)' },
+        { id: 'minion', label: 'Minion / Henchman' },
+        { id: 'npc', label: 'NPC / Other' }
+    ];
+
+    function getRoleLabel(id) {
+        return roles.find(r => r.id === id)?.label ?? id;
+    }
+
     function getRoleOptions() {
-        return roles.map(r => `<option value="${r}">${r}</option>`).join('');
+        return roles.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
     }
 
     // Randomize Story-Type on Page Load
@@ -357,6 +433,7 @@
         if (storySelect && storySelect.options.length > 0) {
             const randomIndex = Math.floor(Math.random() * storySelect.options.length);
             storySelect.selectedIndex = randomIndex;
+            updateKeywordsPlaceholder();
         }
     }
 
@@ -494,23 +571,18 @@
     }
 
     function generatePrompt() {
-        const defaultKeywordsMap = {
-            "The Quest / Search": "Vast landscapes, quiet determination, sensory depth, atmospheric travel",
-            "Voyage & Return": "Wonder, disorientation, contrasting textures, vivid surrealism",
-            "The Mystery / Discovery": "Sharply observed details, lingering shadows, quiet tension, understated subtext",
-            "Overcoming the Monster": "High-contrast atmospheres, visceral presence, escalating tension, sharp focus",
-            "Discovery of Self": "Introspective pacing, subtle emotional resonance, tactile surroundings, quiet clarity"
-        };
-
-        const selectedType = document.getElementById('storyType').value;
-        const keywords = document.getElementById('keywords').value.trim() || defaultKeywordsMap[selectedType] || "Rich sensory details, immersive prose";
+        const selectedTypeId = document.getElementById('storyType').value;
+        const selectedStoryType = getStoryType(selectedTypeId);
+        const selectedTypeDisplay = selectedStoryType?.label || 'The Quest / Search';
+        const keywords = document.getElementById('keywords').value.trim() || selectedStoryType?.keywords || "Rich sensory details, immersive prose";
 
         // Collect Characters
         const charCards = document.querySelectorAll('#characterSlots .item-card');
         const activeChars = [];
         charCards.forEach(card => {
             const name = card.querySelector('.char-name').value.trim();
-            const role = card.querySelector('.char-role').value;
+            const roleId = card.querySelector('.char-role').value;
+            const roleDisplay = getRoleLabel(roleId);
             const desc = card.querySelector('.char-desc').value.trim();
             const goal = card.querySelector('.char-goal').value.trim();
 
@@ -518,7 +590,7 @@
                 const charName = name || "Unnamed Character";
                 const descText = desc ? `: ${desc}` : "";
                 const goalText = goal ? ` (Motivation: ${goal})` : "";
-                activeChars.push(`- [${role}] ${charName}${descText}${goalText}`);
+                activeChars.push(`- [${roleDisplay}] ${charName}${descText}${goalText}`);
             }
         });
 
@@ -562,7 +634,7 @@ WORLD & LOCATIONS:
 ${locBlock}
 
 NARRATIVE SPECIFICATIONS:
-- Structural Archetype: ${selectedType}
+- Structural Archetype: ${selectedTypeDisplay}
 
 - Required Story Beats (Execute in sequence):
 ${beatsBlock}
@@ -598,7 +670,11 @@ Ensure the story progresses organically through five distinct movements, giving 
 
 Begin the story immediately with no conversational preface, meta-commentary, or explanation.`;
 
-        document.getElementById('promptOutput').textContent = constructedPrompt;
+        const outputPre = document.getElementById('promptOutput');
+        outputPre.textContent = constructedPrompt;
+
+        // Smooth scroll down to output for mobile responsiveness
+        outputPre.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function triggerCopyFeedback() {
@@ -653,6 +729,7 @@ Begin the story immediately with no conversational preface, meta-commentary, or 
 
     // Safe Page Initialization
     document.addEventListener('DOMContentLoaded', () => {
+        populateStoryTypes();
         randomizeStoryType();
         addCharacterSlot();
         addLocationSlot();
