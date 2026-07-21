@@ -281,7 +281,7 @@
         <div class="section-header">1. STORY</div>
         <div class="item-card" style="margin-top: 0.5rem;">
             <div class="field-group full-width">
-                <label for="storyType">Story-Type</label>
+                <label for="storyType">Story Structure</label>
                 <select id="storyType">
                     <option value="The Quest / Search">The Quest / Search (Intentional Mission)</option>
                     <option value="Voyage & Return">Voyage & Return (Accidental Portal/Realm Shift)</option>
@@ -336,13 +336,15 @@
 
     // Roles
     const roles = [
-        'Hero (Main)', 
-        'Hero (Secondary)', 
-        'Hero (Sidekick/Support)', 
-        'Villain (Main)', 
-        'Villain (Secondary)', 
-        'Villain (Sidekick/Support)', 
-        'NPC'
+        'Hero (Main)',
+        'Hero (Secondary)',
+        'Ally / Companion',
+        'Mentor / Guide',
+        'Rival',
+        'Villain (Main)',
+        'Villain (Secondary)',
+        'Minion / Henchman',
+        'NPC / Other'
     ];
 
     function getRoleOptions() {
@@ -543,12 +545,12 @@
             : 'No required beats provided; construct an organic plot arc.';
 
         const constructedPrompt = `SYSTEM DIRECTIVE:
-You are an expert author and narrative architect. Write a complete, highly atmospheric short story based on the specifications below.
+You are an expert fiction author and narrative architect. Write a complete, highly atmospheric short story based on the specifications below. The story should feel original and avoid relying on predictable storytelling tropes or genre clichés unless they naturally emerge from the provided specifications.
 
 CAST OF CHARACTERS:
 ${charBlock}
 
-WORLD & ENVIRONMENT POOL:
+WORLD & LOCATIONS:
 ${locBlock}
 
 NARRATIVE SPECIFICATIONS:
@@ -558,10 +560,10 @@ ${beatsBlock}
 - Atmospheric Keywords & Style Cues: ${keywords}
 
 WRITING RULES & EXECUTION BUDGET:
-1. MAXIMAL DEPTH & TEXTURE: Do not summarize or outline. Write fully fleshed-out scenes with sensory environmental details, spatial relationships, and organic character dialogue across all defined characters.
-2. ENVIRONMENT FLUIDITY: Utilize the provided World/Environment locations naturally across the narrative progression as appropriate to the plot.
+1. SCENE-BASED WRITING: Do not summarize or outline. Write the story primarily through unfolding scenes, actions, dialogue, and sensory description rather than exposition or summary, keeping spatial relationships and organic interactions clear across all defined characters.
+2. ENVIRONMENT FLUIDITY: Utilize the provided locations naturally throughout the story, expanding the world organically where appropriate.
 3. INFER TONE: Derive the aesthetic, pacing, and dialogue rhythm from the provided settings, character traits, and style cues.
-4. MONOMYTH ARC (5-ACT STRUCTURE):
+4. NARRATIVE STRUCTURE (5-ACT ARC):
    - Act 1 (Status Quo & Call): Establish the primary characters and setting, introducing the inciting incident.
    - Act 2 (Threshold & Expansion): Transition into deeper conflict, bringing in secondary characters, antagonists, or world locations.
    - Act 3 (Road of Trials): Execute any defined story beats (or construct an organic series of trials) that escalate the conflict and deepen character dynamics.
