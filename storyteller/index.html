@@ -494,8 +494,16 @@
     }
 
     function generatePrompt() {
-        const storyType = document.getElementById('storyType').value;
-        const keywords = document.getElementById('keywords').value.trim() || "Rich sensory details, immersive prose";
+        const defaultKeywordsMap = {
+            "The Quest / Search": "Vast landscapes, quiet determination, sensory depth, atmospheric travel",
+            "Voyage & Return": "Wonder, disorientation, contrasting textures, vivid surrealism",
+            "The Mystery / Discovery": "Sharply observed details, lingering shadows, quiet tension, understated subtext",
+            "Overcoming the Monster": "High-contrast atmospheres, visceral presence, escalating tension, sharp focus",
+            "Discovery of Self": "Introspective pacing, subtle emotional resonance, tactile surroundings, quiet clarity"
+        };
+
+        const selectedType = document.getElementById('storyType').value;
+        const keywords = document.getElementById('keywords').value.trim() || defaultKeywordsMap[selectedType] || "Rich sensory details, immersive prose";
 
         // Collect Characters
         const charCards = document.querySelectorAll('#characterSlots .item-card');
@@ -545,7 +553,7 @@
             : 'No required beats provided; construct an organic plot arc.';
 
         const constructedPrompt = `SYSTEM DIRECTIVE:
-You are an expert fiction author specializing in immersive worldbuilding, visceral prose, and physically grounded narrative. Write a complete, deeply atmospheric short story based on the specifications below. Avoid generic tropes, neat exposition, and clinical summaries.
+You are an expert fiction author specializing in immersive worldbuilding, atmospheric prose, and emotionally grounded narratives tailored precisely to the requested genre and tone. Write a complete, deeply evocative short story based on the specifications below. Avoid generic tropes, neat exposition, and clinical summaries.
 
 CAST OF CHARACTERS:
 ${charBlock}
@@ -554,36 +562,41 @@ WORLD & LOCATIONS:
 ${locBlock}
 
 NARRATIVE SPECIFICATIONS:
-- Structural Archetype: ${storyType}
+- Structural Archetype: ${selectedType}
+
 - Required Story Beats (Execute in sequence):
 ${beatsBlock}
-- Atmospheric Keywords & Style Cues: ${keywords}
 
-WRITING RULES & EXECUTION BUDGET:
+- Atmospheric Keywords & Style Cues:
+${keywords}
+
+WRITING GUIDELINES:
 
 1. ATMOSPHERIC & TACTILE HOOK:
-Open Act 1 immediately with a grounded, sensory observation of the environment or material world. Avoid meta-introductions, immediate dialogue, or floating action.
+Open Act 1 immediately with a grounded, sensory observation of the environment or material world. Avoid meta-introductions or floating action. Dialogue may open the story only if it immediately establishes voice, place, or dramatic tension rather than serving as generic conversation.
 
-2. MATERIAL WEIGHT & SENSORY REALISM:
-Treat the world as tangible and physically coherent. Emphasize texture, weight, mechanics, weather, material surfaces, and physical consequence so every environment feels concrete and inhabited.
+2. MATERIAL WEIGHT & GROUNDED STAKES:
+Treat the world as tangible and physically coherent. Emphasize texture, weight, mechanics, weather, material surfaces, and physical consequence so every environment feels concrete and inhabited. Favor concrete nouns and precise verbs over abstract description. Favor unfolding scenes and active choices over summary. Ensure actions have tangible stakes or produce meaningful changes in the environment, relationships, or character perspectives. Every significant scene should deepen characterization, escalate conflict, reveal meaningful information, or permanently alter the situation. Avoid static scenes that exist only for description.
 
-3. SCENE-BASED WRITING & ENVIRONMENTAL FRICTION:
-Favor unfolding scenes and physical action over summary. Sustain tangible physical friction—environmental hazards, mechanical resistance, bodily effort, resource scarcity, or changing conditions—so every act carries physical consequence. Every significant scene should deepen characterization, escalate conflict, reveal meaningful information, or permanently alter the situation. Avoid static scenes that exist only for description.
+3. SUBTEXT & NATURAL DIALOGUE:
+Favor implication over explanation, allowing readers to infer emotion, history, and relationships through action, dialogue, and environment. Dialogue should reflect each character's background, trade, emotional state, and personality rather than serving as exposition.
 
-4. SUBTEXT & NATURAL DIALOGUE:
-Favor implication over explanation, allowing readers to infer emotion, history, and relationships through action, dialogue, and environment. Dialogue should reflect each character's background, trade, and emotional state rather than serving as exposition.
+4. PROSE RHYTHM & TEXTURE:
+Vary sentence and paragraph length organically to create momentum and emphasis. Alternate concise, high-tension passages with longer, reflective or descriptive sequences, allowing the rhythm to follow the emotional and physical intensity of each scene rather than maintaining a uniform cadence. Avoid repetitive sentence openings, repeated imagery, and recycled metaphors. Let language, imagery, and sensory focus evolve naturally alongside the environments and characters' emotional states.
 
-5. PROSE RHYTHM & TEXTURE:
-Vary sentence and paragraph length organically to create momentum and emphasis. Favor concrete nouns and precise verbs over abstract description whenever possible. Alternate concise, high-tension passages with longer, reflective or descriptive sequences. Let the rhythm of the prose follow the emotional and physical intensity of each scene rather than maintaining a uniform cadence. Avoid repetitive sentence openings, repeated imagery, and recycled metaphors. Allow the language, imagery, and sensory focus to evolve with the environment and the characters' emotional states.
+5. CHARACTER AGENCY & CAUSALITY:
+Characters should make decisions consistent with their established motivations, abilities, fears, and available knowledge. Major developments should arise from character choices and believable consequences rather than author convenience. Coincidences may introduce conflict, but they should not resolve it.
 
 6. NARRATIVE STRUCTURE (5-ACT ARC):
-   - Act 1 (Status Quo & Call): Establish the core characters, setting, and immediate physical baseline before introducing the inciting incident.
-   - Act 2 (Threshold & Expansion): Transition into deeper conflict, introducing secondary forces, new locations, or escalating stakes.
-   - Act 3 (Road of Trials): Execute defined beats or organically escalating trials that force characters to adapt, endure physical strain, or make costly compromises.
-   - Act 4 (The Climax / Ordeal): Deliver the peak confrontation, trial, or revelation that fulfills the chosen narrative archetype.
-   - Act 5 (Resolution): Re-establish balance, resolve the core struggle, and leave the world in a meaningful, grounded new equilibrium. Resist resolving every emotional thread explicitly. Prefer earned implications over exhaustive explanation, allowing some consequences or uncertainties to remain after the central conflict is resolved.
+Ensure the story progresses organically through five distinct movements, giving each act enough narrative weight to feel purposeful without unnecessary padding or rushed transitions.
 
-Begin the story directly with no conversational fluff or meta-preface.`;
+   - Act 1 (Status Quo & Call): Establish the core characters, setting, and physical baseline before introducing the inciting incident.
+   - Act 2 (Threshold & Expansion): Transition into deeper conflict, introducing secondary forces, new locations, or escalating stakes.
+   - Act 3 (Escalation & Complication): Execute the defined beats—or organically escalating complications—that force characters to adapt, endure strain, or make costly compromises, whether through external trials, mounting suspicion, or internal reckoning, as suits the chosen archetype.
+   - Act 4 (Climax / Ordeal): Deliver the peak confrontation, trial, or transformative revelation that fulfills the chosen narrative archetype.
+   - Act 5 (Resolution): Re-establish balance, resolve the central struggle, and leave the world in a meaningful, grounded new equilibrium. Resist resolving every emotional thread explicitly. Prefer earned implication over exhaustive explanation, allowing some consequences or uncertainties to remain after the central conflict concludes.
+
+Begin the story immediately with no conversational preface, meta-commentary, or explanation.`;
 
         document.getElementById('promptOutput').textContent = constructedPrompt;
     }
