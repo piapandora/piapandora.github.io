@@ -313,6 +313,16 @@
         return roles.map(r => `<option value="${r}">${r}</option>`).join('');
     }
 
+    // Randomize Story-Type on Page Load
+    function randomizeStoryType() {
+        const storySelect = document.getElementById('storyType');
+        if (storySelect && storySelect.options.length > 0) {
+            const optionsCount = storySelect.options.length;
+            const randomIndex = Math.floor(Math.random() * optionsCount);
+            storySelect.selectedIndex = randomIndex;
+        }
+    }
+
     // Add Character Slot
     function addCharacterSlot() {
         if (charCount >= MAX_CHARS) return;
@@ -398,7 +408,8 @@
         }
     }
 
-    // Initialize with 1 slot each
+    // Initialize Page
+    randomizeStoryType();
     addCharacterSlot();
     addLocationSlot();
     addBeatSlot();
