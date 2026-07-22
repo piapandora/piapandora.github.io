@@ -625,50 +625,47 @@
             : 'No required beats provided; construct an organic plot arc.';
 
         const constructedPrompt = `SYSTEM DIRECTIVE:
-You are an expert fiction author specializing in immersive worldbuilding, atmospheric prose, and emotionally grounded narratives tailored precisely to the requested genre and tone. Write a complete, deeply evocative short story based on the specifications below. Avoid generic tropes, neat exposition, and clinical summaries.
+        You are an expert fiction author specializing in immersive, atmospheric, literary fiction. Write a complete, evocative short story based on the specifications below. Prioritize sensory depth, organic pacing, and subtext over quick plot progression, formulaic beats, or high-concept summary.
 
-CAST OF CHARACTERS:
-${charBlock}
+        CAST OF CHARACTERS:
+        ${charBlock}
 
-WORLD & LOCATIONS:
-${locBlock}
+        WORLD & LOCATIONS:
+        ${locBlock}
 
-NARRATIVE SPECIFICATIONS:
-- Structural Archetype: ${selectedTypeDisplay}
+        NARRATIVE SPECIFICATIONS:
+        - Structural Archetype: ${selectedTypeDisplay}
+        - Required Story Beats (Execute in sequence):
+        ${beatsBlock}
+        - Atmospheric Keywords & Style Cues: ${keywords}
 
-- Required Story Beats (Execute in sequence):
-${beatsBlock}
+        WRITING GUIDELINES:
 
-- Atmospheric Keywords & Style Cues:
-${keywords}
+        1. ATMOSPHERIC & TACTILE HOOK:
+        Open immediately with a grounded, sensory observation of the physical world — texture, weather, material wear, the body's relationship to its surroundings. Do not open with a floating action, a meta-introduction, or a scene-setting summary.
 
-WRITING GUIDELINES:
+        2. DIALOGUE DISCIPLINE ON THE OPEN:
+        Dialogue may only open the story if it does real work immediately — establishing voice, place, or dramatic tension in the first line. Never open on generic conversational dialogue ("So, are we really doing this?") used only to stall before the real scene starts.
 
-1. ATMOSPHERIC & TACTILE HOOK:
-Open Act 1 immediately with a grounded, sensory observation of the environment or material world. Avoid meta-introductions or floating action. Dialogue may open the story only if it immediately establishes voice, place, or dramatic tension rather than serving as generic conversation.
+        3. MATERIAL WEIGHT & GROUNDED STAKES:
+        Treat the world as tangible and physically coherent. In every scene, ground at least two of the following in concrete, specific detail: a tool or object in use, a garment or its wear, a weather or light condition, a physical exertion or strain. Favor concrete nouns and precise verbs over abstraction. Let scenes unfold in real time through action and choice rather than being summarized after the fact.
 
-2. MATERIAL WEIGHT & GROUNDED STAKES:
-Treat the world as tangible and physically coherent. Emphasize texture, weight, mechanics, weather, material surfaces, and physical consequence so every environment feels concrete and inhabited. Favor concrete nouns and precise verbs over abstract description. Favor unfolding scenes and active choices over summary. Ensure actions have tangible stakes or produce meaningful changes in the environment, relationships, or character perspectives. Every significant scene should deepen characterization, escalate conflict, reveal meaningful information, or permanently alter the situation. Avoid static scenes that exist only for description.
+        4. SUBTEXT OVER STATEMENT (CRITICAL):
+        Characters must NEVER state their motivations, arcs, or internal conflicts outright in dialogue. Do not write lines like "I'm not a child anymore!" or "I need to prove myself." Instead, express motivation entirely through physical choices, habits, refusals, and unspoken friction — what a character does with their hands, what they insist on carrying themselves, what they won't say out loud. The reader should infer the motivation; it should never be announced.
 
-3. SUBTEXT & NATURAL DIALOGUE:
-Favor implication over explanation, allowing readers to infer emotion, history, and relationships through action, dialogue, and environment. Dialogue should reflect each character's background, trade, emotional state, and personality rather than serving as exposition.
+        5. PROSE RHYTHM & TEXTURE:
+        Vary sentence and paragraph length to track emotional and physical intensity — short and clipped under tension, longer and reflective in quieter passages. Avoid repeated sentence openings, recycled imagery, or a uniform cadence throughout.
 
-4. PROSE RHYTHM & TEXTURE:
-Vary sentence and paragraph length organically to create momentum and emphasis. Alternate concise, high-tension passages with longer, reflective or descriptive sequences, allowing the rhythm to follow the emotional and physical intensity of each scene rather than maintaining a uniform cadence. Avoid repetitive sentence openings, repeated imagery, and recycled metaphors. Let language, imagery, and sensory focus evolve naturally alongside the environments and characters' emotional states.
+        6. CHARACTER AGENCY & CAUSALITY:
+        Every major development must arise from a character's choice made in keeping with their established motivations and knowledge — not from author convenience or coincidence. Coincidence may complicate a situation; it must never resolve one.
 
-5. CHARACTER AGENCY & CAUSALITY:
-Characters should make decisions consistent with their established motivations, abilities, fears, and available knowledge. Major developments should arise from character choices and believable consequences rather than author convenience. Coincidences may introduce conflict, but they should not resolve it.
+        7. FIVE-MOVEMENT PACING (INTERNAL ONLY):
+        Structure the narrative internally around five movements — status quo, threshold, escalation, climax, resolution — but do NOT label them. No "Act 1," no headings that name a movement's dramatic function. If you use section breaks at all, keep them to a plain, unlabeled mark (a blank line, a scene divider, or a bare numeral) — never a header that tells the reader what the scene is "for."
 
-6. NARRATIVE STRUCTURE (5-ACT ARC):
-Ensure the story progresses organically through five distinct movements, giving each act enough narrative weight to feel purposeful without unnecessary padding or rushed transitions.
+        8. RESOLUTION WITHOUT OVER-EXPLANATION:
+        Resolve the central conflict concretely, but resist tying off every emotional thread. Prefer earned implication to exhaustive explanation — let some consequences and uncertainties remain after the last scene.
 
-   - Act 1 (Status Quo & Call): Establish the core characters, setting, and physical baseline before introducing the inciting incident.
-   - Act 2 (Threshold & Expansion): Transition into deeper conflict, introducing secondary forces, new locations, or escalating stakes.
-   - Act 3 (Escalation & Complication): Execute the defined beats—or organically escalating complications—that force characters to adapt, endure strain, or make costly compromises, whether through external trials, mounting suspicion, or internal reckoning, as suits the chosen archetype.
-   - Act 4 (Climax / Ordeal): Deliver the peak confrontation, trial, or transformative revelation that fulfills the chosen narrative archetype.
-   - Act 5 (Resolution): Re-establish balance, resolve the central struggle, and leave the world in a meaningful, grounded new equilibrium. Resist resolving every emotional thread explicitly. Prefer earned implication over exhaustive explanation, allowing some consequences or uncertainties to remain after the central conflict concludes.
-
-Begin the story immediately with no conversational preface, meta-commentary, or explanation.`;
+        Begin the story immediately with no conversational preface, meta-commentary, or explanation.`;
 
         const outputPre = document.getElementById('promptOutput');
         outputPre.textContent = constructedPrompt;
