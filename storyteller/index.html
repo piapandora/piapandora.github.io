@@ -625,47 +625,47 @@
             : 'No required beats provided; construct an organic plot arc.';
 
         const constructedPrompt = `SYSTEM DIRECTIVE:
-        You are an expert fiction author specializing in immersive, atmospheric, literary fiction. Write a complete, evocative short story based on the specifications below. Prioritize sensory depth, organic pacing, and subtext over quick plot progression, formulaic beats, or high-concept summary.
+You are an expert fiction author specializing in immersive, atmospheric, literary fiction. Write a complete, evocative short story based on the specifications below. Prioritize sensory depth, organic pacing, and subtext over quick plot progression, formulaic beats, or high-concept summary.
 
-        CAST OF CHARACTERS:
-        ${charBlock}
+CAST OF CHARACTERS:
+${charBlock}
 
-        WORLD & LOCATIONS:
-        ${locBlock}
+WORLD & LOCATIONS:
+${locBlock}
 
-        NARRATIVE SPECIFICATIONS:
-        - Structural Archetype: ${selectedTypeDisplay}
-        - Required Story Beats (Execute in sequence):
-        ${beatsBlock}
-        - Atmospheric Keywords & Style Cues: ${keywords}
+NARRATIVE SPECIFICATIONS:
+- Structural Archetype: ${selectedTypeDisplay}
+- Required Story Beats (Execute in sequence):
+${beatsBlock}
+- Atmospheric Keywords & Style Cues: ${keywords}
 
-        WRITING GUIDELINES:
+WRITING GUIDELINES:
 
-        1. ATMOSPHERIC & TACTILE HOOK:
-        Open immediately with a grounded, sensory observation of the physical world — texture, weather, material wear, the body's relationship to its surroundings. Do not open with a floating action, a meta-introduction, or a scene-setting summary.
+1. ATMOSPHERIC & TACTILE HOOK:
+Open immediately with a grounded, sensory observation of the physical world — texture, weather, material wear, the body's relationship to its surroundings. Do not open with a floating action, a meta-introduction, or a scene-setting summary.
 
-        2. DIALOGUE DISCIPLINE ON THE OPEN:
-        Dialogue may only open the story if it does real work immediately — establishing voice, place, or dramatic tension in the first line. Never open on generic conversational dialogue ("So, are we really doing this?") used only to stall before the real scene starts.
+2. DIALOGUE DISCIPLINE ON THE OPEN:
+Dialogue may only open the story if it does real work immediately — establishing voice, place, or dramatic tension in the first line. Never open on generic conversational dialogue ("So, are we really doing this?") used only to stall before the real scene starts.
 
-        3. MATERIAL WEIGHT & GROUNDED STAKES:
-        Treat the world as tangible and physically coherent. In every scene, ground at least two of the following in concrete, specific detail: a tool or object in use, a garment or its wear, a weather or light condition, a physical exertion or strain. Favor concrete nouns and precise verbs over abstraction. Let scenes unfold in real time through action and choice rather than being summarized after the fact.
+3. MATERIAL WEIGHT & GROUNDED STAKES:
+Treat the world as tangible and physically coherent. In every scene, ground at least two of the following in concrete, specific detail: a tool or object in use, a garment or its wear, a weather or light condition, a physical exertion or strain. Favor concrete nouns and precise verbs over abstraction. Let scenes unfold in real time through action and choice rather than being summarized after the fact.
 
-        4. SUBTEXT OVER STATEMENT (CRITICAL):
-        Characters must NEVER state their motivations, arcs, or internal conflicts outright in dialogue. Do not write lines like "I'm not a child anymore!" or "I need to prove myself." Instead, express motivation entirely through physical choices, habits, refusals, and unspoken friction — what a character does with their hands, what they insist on carrying themselves, what they won't say out loud. The reader should infer the motivation; it should never be announced.
+4. SUBTEXT OVER STATEMENT (CRITICAL):
+Characters must NEVER state their motivations, arcs, or internal conflicts outright in dialogue. Do not write lines like "I'm not a child anymore!" or "I need to prove myself." Instead, express motivation entirely through physical choices, habits, refusals, and unspoken friction — what a character does with their hands, what they insist on carrying themselves, what they won't say out loud. The reader should infer the motivation; it should never be announced.
 
-        5. PROSE RHYTHM & TEXTURE:
-        Vary sentence and paragraph length to track emotional and physical intensity — short and clipped under tension, longer and reflective in quieter passages. Avoid repeated sentence openings, recycled imagery, or a uniform cadence throughout.
+5. PROSE RHYTHM & TEXTURE:
+Vary sentence and paragraph length to track emotional and physical intensity — short and clipped under tension, longer and reflective in quieter passages. Avoid repeated sentence openings, recycled imagery, or a uniform cadence throughout.
 
-        6. CHARACTER AGENCY & CAUSALITY:
-        Every major development must arise from a character's choice made in keeping with their established motivations and knowledge — not from author convenience or coincidence. Coincidence may complicate a situation; it must never resolve one.
+6. CHARACTER AGENCY & CAUSALITY:
+Every major development must arise from a character's choice made in keeping with their established motivations and knowledge — not from author convenience or coincidence. Coincidence may complicate a situation; it must never resolve one.
 
-        7. FIVE-MOVEMENT PACING (INTERNAL ONLY):
-        Structure the narrative internally around five movements — status quo, threshold, escalation, climax, resolution — but do NOT label them. No "Act 1," no headings that name a movement's dramatic function. If you use section breaks at all, keep them to a plain, unlabeled mark (a blank line, a scene divider, or a bare numeral) — never a header that tells the reader what the scene is "for."
+7. FIVE-MOVEMENT PACING (INTERNAL ONLY):
+Structure the narrative internally around five movements — status quo, threshold, escalation, climax, resolution — but do NOT label them. No "Act 1," no headings that name a movement's dramatic function. If you use section breaks at all, keep them to a plain, unlabeled mark (a blank line, a scene divider, or a bare numeral) — never a header that tells the reader what the scene is "for."
 
-        8. RESOLUTION WITHOUT OVER-EXPLANATION:
-        Resolve the central conflict concretely, but resist tying off every emotional thread. Prefer earned implication to exhaustive explanation — let some consequences and uncertainties remain after the last scene.
+8. RESOLUTION WITHOUT OVER-EXPLANATION:
+Resolve the central conflict concretely, but resist tying off every emotional thread. Prefer earned implication to exhaustive explanation — let some consequences and uncertainties remain after the last scene.
 
-        Begin the story immediately with no conversational preface, meta-commentary, or explanation.`;
+Begin the story immediately with no conversational preface, meta-commentary, or explanation.`;
 
         const outputPre = document.getElementById('promptOutput');
         outputPre.textContent = constructedPrompt;
