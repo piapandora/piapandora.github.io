@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Ensō — Zen Circle Generator</title>
+<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
 <style>
   * { box-sizing: border-box; }
   body {
@@ -39,7 +40,11 @@
     left: 0;
     display: block;
   }
-  #seal { pointer-events: none; }
+  #seal {
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
   .controls {
     margin-top: 22px;
     display: flex;
@@ -94,7 +99,7 @@ const sealCanvas = document.getElementById('seal');
 const sealCtx = sealCanvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 
-// ---------- simple layered noise (cheap Perlin-ish) ----------
+// ---------- simple layered noise ----------
 function makeNoise(seedCount = 4) {
   const layers = [];
   for (let i = 0; i < seedCount; i++) {
@@ -116,7 +121,7 @@ function makeNoise(seedCount = 4) {
 
 function easeInOut(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
 
-// ---------- paper texture (higher contrast) ----------
+// ---------- paper texture ----------
 function paintPaper(g) {
   const base = g.createLinearGradient(0, 0, W, H);
   base.addColorStop(0, '#faf4e6');
@@ -139,14 +144,14 @@ function paintPaper(g) {
   g.fillRect(0, 0, W, H);
 }
 
-// ---------- build the centerline of the stroke (fully centered, logo-like) ----------
+// ---------- build stroke centerline ----------
 function buildStroke(closed) {
   const cx = W/2 + (Math.random()-0.5) * 10;
   const cy = H/2 + (Math.random()-0.5) * 10;
   const baseR = 155 + Math.random() * 16;
 
   const wobble = makeNoise(4);
-  const startAngle = -Math.PI/2 + (Math.random()-0.5) * 1.2;
+  const startAngle = Math.PI/2 + (Math.random()-0.5) * 1.2;
   const totalSweep = closed
     ? Math.PI * 2 + 0.35 + Math.random() * 0.25
     : Math.PI * (1.55 + Math.random() * 0.35);
@@ -208,68 +213,7 @@ function drawPolygon(g, poly, fillStyle, alpha) {
   g.fill();
 }
 
-// ---------- renders the full artwork (paper + ink) onto any given context ----------
-function renderArt(g, closed) {
-  paintPaper(g);
-  const { pts, wobble } = buildStroke(closed);
-  const inkTone = `rgb(${16+Math.random()*8}, ${16+Math.random()*8}, ${24+Math.random()*10})`;
-
-  g.save();
-  g.translate(W/2, H/2);
-  g.rotate((Math.random()-0.5) * 0.15);
-  g.translate(-W/2, -H/2);
-  g.globalCompositeOperation = 'multiply';
-
-  for (let i = 0; i < 3; i++) {
-    const off = { x: (Math.random()-0.5)*3, y: (Math.random()-0.5)*3 };
-    const bleedPts = pts.map(p => ({ x: p.x + off.x, y: p.y + off.y, t: p.t }));
-    const poly = strokePolygon(bleedPts, wobble, 46 + i*6);
-    drawPolygon(g, poly, inkTone, 0.06);
-  }
-
-  for (let i = 0; i < 4; i++) {
-    const off = { x: (Math.random()-0.5)*1.5, y: (Math.random()-0.5)*1.5 };
-    const layerPts = pts.map(p => ({ x: p.x + off.x, y: p.y + off.y, t: p.t }));
-    const poly = strokePolygon(layerPts, wobble, 34);
-    drawPolygon(g, poly, inkTone, 0.22 + Math.random()*0.08);
-  }
-
-  const corePoly = strokePolygon(pts, wobble, 26);
-  drawPolygon(g, corePoly, inkTone, 0.55);
-
-  g.globalAlpha = 1;
-  const tailZone = pts.filter(p => p.t > 0.78);
-  tailZone.forEach(p => {
-    if (Math.random() < 0.35) {
-      const w = widthAt(p.t, wobble) * 30;
-      g.beginPath();
-      const rx = p.x + (Math.random()-0.5) * w * 0.9;
-      const ry = p.y + (Math.random()-0.5) * w * 0.9;
-      g.ellipse(rx, ry, Math.random()*1.6+0.3, Math.random()*3+0.5, Math.random()*Math.PI, 0, Math.PI*2);
-      g.globalAlpha = 0.15 + Math.random()*0.35;
-      g.fillStyle = inkTone;
-      g.fill();
-    }
-  });
-
-  const liftPoint = pts[pts.length - 1];
-  for (let i = 0; i < 8; i++) {
-    if (Math.random() < 0.5) continue;
-    const dist = Math.random() * 22;
-    const ang = Math.random() * Math.PI * 2;
-    g.beginPath();
-    g.arc(liftPoint.x + Math.cos(ang)*dist, liftPoint.y + Math.sin(ang)*dist, Math.random()*1.4, 0, Math.PI*2);
-    g.globalAlpha = Math.random() * 0.3;
-    g.fillStyle = inkTone;
-    g.fill();
-  }
-
-  g.globalCompositeOperation = 'source-over';
-  g.globalAlpha = 1;
-  g.restore();
-}
-
-// ---------- red hanko seal — "PP" carved in relief, corner-anchored like a watermark ----------
+// ---------- red hanko seal — exact original bow path & layout ----------
 function roundedSquarePath(g, size, r) {
   g.beginPath();
   g.moveTo(-size/2+r, -size/2);
@@ -284,24 +228,21 @@ function roundedSquarePath(g, size, r) {
   g.closePath();
 }
 
-function drawLetterP(g, x, y, h, stemW) {
-  const bowlH = h * 0.56;
-  const bowlR = bowlH / 2;
-  g.beginPath();
-  g.rect(x, y, stemW, h);
-  g.fill();
-  g.beginPath();
-  g.moveTo(x + stemW, y);
-  g.arc(x + stemW, y + bowlR, bowlR, -Math.PI/2, Math.PI/2, false);
-  g.lineTo(x + stemW, y + bowlH);
-  g.closePath();
-  g.fill();
+function drawBowPath(g) {
+  // right wing: a "P" loop + tail, starting at the shared knot
+  g.moveTo(0, 1);
+  g.bezierCurveTo(5, -13, 18, -17, 15, -4);
+  g.bezierCurveTo(13, 4, 4, 3, -7, 17);
+  // left wing: mirrored "P" loop + tail — tails cross beneath the knot, longer flowing ends
+  g.moveTo(0, 1);
+  g.bezierCurveTo(-5, -13, -18, -17, -15, -4);
+  g.bezierCurveTo(-13, 4, -4, 3, 7, 17);
 }
 
 function drawSeal() {
   sealCtx.clearRect(0, 0, W, H);
-  const size = 46;
-  const margin = 22;
+  const size = 54;
+  const margin = 20;
   const cx = W - margin - size/2;
   const cy = H - margin - size/2;
 
@@ -314,8 +255,9 @@ function drawSeal() {
   sealCtx.fillStyle = '#a3241f';
   sealCtx.fill();
 
-  // stone-seal wear
   sealCtx.globalCompositeOperation = 'destination-out';
+
+  // stone-seal wear
   for (let i = 0; i < 8; i++) {
     sealCtx.beginPath();
     const ex = (Math.random()-0.5) * size;
@@ -325,53 +267,16 @@ function drawSeal() {
     sealCtx.fill();
   }
 
-  // "PP" carved out in relief — reveals whatever sits beneath the seal layer
-  const h = 22, stemW = 4.2, letterAdvance = stemW + h*0.28, gap = 5;
-  const totalW = letterAdvance*2 + gap;
-  let x = -totalW/2;
-  sealCtx.globalAlpha = 0.85;
-  drawLetterP(sealCtx, x, -h/2, h, stemW);
-  x += letterAdvance + gap;
-  drawLetterP(sealCtx, x, -h/2, h, stemW);
+  // bow glyph carved out — the two "P" loops with crossing tails
+  sealCtx.beginPath();
+  drawBowPath(sealCtx);
+  sealCtx.lineWidth = 3;
+  sealCtx.lineCap = 'round';
+  sealCtx.lineJoin = 'round';
+  sealCtx.globalAlpha = 0.9;
+  sealCtx.stroke();
 
   sealCtx.restore();
-}
-
-// ---------- circular reveal ----------
-let offCanvas = null;
-function revealAnimate() {
-  const start = performance.now();
-  const duration = 850;
-  const maxR = Math.hypot(W, H)/2 * 1.08;
-  function frame(now) {
-    const t = Math.min(1, (now-start)/duration);
-    const r = Math.max(1, easeInOut(t) * maxR);
-    ctx.clearRect(0, 0, W, H);
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(W/2, H/2, r, 0, Math.PI*2);
-    ctx.clip();
-    ctx.drawImage(offCanvas, 0, 0);
-    ctx.restore();
-    if (t < 1) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-}
-
-function paint() {
-  const closed = document.getElementById('closedToggle').checked;
-  if (!offCanvas) {
-    offCanvas = document.createElement('canvas');
-    offCanvas.width = W; offCanvas.height = H;
-  }
-  const offCtx = offCanvas.getContext('2d');
-  offCtx.clearRect(0, 0, W, H);
-  renderArt(offCtx, closed);
-
-  drawSeal();
-  applySealVisibility();
-
-  revealAnimate();
 }
 
 function applySealVisibility() {
@@ -379,15 +284,156 @@ function applySealVisibility() {
 }
 document.getElementById('sealToggle').addEventListener('change', applySealVisibility);
 
+// ---------- paint interaction ----------
+let paperCanvas = null;
+
+function paint() {
+  sealCtx.clearRect(0, 0, W, H);
+  sealCanvas.style.opacity = '0';
+
+  const closed = document.getElementById('closedToggle').checked;
+  const { pts, wobble } = buildStroke(closed);
+  const inkTone = `rgb(${16+Math.random()*8}, ${16+Math.random()*8}, ${24+Math.random()*10})`;
+
+  if (!paperCanvas) {
+    paperCanvas = document.createElement('canvas');
+    paperCanvas.width = W; paperCanvas.height = H;
+  }
+  const paperCtx = paperCanvas.getContext('2d');
+  paintPaper(paperCtx);
+
+  const tiltAngle = (Math.random()-0.5) * 0.15;
+
+  const bleedOffsets = [0,1,2].map(() => ({ x:(Math.random()-0.5)*3, y:(Math.random()-0.5)*3 }));
+  const bodyOffsets = [0,1,2,3].map(() => ({
+    x: (Math.random()-0.5)*1.5, y: (Math.random()-0.5)*1.5,
+    alpha: 0.22 + Math.random()*0.08
+  }));
+
+  const tailDabs = [];
+  pts.filter(p => p.t > 0.78).forEach(p => {
+    if (Math.random() < 0.35) {
+      const w = widthAt(p.t, wobble) * 30;
+      tailDabs.push({
+        t: p.t,
+        x: p.x + (Math.random()-0.5) * w * 0.9,
+        y: p.y + (Math.random()-0.5) * w * 0.9,
+        rx: Math.random()*1.6+0.3,
+        ry: Math.random()*3+0.5,
+        rot: Math.random()*Math.PI,
+        alpha: 0.15 + Math.random()*0.35
+      });
+    }
+  });
+
+  const liftPoint = pts[pts.length-1];
+  const spatter = [];
+  for (let i = 0; i < 8; i++) {
+    if (Math.random() < 0.5) continue;
+    const dist = Math.random()*22, ang = Math.random()*Math.PI*2;
+    spatter.push({
+      x: liftPoint.x + Math.cos(ang)*dist,
+      y: liftPoint.y + Math.sin(ang)*dist,
+      r: Math.random()*1.4,
+      alpha: Math.random()*0.3
+    });
+  }
+
+  function drawFrame(currentT) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(paperCanvas, 0, 0);
+
+    const cutIdx = Math.max(1, Math.floor(currentT * (pts.length-1)));
+    const slice = pts.slice(0, cutIdx+1);
+    if (slice.length < 2) return;
+
+    ctx.save();
+    ctx.translate(W/2, H/2);
+    ctx.rotate(tiltAngle);
+    ctx.translate(-W/2, -H/2);
+    ctx.globalCompositeOperation = 'multiply';
+
+    bleedOffsets.forEach((off, i) => {
+      const bp = slice.map(p => ({ x: p.x+off.x, y: p.y+off.y, t: p.t }));
+      const poly = strokePolygon(bp, wobble, 46 + i*6);
+      drawPolygon(ctx, poly, inkTone, 0.06);
+    });
+
+    bodyOffsets.forEach((off) => {
+      const bp = slice.map(p => ({ x: p.x+off.x, y: p.y+off.y, t: p.t }));
+      const poly = strokePolygon(bp, wobble, 34);
+      drawPolygon(ctx, poly, inkTone, off.alpha);
+    });
+
+    const corePoly = strokePolygon(slice, wobble, 26);
+    drawPolygon(ctx, corePoly, inkTone, 0.55);
+
+    ctx.globalAlpha = 1;
+    tailDabs.forEach(d => {
+      if (d.t <= currentT) {
+        ctx.beginPath();
+        ctx.ellipse(d.x, d.y, d.rx, d.ry, d.rot, 0, Math.PI*2);
+        ctx.globalAlpha = d.alpha;
+        ctx.fillStyle = inkTone;
+        ctx.fill();
+      }
+    });
+
+    if (currentT >= 0.98) {
+      spatter.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.globalAlpha = s.alpha;
+        ctx.fillStyle = inkTone;
+        ctx.fill();
+      });
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  const start = performance.now();
+  const duration = 1400;
+  function frame(now) {
+    const raw = Math.min(1, (now-start)/duration);
+    drawFrame(easeInOut(raw));
+    if (raw < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      drawSeal();
+      applySealVisibility();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---------- Save PNG (1024px x 1024px output resolution) ----------
 function save() {
-  // bake the seal layer into the export only if it's currently visible
+  const targetSize = 1024;
   const out = document.createElement('canvas');
-  out.width = W; out.height = H;
+  out.width = targetSize;
+  out.height = targetSize;
   const octx = out.getContext('2d');
-  octx.drawImage(canvas, 0, 0);
-  if (document.getElementById('sealToggle').checked) octx.drawImage(sealCanvas, 0, 0);
+
+  // Background color fill (#ede7da)
+  octx.fillStyle = '#ede7da';
+  octx.fillRect(0, 0, targetSize, targetSize);
+
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = 'high';
+
+  // Draw main canvas
+  octx.drawImage(canvas, 0, 0, targetSize, targetSize);
+
+  // Draw stamp if checkbox is active
+  if (document.getElementById('sealToggle').checked) {
+    octx.drawImage(sealCanvas, 0, 0, targetSize, targetSize);
+  }
+
   const link = document.createElement('a');
-  link.download = 'enso.png';
+  link.download = `enso-${Date.now()}.png`;
   link.href = out.toDataURL('image/png');
   link.click();
 }
