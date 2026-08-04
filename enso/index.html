@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ensō — Zen Circle Generator</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #ede7da;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #3a352c;
+  }
+  h1 {
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: #8a8171;
+    margin: 0 0 18px;
+  }
+  #wrap {
+    position: relative;
+    width: 500px;
+    height: 500px;
+    box-shadow: 0 14px 44px rgba(0,0,0,0.18);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #f4efe3;
+  }
+  #wrap canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+  }
+  #seal { pointer-events: none; }
+  .controls {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    max-width: 500px;
+  }
+  button {
+    padding: 10px 22px;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    border: 1px solid #3a352c;
+    background: transparent;
+    color: #3a352c;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s ease;
+    text-transform: uppercase;
+  }
+  button:hover { background: #3a352c; color: #f4efe3; }
+  button.primary { background: #3a352c; color: #f4efe3; }
+  button.primary:hover { background: #55503f; }
+  label {
+    font-size: 12px;
+    color: #8a8171;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+
+<h1>一 円 相 · Ensō</h1>
+<div id="wrap">
+  <canvas id="c" width="500" height="500"></canvas>
+  <canvas id="seal" width="500" height="500"></canvas>
+</div>
+<div class="controls">
+  <button class="primary" onclick="paint()">Paint New</button>
+  <button onclick="save()">Save PNG</button>
+  <label><input type="checkbox" id="closedToggle"> allow closed circle</label>
+  <label><input type="checkbox" id="sealToggle" checked> show stamp</label>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const sealCanvas = document.getElementById('seal');
+const sealCtx = sealCanvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ---------- simple layered noise (cheap Perlin-ish) ----------
+function makeNoise(seedCount = 4) {
+  const layers = [];
+  for (let i = 0; i < seedCount; i++) {
+    layers.push({
+      freq: 1.5 + Math.random() * 2.5,
+      phase: Math.random() * Math.PI * 2,
+      amp: 1 / (i + 1.4)
+    });
+  }
+  return (t) => {
+    let v = 0, norm = 0;
+    for (const l of layers) {
+      v += Math.sin(t * l.freq + l.phase) * l.amp;
+      norm += l.amp;
+    }
+    return v / norm;
+  };
+}
+
+function easeInOut(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+
+// ---------- paper texture (higher contrast) ----------
+function paintPaper(g) {
+  const base = g.createLinearGradient(0, 0, W, H);
+  base.addColorStop(0, '#faf4e6');
+  base.addColorStop(1, '#e4d9bf');
+  g.fillStyle = base;
+  g.fillRect(0, 0, W, H);
+
+  const grain = g.createImageData(W, H);
+  for (let i = 0; i < grain.data.length; i += 4) {
+    const v = 220 + Math.random() * 35;
+    grain.data[i] = v; grain.data[i+1] = v - 6; grain.data[i+2] = v - 20;
+    grain.data[i+3] = Math.random() * 20;
+  }
+  g.putImageData(grain, 0, 0);
+
+  const vg = g.createRadialGradient(W/2, H/2, W*0.18, W/2, H/2, W*0.72);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(50,40,20,0.14)');
+  g.fillStyle = vg;
+  g.fillRect(0, 0, W, H);
+}
+
+// ---------- build the centerline of the stroke (fully centered, logo-like) ----------
+function buildStroke(closed) {
+  const cx = W/2 + (Math.random()-0.5) * 10;
+  const cy = H/2 + (Math.random()-0.5) * 10;
+  const baseR = 155 + Math.random() * 16;
+
+  const wobble = makeNoise(4);
+  const startAngle = -Math.PI/2 + (Math.random()-0.5) * 1.2;
+  const totalSweep = closed
+    ? Math.PI * 2 + 0.35 + Math.random() * 0.25
+    : Math.PI * (1.55 + Math.random() * 0.35);
+
+  const steps = 260;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const angle = startAngle + t * totalSweep;
+    const settle = Math.min(1, t * 8) * Math.min(1, (1 - t) * 8 + (closed ? 1 : 0));
+    const r = baseR + wobble(t * 6.2) * 9 * (0.3 + 0.7 * settle) + wobble(t * 17 + 3) * 3;
+    pts.push({
+      x: cx + Math.cos(angle) * r,
+      y: cy + Math.sin(angle) * r,
+      t
+    });
+  }
+  return { pts, wobble };
+}
+
+function widthAt(t, wobble) {
+  let profile;
+  if (t < 0.08) {
+    profile = easeInOut(t / 0.08) * 0.85;
+  } else if (t > 0.82) {
+    const tt = (t - 0.82) / 0.18;
+    profile = (1 - easeInOut(tt)) * 1.0;
+    profile = Math.pow(Math.max(profile, 0), 1.4);
+  } else {
+    profile = 0.85 + 0.15 * Math.sin((t - 0.08) / 0.74 * Math.PI);
+  }
+  const jitter = 1 + wobble(t * 30) * 0.12;
+  return Math.max(0.02, profile * jitter);
+}
+
+function strokePolygon(pts, wobble, maxWidth) {
+  const left = [], right = [];
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const prev = pts[Math.max(0, i-1)];
+    const next = pts[Math.min(pts.length-1, i+1)];
+    const dx = next.x - prev.x, dy = next.y - prev.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy/len, ny = dx/len;
+    const w = widthAt(p.t, wobble) * maxWidth / 2;
+    left.push({ x: p.x + nx*w, y: p.y + ny*w });
+    right.push({ x: p.x - nx*w, y: p.y - ny*w });
+  }
+  return [...left, ...right.reverse()];
+}
+
+function drawPolygon(g, poly, fillStyle, alpha) {
+  g.beginPath();
+  g.moveTo(poly[0].x, poly[0].y);
+  for (let i = 1; i < poly.length; i++) g.lineTo(poly[i].x, poly[i].y);
+  g.closePath();
+  g.globalAlpha = alpha;
+  g.fillStyle = fillStyle;
+  g.fill();
+}
+
+// ---------- renders the full artwork (paper + ink) onto any given context ----------
+function renderArt(g, closed) {
+  paintPaper(g);
+  const { pts, wobble } = buildStroke(closed);
+  const inkTone = `rgb(${16+Math.random()*8}, ${16+Math.random()*8}, ${24+Math.random()*10})`;
+
+  g.save();
+  g.translate(W/2, H/2);
+  g.rotate((Math.random()-0.5) * 0.15);
+  g.translate(-W/2, -H/2);
+  g.globalCompositeOperation = 'multiply';
+
+  for (let i = 0; i < 3; i++) {
+    const off = { x: (Math.random()-0.5)*3, y: (Math.random()-0.5)*3 };
+    const bleedPts = pts.map(p => ({ x: p.x + off.x, y: p.y + off.y, t: p.t }));
+    const poly = strokePolygon(bleedPts, wobble, 46 + i*6);
+    drawPolygon(g, poly, inkTone, 0.06);
+  }
+
+  for (let i = 0; i < 4; i++) {
+    const off = { x: (Math.random()-0.5)*1.5, y: (Math.random()-0.5)*1.5 };
+    const layerPts = pts.map(p => ({ x: p.x + off.x, y: p.y + off.y, t: p.t }));
+    const poly = strokePolygon(layerPts, wobble, 34);
+    drawPolygon(g, poly, inkTone, 0.22 + Math.random()*0.08);
+  }
+
+  const corePoly = strokePolygon(pts, wobble, 26);
+  drawPolygon(g, corePoly, inkTone, 0.55);
+
+  g.globalAlpha = 1;
+  const tailZone = pts.filter(p => p.t > 0.78);
+  tailZone.forEach(p => {
+    if (Math.random() < 0.35) {
+      const w = widthAt(p.t, wobble) * 30;
+      g.beginPath();
+      const rx = p.x + (Math.random()-0.5) * w * 0.9;
+      const ry = p.y + (Math.random()-0.5) * w * 0.9;
+      g.ellipse(rx, ry, Math.random()*1.6+0.3, Math.random()*3+0.5, Math.random()*Math.PI, 0, Math.PI*2);
+      g.globalAlpha = 0.15 + Math.random()*0.35;
+      g.fillStyle = inkTone;
+      g.fill();
+    }
+  });
+
+  const liftPoint = pts[pts.length - 1];
+  for (let i = 0; i < 8; i++) {
+    if (Math.random() < 0.5) continue;
+    const dist = Math.random() * 22;
+    const ang = Math.random() * Math.PI * 2;
+    g.beginPath();
+    g.arc(liftPoint.x + Math.cos(ang)*dist, liftPoint.y + Math.sin(ang)*dist, Math.random()*1.4, 0, Math.PI*2);
+    g.globalAlpha = Math.random() * 0.3;
+    g.fillStyle = inkTone;
+    g.fill();
+  }
+
+  g.globalCompositeOperation = 'source-over';
+  g.globalAlpha = 1;
+  g.restore();
+}
+
+// ---------- red hanko seal — "PP" carved in relief, corner-anchored like a watermark ----------
+function roundedSquarePath(g, size, r) {
+  g.beginPath();
+  g.moveTo(-size/2+r, -size/2);
+  g.lineTo(size/2-r, -size/2);
+  g.quadraticCurveTo(size/2, -size/2, size/2, -size/2+r);
+  g.lineTo(size/2, size/2-r);
+  g.quadraticCurveTo(size/2, size/2, size/2-r, size/2);
+  g.lineTo(-size/2+r, size/2);
+  g.quadraticCurveTo(-size/2, size/2, -size/2, size/2-r);
+  g.lineTo(-size/2, -size/2+r);
+  g.quadraticCurveTo(-size/2, -size/2, -size/2+r, -size/2);
+  g.closePath();
+}
+
+function drawLetterP(g, x, y, h, stemW) {
+  const bowlH = h * 0.56;
+  const bowlR = bowlH / 2;
+  g.beginPath();
+  g.rect(x, y, stemW, h);
+  g.fill();
+  g.beginPath();
+  g.moveTo(x + stemW, y);
+  g.arc(x + stemW, y + bowlR, bowlR, -Math.PI/2, Math.PI/2, false);
+  g.lineTo(x + stemW, y + bowlH);
+  g.closePath();
+  g.fill();
+}
+
+function drawSeal() {
+  sealCtx.clearRect(0, 0, W, H);
+  const size = 46;
+  const margin = 22;
+  const cx = W - margin - size/2;
+  const cy = H - margin - size/2;
+
+  sealCtx.save();
+  sealCtx.translate(cx, cy);
+  sealCtx.rotate((Math.random()-0.5) * 0.05);
+
+  roundedSquarePath(sealCtx, size, 5);
+  sealCtx.globalAlpha = 0.92;
+  sealCtx.fillStyle = '#a3241f';
+  sealCtx.fill();
+
+  // stone-seal wear
+  sealCtx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 8; i++) {
+    sealCtx.beginPath();
+    const ex = (Math.random()-0.5) * size;
+    const ey = (Math.random()-0.5) * size;
+    sealCtx.arc(ex, ey, Math.random()*1.8, 0, Math.PI*2);
+    sealCtx.globalAlpha = 0.2 + Math.random()*0.25;
+    sealCtx.fill();
+  }
+
+  // "PP" carved out in relief — reveals whatever sits beneath the seal layer
+  const h = 22, stemW = 4.2, letterAdvance = stemW + h*0.28, gap = 5;
+  const totalW = letterAdvance*2 + gap;
+  let x = -totalW/2;
+  sealCtx.globalAlpha = 0.85;
+  drawLetterP(sealCtx, x, -h/2, h, stemW);
+  x += letterAdvance + gap;
+  drawLetterP(sealCtx, x, -h/2, h, stemW);
+
+  sealCtx.restore();
+}
+
+// ---------- circular reveal ----------
+let offCanvas = null;
+function revealAnimate() {
+  const start = performance.now();
+  const duration = 850;
+  const maxR = Math.hypot(W, H)/2 * 1.08;
+  function frame(now) {
+    const t = Math.min(1, (now-start)/duration);
+    const r = Math.max(1, easeInOut(t) * maxR);
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(W/2, H/2, r, 0, Math.PI*2);
+    ctx.clip();
+    ctx.drawImage(offCanvas, 0, 0);
+    ctx.restore();
+    if (t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function paint() {
+  const closed = document.getElementById('closedToggle').checked;
+  if (!offCanvas) {
+    offCanvas = document.createElement('canvas');
+    offCanvas.width = W; offCanvas.height = H;
+  }
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.clearRect(0, 0, W, H);
+  renderArt(offCtx, closed);
+
+  drawSeal();
+  applySealVisibility();
+
+  revealAnimate();
+}
+
+function applySealVisibility() {
+  sealCanvas.style.opacity = document.getElementById('sealToggle').checked ? '1' : '0';
+}
+document.getElementById('sealToggle').addEventListener('change', applySealVisibility);
+
+function save() {
+  // bake the seal layer into the export only if it's currently visible
+  const out = document.createElement('canvas');
+  out.width = W; out.height = H;
+  const octx = out.getContext('2d');
+  octx.drawImage(canvas, 0, 0);
+  if (document.getElementById('sealToggle').checked) octx.drawImage(sealCanvas, 0, 0);
+  const link = document.createElement('a');
+  link.download = 'enso.png';
+  link.href = out.toDataURL('image/png');
+  link.click();
+}
+
+paint();
+</script>
+</body>
+</html>
