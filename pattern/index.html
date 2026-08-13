@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pattern Texture Studio</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background: #18181c;
+      color: #f4f4f6;
+      overflow: hidden;
+    }
+
+    /* Sidebar Controls */
+    .sidebar {
+      width: 380px;
+      background: #24242d;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 4px 0 15px rgba(0,0,0,0.4);
+      z-index: 10;
+      overflow-y: auto;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Pattern Mode Tabs (Rearranged: Tartan - Polka Dots - Stripes) */
+    .tab-group {
+      display: flex;
+      background: #18181c;
+      padding: 4px;
+      border-radius: 8px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #aaa;
+      padding: 8px 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: #e60067;
+      color: #fff;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #888899;
+      margin-top: 4px;
+    }
+
+    /* Controls Container */
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-group {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-group.active {
+      display: flex;
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #2e2e3a;
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+
+    .color-row label {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    input[type="color"] {
+      -webkit-appearance: none;
+      appearance: none;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      background: none;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch {
+      border: 2px solid #fff;
+      border-radius: 50%;
+    }
+
+    .controls-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #2e2e3a;
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .controls-group label {
+      font-size: 0.8rem;
+      color: #ccc;
+    }
+
+    .val-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #e60067;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #e60067;
+      cursor: pointer;
+    }
+
+    select {
+      background: #18181c;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 10px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      background: #e60067;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      width: 100%;
+    }
+
+    .btn:hover { background: #ff1a7d; }
+
+    .btn-secondary {
+      background: #4a4a5e;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      flex: 1;
+      font-size: 0.8rem;
+    }
+
+    .btn-secondary:hover { background: #5d5d75; }
+
+    /* Preview Canvas Area */
+    .preview-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background-color: #121216;
+    }
+
+    #previewCanvas {
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      border-radius: 6px;
+    }
+
+    .badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h1>Pattern Studio</h1>
+
+    <!-- Mode Selector Tabs (Tartan - Polka Dots - Stripes) -->
+    <div class="tab-group">
+      <button class="tab-btn active" data-mode="tartan">Tartan</button>
+      <button class="tab-btn" data-mode="dots">Polka Dots</button>
+      <button class="tab-btn" data-mode="stripes">Stripes</button>
+    </div>
+
+    <!-- Global Scale Control -->
+    <div class="controls-group">
+      <div class="slider-header">
+        <label for="scaleSlider">Global Pattern Scale</label>
+        <span class="val-badge" id="scaleValue">2.00x</span>
+      </div>
+      <input type="range" id="scaleSlider" min="0.5" max="8.0" step="0.05" value="2.0">
+    </div>
+
+    <!-- Panel 1: TARTAN (Active on Startup) -->
+    <div class="panel-group active" id="panel-tartan">
+      <div class="section-title">Tartan Palette</div>
+      <div class="color-row">
+        <label for="colorBase">Base Ground Color</label>
+        <input type="color" id="colorBase" value="#d6226e">
+      </div>
+      <div class="color-row">
+        <label for="colorPink">Bright Accent Line</label>
+        <input type="color" id="colorPink" value="#f8a3c8">
+      </div>
+      <div class="color-row">
+        <label for="colorDark">Dark Check</label>
+        <input type="color" id="colorDark" value="#1a2536">
+      </div>
+      <div class="color-row">
+        <label for="colorCream">Cream Stripe</label>
+        <input type="color" id="colorCream" value="#f3eee3">
+      </div>
+      <div class="color-row">
+        <label for="colorYellow">Yellow Pinstripe</label>
+        <input type="color" id="colorYellow" value="#dca442">
+      </div>
+
+      <div class="btn-row" style="margin-top: 8px;">
+        <button class="btn-secondary" id="prevBtn">◄ Prev Clan</button>
+        <button class="btn-secondary" id="nextBtn" style="flex:2;">Next Preset (Default)</button>
+      </div>
+    </div>
+
+    <!-- Panel 2: POLKA DOTS -->
+    <div class="panel-group" id="panel-dots">
+      <div class="section-title">Dot Colors</div>
+      <div class="color-row">
+        <label for="dotBg">Background Color</label>
+        <input type="color" id="dotBg" value="#1e293b">
+      </div>
+      <div class="color-row">
+        <label for="dotColor1">Primary Dot Color</label>
+        <input type="color" id="dotColor1" value="#f43f5e">
+      </div>
+      <div class="color-row">
+        <label for="dotColor2">Alternating Color (Optional)</label>
+        <input type="color" id="dotColor2" value="#38bdf8">
+      </div>
+
+      <div class="section-title">Geometry & Grid</div>
+      <div class="controls-group">
+        <label for="dotAlign">Grid Alignment</label>
+        <select id="dotAlign">
+          <option value="45" selected>45° Diagonal Staggered (Classic)</option>
+          <option value="0">0° Straight Grid</option>
+        </select>
+      </div>
+
+      <div class="controls-group">
+        <div class="slider-header">
+          <label for="dotSize">Dot Diameter</label>
+          <span class="val-badge" id="dotSizeVal">24px</span>
+        </div>
+        <input type="range" id="dotSize" min="4" max="100" value="24">
+      </div>
+
+      <div class="controls-group">
+        <div class="slider-header">
+          <label for="dotSpacing">Distance Between Dots</label>
+          <span class="val-badge" id="dotSpacingVal">36px</span>
+        </div>
+        <input type="range" id="dotSpacing" min="4" max="120" value="36">
+      </div>
+
+      <div class="controls-group">
+        <label for="dotAltToggle">Color Style</label>
+        <select id="dotAltToggle">
+          <option value="single">Single Color</option>
+          <option value="alternating">Alternating Dots</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Panel 3: STRIPES -->
+    <div class="panel-group" id="panel-stripes">
+      <div class="section-title">Stripe Colors</div>
+      <div class="color-row">
+        <label for="stripeBg">Background Color</label>
+        <input type="color" id="stripeBg" value="#0f172a">
+      </div>
+      <div class="color-row">
+        <label for="stripeColor1">Primary Stripe</label>
+        <input type="color" id="stripeColor1" value="#f59e0b">
+      </div>
+      <div class="color-row">
+        <label for="stripeColor2">Secondary Stripe</label>
+        <input type="color" id="stripeColor2" value="#10b981">
+      </div>
+      <div class="color-row">
+        <label for="stripeEnable2">Enable Secondary Stripe</label>
+        <input type="checkbox" id="stripeEnable2" style="width: 20px; height: 20px; cursor: pointer;">
+      </div>
+
+      <div class="section-title">Stripe Dimensions</div>
+      <div class="controls-group">
+        <div class="slider-header">
+          <label for="stripeThick1">Stripe Thickness</label>
+          <span class="val-badge" id="stripeThick1Val">20px</span>
+        </div>
+        <input type="range" id="stripeThick1" min="2" max="120" value="20">
+      </div>
+
+      <div class="controls-group">
+        <div class="slider-header">
+          <label for="stripeGap">Gap Distance</label>
+          <span class="val-badge" id="stripeGapVal">20px</span>
+        </div>
+        <input type="range" id="stripeGap" min="2" max="120" value="20">
+      </div>
+
+      <div class="controls-group">
+        <div class="slider-header">
+          <label for="stripeAngle">Angle / Orientation</label>
+          <span class="val-badge" id="stripeAngleVal">45°</span>
+        </div>
+        <input type="range" id="stripeAngle" min="0" max="180" step="5" value="45">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="setStripeAngle(0)">0° Horizontal</button>
+        <button class="btn-secondary" onclick="setStripeAngle(45)">45° Diagonal</button>
+        <button class="btn-secondary" onclick="setStripeAngle(90)">90° Vertical</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="button-group">
+      <button class="btn" id="downloadBtn">Download PNG (2048x2048)</button>
+    </div>
+  </div>
+
+  <!-- Preview Area -->
+  <div class="preview-container">
+    <div class="badge">Seamless Tiled Preview</div>
+    <canvas id="previewCanvas"></canvas>
+  </div>
+
+  <script>
+    // State (Default mode: tartan)
+    let currentMode = 'tartan';
+    let currentPaletteIndex = -1;
+
+    // DOM Elements
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const scaleSlider = document.getElementById('scaleSlider');
+    const scaleValue = document.getElementById('scaleValue');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // Polka Dot Controls
+    const dotBg = document.getElementById('dotBg');
+    const dotColor1 = document.getElementById('dotColor1');
+    const dotColor2 = document.getElementById('dotColor2');
+    const dotAlign = document.getElementById('dotAlign');
+    const dotSize = document.getElementById('dotSize');
+    const dotSpacing = document.getElementById('dotSpacing');
+    const dotAltToggle = document.getElementById('dotAltToggle');
+
+    // Stripe Controls
+    const stripeBg = document.getElementById('stripeBg');
+    const stripeColor1 = document.getElementById('stripeColor1');
+    const stripeColor2 = document.getElementById('stripeColor2');
+    const stripeEnable2 = document.getElementById('stripeEnable2');
+    const stripeThick1 = document.getElementById('stripeThick1');
+    const stripeGap = document.getElementById('stripeGap');
+    const stripeAngle = document.getElementById('stripeAngle');
+
+    // Tartan Controls
+    const colorBase = document.getElementById('colorBase');
+    const colorPink = document.getElementById('colorPink');
+    const colorDark = document.getElementById('colorDark');
+    const colorCream = document.getElementById('colorCream');
+    const colorYellow = document.getElementById('colorYellow');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    // Tartan Default Palette
+    const defaultPalette = [colorBase.value, colorPink.value, colorDark.value, colorCream.value, colorYellow.value];
+
+    // Tartan Clans - 100 Curated Tartan Color Schemes
+    const clanPalettes = [
+      ['#c8102e', '#ffffff', '#00563f', '#111111', '#fcd116'],
+      ['#003319', '#111111', '#001a33', '#004422', '#1a1a1a'],
+      ['#fada5e', '#c8102e', '#1a1a1a', '#eed450', '#222222'],
+      ['#003319', '#ffcc00', '#001133', '#004422', '#ffdb4d'],
+      ['#d94d1a', '#ffffff', '#004225', '#a6192e', '#ffb81c'],
+      ['#c60c30', '#ffb81c', '#111111', '#a10b27', '#222222'],
+      ['#00205b', '#ffffff', '#111111', '#003075', '#00563f'],
+      ['#bd2031', '#f2c75c', '#00594c', '#0a1c37', '#9c1523'],
+      ['#10351d', '#990000', '#14192b', '#f2f2f2', '#111111'],
+      ['#cccccc', '#c8102e', '#1a1a1a', '#f5f5f5', '#aaaaaa'],
+      ['#111111', '#111122', '#333333', '#1a1a1a', '#ffffff'],
+      ['#003c28', '#b31b1b', '#00205b', '#004f36', '#111111'],
+      ['#004488', '#ffffff', '#111111', '#005522', '#ffcc00'],
+      ['#1a1a1a', '#f2f2f2', '#b31b1b', '#2a2a2a', '#e6e6e6'],
+      ['#214a2e', '#d4af37', '#182335', '#151515', '#f0f0f0'],
+      ['#c8102e', '#ffd100', '#111111', '#a30d24', '#222222'],
+      ['#002855', '#fcd116', '#004b23', '#ba1c21', '#111111'],
+      ['#004225', '#ffffff', '#00205b', '#c8102e', '#1a1a1a'],
+      ['#b01a2e', '#f2f2f2', '#154734', '#102a45', '#8a1524'],
+      ['#4a154b', '#e0b122', '#141414', '#6e6e6e', '#f4f4f4'],
+      ['#2c3e50', '#e74c3c', '#1a252f', '#ecf0f1', '#f1c40f'],
+      ['#27ae60', '#f39c12', '#2c3e50', '#ffffff', '#e67e22'],
+      ['#2980b9', '#16a085', '#1a252f', '#ecf0f1', '#f39c12'],
+      ['#8e44ad', '#3498db', '#2c3e50', '#ffffff', '#2ecc71'],
+      ['#d35400', '#f1c40f', '#2c3e50', '#ecf0f1', '#c0392b'],
+      ['#16a085', '#f39c12', '#1a252f', '#ffffff', '#27ae60'],
+      ['#7f8c8d', '#e74c3c', '#2c3e50', '#ecf0f1', '#f1c40f'],
+      ['#c0392b', '#2980b9', '#1a252f', '#ffffff', '#f1c40f'],
+      ['#34495e', '#16a085', '#1a252f', '#ecf0f1', '#e67e22'],
+      ['#b8860b', '#2f4f4f', '#191970', '#fff8dc', '#8b0000'],
+      ['#8b0000', '#ffd700', '#000000', '#fff8dc', '#006400'],
+      ['#006400', '#ff8c00', '#00008b', '#ffffff', '#8b0000'],
+      ['#191970', '#00ff7f', '#000000', '#f5f5f5', '#ff1493'],
+      ['#4b0082', '#ff69b4', '#191970', '#ffffff', '#00ffff'],
+      ['#556b2f', '#d2b48c', '#2f4f4f', '#f5f5dc', '#8b4513'],
+      ['#8b4513', '#f4a460', '#2f4f4f', '#fff8dc', '#d2691e'],
+      ['#2f4f4f', '#00ced1', '#191970', '#ffffff', '#20b2aa'],
+      ['#800000', '#dda0dd', '#4b0082', '#ffffff', '#ff00ff'],
+      ['#008080', '#ff7f50', '#000080', '#ffffff', '#ffd700'],
+      ['#4682b4', '#ffb6c1', '#191970', '#ffffff', '#b0c4de'],
+      ['#333333', '#999999', '#1a1a1a', '#ffffff', '#cccccc'],
+      ['#5c4033', '#cd853f', '#261b18', '#f5f5dc', '#8b5a2b'],
+      ['#1b4d3e', '#e3a857', '#0f2d24', '#fdfd96', '#3b7a57'],
+      ['#4b3621', '#c5a059', '#241a10', '#ece2d0', '#7b1113'],
+      ['#003153', '#f4c430', '#001a2c', '#ffffff', '#c00000'],
+      ['#792f39', '#e8c39e', '#3f181d', '#fdf2e9', '#a04000'],
+      ['#36454f', '#ff6f61', '#1c2833', '#f4f6f7', '#48c9b0'],
+      ['#014421', '#d4af37', '#002211', '#ffffff', '#990000'],
+      ['#581845', '#ffc300', '#2c0d25', '#f8f9f9', '#daf7a6'],
+      ['#1f618d', '#f5b041', '#113f60', '#fbfcfc', '#ec7063'],
+      ['#900c3f', '#ff5733', '#581845', '#ffffff', '#ffc300'],
+      ['#1e8449', '#f1c40f', '#145a32', '#f9ebae', '#a04000'],
+      ['#283747', '#e74c3c', '#1b2631', '#f2f3f4', '#f39c12'],
+      ['#6c3483', '#f4d03f', '#421d52', '#fbfcfc', '#52be80'],
+      ['#117a65', '#f8c471', '#0e6251', '#e8f8f5', '#e74c3c'],
+      ['#b03a2e', '#eb984e', '#6e2c00', '#fdedec', '#f4d03f'],
+      ['#2e4053', '#85929e', '#1c2833', '#f4f6f7', '#d5d8dc'],
+      ['#7d6608', '#f9e79f', '#4d3f05', '#fef9e7', '#b9770e'],
+      ['#1b4f72', '#a9cce3', '#0e3146', '#ebf5fb', '#5499c7'],
+      ['#641e16', '#f5b7b1', '#42140e', '#fadbd8', '#e6b0aa'],
+      ['#229954', '#abebc6', '#145a32', '#eaf2f8', '#f4d03f'],
+      ['#d68910', '#fef9e7', '#7e5109', '#fef5e7', '#b9770e'],
+      ['#512e5f', '#d7bde2', '#341f39', '#f5eeed', '#a569bd'],
+      ['#1f618d', '#a3e4d7', '#113f60', '#e8f8f5', '#48c9b0'],
+      ['#a04000', '#edbb99', '#5c2500', '#fbeee6', '#dc7633'],
+      ['#212f3d', '#f1948a', '#17202a', '#fadbd8', '#e74c3c'],
+      ['#117864', '#a2d9ce', '#0b4f42', '#e8f8f5', '#16a085'],
+      ['#78281f', '#f5b7b1', '#4a1913', '#fadbd8', '#c0392b'],
+      ['#1a5276', '#f9e79f', '#11364d', '#fef9e7', '#f39c12'],
+      ['#196f3d', '#f8c471', '#114b29', '#fef5e7', '#d68910'],
+      ['#6e2c00', '#f5cba7', '#461c00', '#fbeee6', '#ca6f1e'],
+      ['#283747', '#bb8fce', '#1b2631', '#f4ecf7', '#8e44ad'],
+      ['#b7950b', '#fef9e7', '#7d6608', '#fffde7', '#d4ac0d'],
+      ['#138d75', '#fad7a0', '#0e5a4a', '#fdebd0', '#edbb99'],
+      ['#884ea0', '#f1948a', '#5b326b', '#fadbd8', '#bb8fce'],
+      ['#2e4053', '#f7dc6f', '#1c2833', '#fef9e7', '#f39c12'],
+      ['#9a7d0a', '#d5f5e3', '#625006', '#eaafaf', '#27ae60'],
+      ['#1b2631', '#e74c3c', '#0d1319', '#ffffff', '#2ecc71'],
+      ['#4a235a', '#f5b041', '#2c1435', '#fdebd0', '#eb984e'],
+      ['#0e6251', '#f1948a', '#093f34', '#fadbd8', '#e74c3c'],
+      ['#7b7d7d', '#f4f6f7', '#4d4e4e', '#ffffff', '#e5e7e9'],
+      ['#1c2833', '#f39c12', '#000000', '#ffffff', '#c0392b'],
+      ['#616a6b', '#aed6f1', '#383e3e', '#ebf5fb', '#5dade2'],
+      ['#78281f', '#f8c471', '#4a1913', '#fdebd0', '#e67e22'],
+      ['#145a32', '#f5cba7', '#0d381f', '#fbeee6', '#dc7633'],
+      ['#1b4f72', '#eb984e', '#0e3146', '#fbeee6', '#ca6f1e'],
+      ['#512e5f', '#f7dc6f', '#341f39', '#fef9e7', '#f1c40f'],
+      ['#78281f', '#a3e4d7', '#4a1913', '#e8f8f5', '#1abc9c'],
+      ['#196f3d', '#f1948a', '#114b29', '#fadbd8', '#e74c3c'],
+      ['#2e4053', '#f5cba7', '#1c2833', '#fbeee6', '#e59866'],
+      ['#6e2c00', '#f9e79f', '#461c00', '#fef9e7', '#f39c12'],
+      ['#117864', '#f5b041', '#0b4f42', '#fdebd0', '#eb984e'],
+      ['#884ea0', '#a3e4d7', '#5b326b', '#e8f8f5', '#1abc9c'],
+      ['#212f3d', '#f8c471', '#17202a', '#fdebd0', '#f39c12'],
+      ['#900c3f', '#a9cce3', '#581845', '#ebf5fb', '#5499c7'],
+      ['#1e8449', '#f5b7b1', '#145a32', '#fadbd8', '#e74c3c'],
+      ['#283747', '#f9e79f', '#1b2631', '#fef9e7', '#f1c40f'],
+      ['#7d6608', '#a3e4d7', '#4d3f05', '#e8f8f5', '#1abc9c'],
+      ['#1b4f72', '#f5b7b1', '#0e3146', '#fadbd8', '#ec7063'],
+      ['#641e16', '#a2d9ce', '#42140e', '#e8f8f5', '#16a085']
+    ];
+
+    // Tab Switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel-group').forEach(p => p.classList.remove('active'));
+        
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+        document.getElementById(`panel-${currentMode}`).classList.add('active');
+        draw();
+      });
+    });
+
+    function setStripeAngle(deg) {
+      stripeAngle.value = deg;
+      document.getElementById('stripeAngleVal').textContent = deg + '°';
+      draw();
+    }
+
+    /* ----------------------------------------------------
+       1. POLKA DOT GENERATOR
+    ---------------------------------------------------- */
+    function createDotTile(scale) {
+      const diameter = parseFloat(dotSize.value) * scale;
+      const space = parseFloat(dotSpacing.value) * scale;
+      const radius = diameter / 2;
+      const isDiagonal = dotAlign.value === '45';
+      const isAlt = dotAltToggle.value === 'alternating';
+
+      const bg = dotBg.value;
+      const c1 = dotColor1.value;
+      const c2 = isAlt ? dotColor2.value : c1;
+
+      const tileCanvas = document.createElement('canvas');
+      const tileCtx = tileCanvas.getContext('2d');
+
+      if (isDiagonal) {
+        const pitch = diameter + space;
+        const tileSize = Math.max(4, Math.round(pitch));
+        tileCanvas.width = tileSize;
+        tileCanvas.height = tileSize;
+
+        tileCtx.fillStyle = bg;
+        tileCtx.fillRect(0, 0, tileSize, tileSize);
+
+        const drawCircle = (cx, cy, color) => {
+          tileCtx.fillStyle = color;
+          tileCtx.beginPath();
+          tileCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+          tileCtx.fill();
+        };
+
+        drawCircle(tileSize / 2, tileSize / 2, c1);
+        drawCircle(0, 0, c2);
+        drawCircle(tileSize, 0, c2);
+        drawCircle(0, tileSize, c2);
+        drawCircle(tileSize, tileSize, c2);
+
+      } else {
+        const pitch = diameter + space;
+        const tileSize = Math.max(4, Math.round(pitch));
+        tileCanvas.width = tileSize;
+        tileCanvas.height = tileSize;
+
+        tileCtx.fillStyle = bg;
+        tileCtx.fillRect(0, 0, tileSize, tileSize);
+
+        tileCtx.fillStyle = c1;
+        tileCtx.beginPath();
+        tileCtx.arc(tileSize / 2, tileSize / 2, radius, 0, Math.PI * 2);
+        tileCtx.fill();
+      }
+
+      return tileCanvas;
+    }
+
+    /* ----------------------------------------------------
+       2. STRIPES GENERATOR (Crash-Safe Vector Projection)
+    ---------------------------------------------------- */
+    function createStripeTile(scale) {
+      const t1 = parseFloat(stripeThick1.value) * scale;
+      const gap = parseFloat(stripeGap.value) * scale;
+      const angleDeg = parseFloat(stripeAngle.value);
+
+      const bg = stripeBg.value;
+      const c1 = stripeColor1.value;
+      const c2 = stripeColor2.value;
+      const useSecondary = stripeEnable2.checked;
+
+      const colors = useSecondary ? [c1, c2] : [c1];
+      const numColors = colors.length;
+
+      // 1. Straight Orientations (0°, 180° Horizontal & 90° Vertical)
+      if (angleDeg % 180 === 0 || angleDeg === 90) {
+        const period = t1 + gap;
+        const tileSize = Math.max(4, Math.round(period * numColors));
+
+        const tileCanvas = document.createElement('canvas');
+        tileCanvas.width = tileSize;
+        tileCanvas.height = tileSize;
+        const tileCtx = tileCanvas.getContext('2d');
+
+        tileCtx.fillStyle = bg;
+        tileCtx.fillRect(0, 0, tileSize, tileSize);
+
+        for (let i = 0; i < tileSize; i += period) {
+          const colorIdx = Math.floor(i / period) % numColors;
+          tileCtx.fillStyle = colors[colorIdx];
+
+          if (angleDeg % 180 === 0) {
+            tileCtx.fillRect(0, i, tileSize, t1);
+          } else {
+            tileCtx.fillRect(i, 0, t1, tileSize);
+          }
+        }
+        return tileCanvas;
+      }
+
+      // 2. Vector Projection for Angles (with safeguards)
+      const rad = (angleDeg * Math.PI) / 180;
+      const rawSin = Math.sin(rad);
+      const rawCos = Math.cos(rad);
+
+      // Clamp sinA so denominator never drops below 0.02 (prevents giant canvas allocations)
+      const sinA = Math.max(0.02, Math.abs(rawSin));
+      const dxPerY = rawCos / (rawSin || 0.02);
+
+      const wEdge = t1 / sinA;
+      const pEdge = (t1 + gap) / sinA;
+
+      // Cap max tile dimensions to 2048px to safeguard browser memory
+      const rawTileSize = Math.round(pEdge * numColors);
+      const tileSize = Math.min(2048, Math.max(8, rawTileSize));
+
+      const tileCanvas = document.createElement('canvas');
+      tileCanvas.width = tileSize;
+      tileCanvas.height = tileSize;
+      const tileCtx = tileCanvas.getContext('2d');
+
+      tileCtx.fillStyle = bg;
+      tileCtx.fillRect(0, 0, tileSize, tileSize);
+
+      const startX = -Math.abs(dxPerY * tileSize) - tileSize * 2;
+      const endX = tileSize * 3 + Math.abs(dxPerY * tileSize);
+
+      let stripeIndex = 0;
+      for (let x = startX; x < endX; x += pEdge) {
+        const colorIdx = Math.abs(Math.floor(stripeIndex)) % numColors;
+        tileCtx.fillStyle = colors[colorIdx];
+
+        tileCtx.beginPath();
+        tileCtx.moveTo(x, 0);
+        tileCtx.lineTo(x + wEdge, 0);
+        tileCtx.lineTo(x + wEdge + dxPerY * tileSize, tileSize);
+        tileCtx.lineTo(x + dxPerY * tileSize, tileSize);
+        tileCtx.closePath();
+        tileCtx.fill();
+
+        stripeIndex++;
+      }
+
+      return tileCanvas;
+    }
+
+    /* ----------------------------------------------------
+       3. TARTAN GENERATOR
+    ---------------------------------------------------- */
+    function getSettPattern() {
+      return [
+        [colorBase.value, 29],
+        [colorPink.value, 2],
+        [colorBase.value, 4],
+        [colorCream.value, 4],
+        [colorDark.value, 12],
+        [colorYellow.value, 2],
+        [colorDark.value, 12],
+        [colorCream.value, 4],
+        [colorBase.value, 4],
+        [colorPink.value, 2],
+        [colorBase.value, 29]
+      ];
+    }
+
+    function createTartanTile(scale) {
+      const sett = getSettPattern();
+      const threads = [];
+      sett.forEach(([col, cnt]) => {
+        for (let i = 0; i < cnt; i++) threads.push(col);
+      });
+
+      const threadCount = threads.length;
+      let rawTileSize = threadCount * scale;
+      let tileSize = Math.max(4, Math.round(rawTileSize / 4) * 4);
+      let actualScale = tileSize / threadCount;
+
+      const tileCanvas = document.createElement('canvas');
+      tileCanvas.width = tileSize;
+      tileCanvas.height = tileSize;
+      const tileCtx = tileCanvas.getContext('2d');
+
+      for (let y = 0; y < threadCount; y++) {
+        const yStart = Math.floor(y * actualScale);
+        const yEnd = Math.floor((y + 1) * actualScale);
+        const weftColor = threads[y];
+
+        for (let x = 0; x < threadCount; x++) {
+          const xStart = Math.floor(x * actualScale);
+          const xEnd = Math.floor((x + 1) * actualScale);
+          const warpColor = threads[x];
+
+          const isWarpTop = ((x + y) % 4) < 2;
+          tileCtx.fillStyle = isWarpTop ? warpColor : weftColor;
+          tileCtx.fillRect(xStart, yStart, xEnd - xStart, yEnd - yStart);
+        }
+      }
+
+      return tileCanvas;
+    }
+
+    /* ----------------------------------------------------
+       MAIN RENDER LOOP
+    ---------------------------------------------------- */
+    function draw() {
+      const scale = parseFloat(scaleSlider.value);
+      scaleValue.textContent = scale.toFixed(2) + 'x';
+
+      document.getElementById('dotSizeVal').textContent = dotSize.value + 'px';
+      document.getElementById('dotSpacingVal').textContent = dotSpacing.value + 'px';
+      document.getElementById('stripeThick1Val').textContent = stripeThick1.value + 'px';
+      document.getElementById('stripeGapVal').textContent = stripeGap.value + 'px';
+      document.getElementById('stripeAngleVal').textContent = stripeAngle.value + '°';
+
+      let tile;
+      if (currentMode === 'dots') tile = createDotTile(scale);
+      else if (currentMode === 'stripes') tile = createStripeTile(scale);
+      else tile = createTartanTile(scale);
+
+      const pattern = ctx.createPattern(tile, 'repeat');
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function resizeCanvas() {
+      const size = Math.min(window.innerWidth - 380 - 80, window.innerHeight - 80);
+      canvas.width = Math.max(300, size);
+      canvas.height = Math.max(300, size);
+      draw();
+    }
+
+    // Tartan Presets
+    function updatePalette(index) {
+      currentPaletteIndex = index;
+      const active = currentPaletteIndex === -1 ? defaultPalette : clanPalettes[currentPaletteIndex];
+
+      colorBase.value = active[0];
+      colorPink.value = active[1];
+      colorDark.value = active[2];
+      colorCream.value = active[3];
+      colorYellow.value = active[4];
+
+      nextBtn.textContent = currentPaletteIndex === -1 ? "Next Preset (Default)" : `Preset ${currentPaletteIndex + 1}/${clanPalettes.length}`;
+      draw();
+    }
+
+    nextBtn.addEventListener('click', () => {
+      let nextIdx = currentPaletteIndex + 1;
+      if (nextIdx >= clanPalettes.length) nextIdx = -1;
+      updatePalette(nextIdx);
+    });
+
+    prevBtn.addEventListener('click', () => {
+      let prevIdx = currentPaletteIndex - 1;
+      if (prevIdx < -1) prevIdx = clanPalettes.length - 1;
+      updatePalette(prevIdx);
+    });
+
+    // Event Listeners for Live Preview updates
+    document.querySelectorAll('input, select').forEach(elem => {
+      elem.addEventListener('input', draw);
+      elem.addEventListener('change', draw);
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // High-Res Export (2048x2048 PNG)
+    downloadBtn.addEventListener('click', () => {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = 2048;
+      exportCanvas.height = 2048;
+      const exportCtx = exportCanvas.getContext('2d');
+
+      const scale = parseFloat(scaleSlider.value);
+      let tile;
+      if (currentMode === 'dots') tile = createDotTile(scale);
+      else if (currentMode === 'stripes') tile = createStripeTile(scale);
+      else tile = createTartanTile(scale);
+
+      const pattern = exportCtx.createPattern(tile, 'repeat');
+      exportCtx.fillStyle = pattern;
+      exportCtx.fillRect(0, 0, 2048, 2048);
+
+      const link = document.createElement('a');
+      link.download = `${currentMode}-pattern-2048.png`;
+      link.href = exportCanvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // Initial Run
+    resizeCanvas();
+  </script>
+</body>
+</html>
