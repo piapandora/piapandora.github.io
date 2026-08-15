@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual Novel Dialogue Overlay</title>
+<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0d;
+    --panel:#15151b;
+    --panel-border:#26262f;
+    --ink:#ece9e2;
+    --ink-dim:#8a8a97;
+    --gold:#d9a94e;
+    --gold-bright:#f2c96f;
+    --box-navy:0 0 0;
+    --box-opacity:1;
+    --box-bottom:40px;
+    --accent-rgb:255,0,0;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 20px 60px;
+  }
+
+  /* ---------------- Controls ---------------- */
+  .controls-panel{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:20px 26px;
+    margin-bottom:22px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    gap:20px;
+    box-shadow:0 12px 32px rgba(0,0,0,0.45);
+    max-width:1280px;
+    width:100%;
+  }
+  .input-group{display:flex;flex-direction:column;gap:7px;}
+  .input-group label{
+    font-family:var(--mono);
+    font-size:0.68rem;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    color:var(--ink-dim);
+  }
+  input[type="text"],textarea{
+    background:#0e0e13;
+    border:1px solid var(--panel-border);
+    color:#fff;
+    padding:9px 12px;
+    border-radius:7px;
+    font-family:inherit;
+    font-size:0.92rem;
+    outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  input[type="text"]:focus,textarea:focus{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(217,169,78,0.15);
+  }
+  textarea{
+    resize:none;
+    width:400px;
+    min-height:40px;
+    line-height:1.35;
+    overflow:hidden;
+  }
+  input[type="text"]#input-name{width:170px;}
+
+  .color-picker-wrapper{display:flex;align-items:center;}
+  input[type="color"]{
+    appearance:none;-webkit-appearance:none;
+    border:1px solid var(--panel-border);
+    width:38px;height:38px;
+    border-radius:8px;
+    cursor:pointer;
+    background:none;
+    padding:0;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper{padding:3px;}
+  input[type="color"]::-webkit-color-swatch{border:none;border-radius:5px;}
+
+  /* segmented toggle */
+  .toggle-group{display:flex;border:1px solid var(--panel-border);border-radius:8px;overflow:hidden;}
+  .toggle-group input{display:none;}
+  .toggle-group label{
+    font-family:var(--mono);
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    padding:10px 14px;
+    color:var(--ink-dim);
+    cursor:pointer;
+    background:#0e0e13;
+    transition:background .15s,color .15s;
+  }
+  .toggle-group input:checked + label{
+    background:var(--gold);
+    color:#171207;
+  }
+
+  input[type="range"]{
+    appearance:none;
+    -webkit-appearance:none;
+    width:130px;
+    height:4px;
+    border-radius:2px;
+    background:var(--panel-border);
+    outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    appearance:none;
+    -webkit-appearance:none;
+    width:15px;height:15px;
+    border-radius:50%;
+    background:var(--gold);
+    cursor:pointer;
+    border:2px solid #0e0e13;
+  }
+  #opacity-value{font-family:var(--mono);font-size:0.72rem;color:var(--ink-dim);}
+
+  .btn-export{
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    color:#1a1206;
+    border:none;
+    padding:11px 22px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:0.88rem;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    margin-left:auto;
+    transition:filter .15s,transform .1s;
+  }
+  .btn-export:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .btn-export:active{transform:translateY(0);}
+
+  .hint{
+    font-family:var(--mono);
+    font-size:0.72rem;
+    color:var(--ink-dim);
+    width:100%;
+  }
+  .hint kbd{
+    background:#0e0e13;
+    border:1px solid var(--panel-border);
+    padding:2px 6px;
+    border-radius:4px;
+    color:var(--ink);
+  }
+
+  /* ---------------- Stage ---------------- */
+  .stage-meta{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    max-width:1280px;
+    width:100%;
+    margin-bottom:8px;
+    font-family:var(--mono);
+    font-size:0.7rem;
+    color:var(--ink-dim);
+    letter-spacing:0.04em;
+  }
+  .stage-meta span.dot{color:var(--gold);}
+
+  .stage-wrapper{
+    background-color:#1a1a1a;
+    background-image:
+      linear-gradient(45deg,#222 25%,transparent 25%),
+      linear-gradient(-45deg,#222 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#222 75%),
+      linear-gradient(-45deg,transparent 75%,#222 75%);
+    background-size:20px 20px;
+    background-position:0 0,0 10px,10px -10px,-10px 0px;
+    border-radius:8px;
+    box-shadow:0 16px 48px rgba(0,0,0,0.65);
+    overflow:hidden;
+    border:1px solid var(--panel-border);
+    max-width:100%;
+  }
+
+  .stage{
+    width:1280px;
+    height:720px;
+    max-width:100%;
+    position:relative;
+    background:transparent;
+  }
+
+  /* ---------------- Dialogue box ---------------- */
+  /* NOTE: no blurred box-shadow anywhere below this point. html2canvas
+     renders blurred shadows incorrectly against a transparent export
+     background — it bakes in a solid colored haze instead of a soft
+     fade. Depth comes from solid borders and flat color layering. */
+
+  .dialogue-box-wrap{
+    position:absolute;
+    left:50%;
+    bottom:var(--box-bottom);
+    transform:translateX(-50%);
+    width:840px;
+    max-width:82%;
+    user-select:none;
+  }
+
+  .name-tab{
+    display:inline-block;
+    position:relative;
+    left:0;
+    padding:14px 30px 8px 24px;
+    background:#000;
+    border:1px solid rgba(var(--accent-rgb),0.55);
+    border-bottom:none;
+    clip-path:polygon(0 0,100% 0,calc(100% - 16px) 100%,0 100%);
+  }
+  .character-name{
+    display:block;
+    font-family:'Poppins',sans-serif;
+    font-size:1.75rem;
+    font-weight:700;
+    font-style:italic;
+    line-height:1;
+    letter-spacing:0.01em;
+    color:#ff0000;
+    white-space:nowrap;
+  }
+
+  .dialogue-panel{
+    position:relative;
+    margin-left:34px;
+    width:calc(100% - 34px);
+    background:rgb(var(--box-navy) / var(--box-opacity));
+    border-radius:4px 16px 16px 16px;
+    border:1px solid rgba(var(--accent-rgb),0.45);
+    border-top:2px solid rgba(var(--accent-rgb),0.7);
+    overflow:hidden;
+    padding:26px 44px 30px 40px;
+    min-height:104px;
+  }
+
+  .dialogue-text{
+    font-family:'Inter',sans-serif;
+    font-size:1.42rem;
+    font-weight:500;
+    color:#f4f2ec;
+    line-height:1.5;
+    letter-spacing:0.005em;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    max-height:4.5em;
+    overflow:hidden;
+  }
+
+  /* ---------------- Outline style (no panel) ---------------- */
+  .style-outline .dialogue-box-wrap{
+    bottom:calc(var(--box-bottom) - 0px);
+  }
+  .style-outline .name-tab{
+    background:transparent;
+    border:none;
+    clip-path:none;
+    padding:0 12px 0 0;
+  }
+  .style-outline .dialogue-panel{
+    background:transparent;
+    border:none;
+    margin-left:28px;
+    margin-top:12px;
+    width:calc(100% - 28px);
+    padding:0;
+    min-height:0;
+  }
+  .style-outline .character-name{
+    font-size:2rem;
+    -webkit-text-stroke:3.5px #000;
+    paint-order:stroke fill;
+    text-shadow:0 3px 6px rgba(0,0,0,0.9);
+  }
+  .style-outline .dialogue-text{
+    -webkit-text-stroke:3px #000;
+    paint-order:stroke fill;
+    text-shadow:0 3px 6px rgba(0,0,0,0.9);
+  }
+</style>
+</head>
+<body>
+
+  <div class="controls-panel">
+    <div class="input-group">
+      <label for="input-name">Name</label>
+      <input type="text" id="input-name" value="Pia Pandora" autocomplete="off">
+    </div>
+
+    <div class="input-group">
+      <label for="input-color">Name color</label>
+      <div class="color-picker-wrapper">
+        <input type="color" id="input-color" value="#ff0000">
+      </div>
+    </div>
+
+    <div class="input-group" style="flex:1;min-width:280px;">
+      <label for="input-text">Dialogue text</label>
+      <textarea id="input-text">If only I knew who Pia was... if only I could hold her hands before I die... I would feel complete.</textarea>
+    </div>
+
+    <div class="input-group">
+      <label>Style</label>
+      <div class="toggle-group">
+        <input type="radio" name="box-style" id="style-boxed" value="boxed" checked>
+        <label for="style-boxed">Boxed</label>
+        <input type="radio" name="box-style" id="style-outline" value="outline">
+        <label for="style-outline">Outline</label>
+      </div>
+    </div>
+
+    <div class="input-group" id="opacity-group">
+      <label for="input-opacity">Box opacity <span id="opacity-value">100%</span></label>
+      <input type="range" id="input-opacity" min="20" max="100" value="100">
+    </div>
+
+    <button type="button" class="btn-export" onclick="exportDialoguePNG(event)">Export PNG</button>
+
+    <div class="hint">
+      Press <kbd>ENTER</kbd> anywhere (outside the text area) or <kbd>CTRL</kbd> + <kbd>ENTER</kbd> to export a transparent PNG.
+    </div>
+  </div>
+
+  <div class="stage-meta">
+    <span><span class="dot">●</span> 1280 × 720</span>
+    <span>transparent background on export</span>
+  </div>
+
+  <div class="stage-wrapper">
+    <div class="stage" id="capture-stage">
+      <div class="dialogue-box-wrap">
+        <div class="name-tab">
+          <div class="character-name" id="display-name">Pia Pandora</div>
+        </div>
+        <div class="dialogue-panel">
+          <div class="dialogue-text" id="display-text">If only I knew who Pia was... if only I could hold her hands before I die... I would feel complete.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const inputName = document.getElementById('input-name');
+    const inputColor = document.getElementById('input-color');
+    const inputText = document.getElementById('input-text');
+    const inputOpacity = document.getElementById('input-opacity');
+    const opacityValue = document.getElementById('opacity-value');
+    const styleBoxed = document.getElementById('style-boxed');
+    const styleOutline = document.getElementById('style-outline');
+
+    const displayName = document.getElementById('display-name');
+    const displayText = document.getElementById('display-text');
+    const captureStage = document.getElementById('capture-stage');
+
+    function autoGrow(el){
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+    autoGrow(inputText);
+
+    function hexToRgb(hex){
+      const h = hex.replace('#','');
+      const num = parseInt(h,16);
+      return `${(num>>16)&255},${(num>>8)&255},${num&255}`;
+    }
+    function applyAccentColor(hex){
+      captureStage.style.setProperty('--accent-rgb', hexToRgb(hex));
+    }
+    applyAccentColor(inputColor.value);
+
+    inputName.addEventListener('input', e => {
+      displayName.textContent = e.target.value || '';
+    });
+    inputColor.addEventListener('input', e => {
+      displayName.style.color = e.target.value;
+      applyAccentColor(e.target.value);
+    });
+    inputText.addEventListener('input', e => {
+      displayText.textContent = e.target.value || '';
+      autoGrow(e.target);
+    });
+    inputOpacity.addEventListener('input', e => {
+      const v = e.target.value;
+      captureStage.style.setProperty('--box-opacity', v / 100);
+      opacityValue.textContent = v + '%';
+    });
+
+    function applyStyleMode(){
+      captureStage.classList.toggle('style-outline', styleOutline.checked);
+    }
+    styleBoxed.addEventListener('change', applyStyleMode);
+    styleOutline.addEventListener('change', applyStyleMode);
+
+    async function exportDialoguePNG(e){
+      if(e) e.preventDefault();
+
+      const canvas = await html2canvas(captureStage, {
+        scale: 1.5,
+        backgroundColor: null,
+        useCORS: true,
+        logging: false
+      });
+      const link = document.createElement('a');
+      const filename = (inputName.value.trim() || 'dialogue').toLowerCase().replace(/\s+/g,'-');
+      link.download = `${filename}-dialogue.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    window.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){
+        if(document.activeElement === inputText && !e.ctrlKey) return;
+        e.preventDefault();
+        e.stopPropagation();
+        exportDialoguePNG(e);
+      }
+    });
+  </script>
+</body>
+</html>
