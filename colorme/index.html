@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Color Me</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      gap: 16px;
+    }
+
+    canvas {
+      width: 512px;
+      height: 512px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background-color: #252738;
+      border: 1px solid #3d405b;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background-color: #33364d;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .download-btn {
+      background-color: #3b5dc9;
+      border-color: #41a6f6;
+    }
+
+    .download-btn:hover {
+      background-color: #41a6f6;
+    }
+
+    #hidden-container {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas" width="1024" height="1024"></canvas>
+
+  <div class="controls">
+    <button onclick="cycleColor('bg')">BG</button>
+    <button onclick="cycleColor('layer1')">1</button>
+    <button onclick="cycleColor('layer2')">2</button>
+    <button onclick="cycleColor('layer3')">3</button>
+    <button onclick="cycleColor('layer4')">4</button>
+    <button onclick="cycleColor('layer5')">5</button>
+    <button class="download-btn" onclick="downloadPNG()">Download PNG</button>
+  </div>
+
+  <div id="hidden-container"></div>
+
+  <script>
+    const palette = [
+      "#1a1c2c", "#5d275d", "#b13e53", "#ef7d57",
+      "#ffcd75", "#a7f070", "#38b764", "#257179",
+      "#29366f", "#3b5dc9", "#41a6f6", "#73eff7",
+      "#f4f4f4", "#94b0c2", "#566c86", "#333c57"
+    ];
+
+    // Targets group IDs inside the single art.svg file
+    const layers = [
+      { id: 'bg', colorIndex: 14 },
+      { id: 'layer1', colorIndex: 3 },
+      { id: 'layer2', colorIndex: 12 },
+      { id: 'layer3', colorIndex: 2 },
+      { id: 'layer4', colorIndex: 15 },
+      { id: 'layer5', colorIndex: 8 }
+    ];
+
+    let masterSVGText = '';
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const hiddenContainer = document.getElementById('hidden-container');
+
+    async function loadMasterSVG() {
+      try {
+        const res = await fetch('art.svg');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        masterSVGText = await res.text();
+        renderAll();
+      } catch (e) {
+        console.warn('Could not load art.svg. Verify the file exists in the directory.');
+      }
+    }
+
+    function generateProcessedSVGDataUrl(targetSize) {
+      if (!masterSVGText) return null;
+
+      hiddenContainer.innerHTML = masterSVGText;
+      const svgEl = hiddenContainer.querySelector('svg');
+
+      if (!svgEl) return null;
+
+      svgEl.setAttribute('width', targetSize);
+      svgEl.setAttribute('height', targetSize);
+      svgEl.setAttribute('shape-rendering', 'geometricPrecision');
+
+      // Strip style blocks to allow programatic recoloring
+      const styleBlocks = svgEl.querySelectorAll('style');
+      styleBlocks.forEach(style => style.remove());
+
+      // Recolor each group targeted by its ID
+      layers.forEach(layer => {
+        const targetGroup = svgEl.querySelector(`#${layer.id}`);
+        if (targetGroup) {
+          const color = palette[layer.colorIndex];
+          const shapes = targetGroup.querySelectorAll('path, rect, circle, polygon, ellipse');
+          shapes.forEach(shape => {
+            shape.removeAttribute('style');
+            shape.setAttribute('fill', color);
+          });
+        }
+      });
+
+      const serialized = new XMLSerializer().serializeToString(svgEl);
+      const encoded = encodeURIComponent(serialized);
+      hiddenContainer.innerHTML = '';
+
+      return `data:image/svg+xml;charset=utf-8,${encoded}`;
+    }
+
+    function renderAll() {
+      const dataUrl = generateProcessedSVGDataUrl(canvas.width);
+      if (!dataUrl) return;
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = dataUrl;
+    }
+
+    function cycleColor(layerId) {
+      const layer = layers.find(l => l.id === layerId);
+      if (layer) {
+        layer.colorIndex = (layer.colorIndex + 1) % palette.length;
+        renderAll();
+      }
+    }
+
+    function downloadPNG() {
+      const exportSize = 2048;
+      const dataUrl = generateProcessedSVGDataUrl(exportSize);
+      if (!dataUrl) return;
+
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = exportSize;
+      exportCanvas.height = exportSize;
+      const exportCtx = exportCanvas.getContext('2d');
+
+      const img = new Image();
+      img.onload = () => {
+        exportCtx.drawImage(img, 0, 0, exportSize, exportSize);
+        const link = document.createElement('a');
+        link.download = `art-${Date.now()}.png`;
+        link.href = exportCanvas.toDataURL('image/png');
+        link.click();
+      };
+      img.src = dataUrl;
+    }
+
+    loadMasterSVG();
+  </script>
+</body>
+</html>
