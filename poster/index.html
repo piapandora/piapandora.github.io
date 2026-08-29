@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poster Creator</title>
+	<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Sora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #06080e;
+            --panel-bg: rgba(14, 18, 28, 0.95);
+            --accent-color: #3f8dfd;
+            --text-color: #f3f1f7;
+            --border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Sora', sans-serif;
+            display: flex;
+            gap: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .controls {
+            flex: 0 0 320px;
+            background: var(--panel-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: fit-content;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #8b8598;
+        }
+
+        input[type="text"] {
+            background: #06080e;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .color-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .color-picker {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #06080e;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        input[type="color"] {
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+        }
+
+        button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 8px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            letter-spacing: 0.05em;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .preview-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #030407;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        canvas {
+            max-height: 85vh;
+            max-width: 100%;
+            object-fit: contain;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            background-image: 
+                linear-gradient(45deg, #101420 25%, transparent 25%), 
+                linear-gradient(-45deg, #101420 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #101420 75%), 
+                linear-gradient(-45deg, transparent 75%, #101420 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2 style="margin: 0 0 8px 0; font-size: 20px; font-family: 'Rajdhani', sans-serif;">Poster Controls</h2>
+        
+        <div class="field">
+            <label for="title">Title</label>
+            <input type="text" id="title" value="🪶 TICKLE TRIO">
+        </div>
+
+        <div class="field">
+            <label for="subtitle">Subtitle</label>
+            <input type="text" id="subtitle" value="The Art of the Feather">
+        </div>
+
+        <div class="field">
+            <label for="name">Bottom Name</label>
+            <input type="text" id="name" value="Pia Pandora">
+        </div>
+
+        <div class="color-row">
+            <div class="field color-picker">
+                <input type="color" id="textColor" value="#ffffff">
+                <label for="textColor">Text Color</label>
+            </div>
+            <div class="field color-picker">
+                <input type="color" id="subtextColor" value="#cbd5e1">
+                <label for="subtextColor">Subtext Color</label>
+            </div>
+        </div>
+
+        <label class="toggle-container">
+            <input type="checkbox" id="transparentBg" checked>
+            Transparent Section Backgrounds
+        </label>
+
+        <label class="toggle-container">
+            <input type="checkbox" id="showGuides" checked>
+            Show Placement Guides
+        </label>
+
+        <button id="downloadBtn">DOWNLOAD PNG</button>
+    </div>
+
+    <div class="preview-area">
+        <canvas id="posterCanvas" width="1536" height="2048"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('posterCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Dimensions
+        const WIDTH = 1536;
+        const HEIGHT = 2048;
+        const TOP_HEIGHT = 341;     
+        const MID_HEIGHT = 1536;    
+        const BOTTOM_HEIGHT = 171;
+
+        const titleInput = document.getElementById('title');
+        const subtitleInput = document.getElementById('subtitle');
+        const nameInput = document.getElementById('name');
+        const textColorInput = document.getElementById('textColor');
+        const subtextColorInput = document.getElementById('subtextColor');
+        const transparentBgInput = document.getElementById('transparentBg');
+        const showGuidesInput = document.getElementById('showGuides');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        function drawDarkBlueSection(x, y, w, h) {
+            if (transparentBgInput.checked) {
+                return;
+            }
+
+            ctx.fillStyle = '#06080e';
+            ctx.fillRect(x, y, w, h);
+
+            const blueGlow = ctx.createRadialGradient(x + w * 0.5, y + h * 0.5, 0, x + w * 0.5, y + h * 0.5, w * 0.7);
+            blueGlow.addColorStop(0, 'rgba(30, 58, 110, 0.28)');
+            blueGlow.addColorStop(1, 'transparent');
+            
+            ctx.fillStyle = blueGlow;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        function drawText(text, x, y, font, letterSpacing, color, glowAmount = 0, glowColor = 'rgba(63, 141, 253, 0.35)') {
+            ctx.font = font;
+            ctx.letterSpacing = letterSpacing;
+            ctx.textAlign = 'center';
+
+            if (glowAmount > 0) {
+                ctx.shadowColor = glowColor;
+                ctx.shadowBlur = glowAmount;
+                ctx.fillStyle = color;
+                ctx.fillText(text, x, y);
+            }
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = color;
+            ctx.fillText(text, x, y);
+        }
+
+        function drawPoster() {
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+            const textColor = textColorInput.value;
+            const subtextColor = subtextColorInput.value;
+
+            // 1. Render Background Bars (or leave transparent if checked)
+            drawDarkBlueSection(0, 0, WIDTH, TOP_HEIGHT);
+            drawDarkBlueSection(0, TOP_HEIGHT + MID_HEIGHT, WIDTH, BOTTOM_HEIGHT);
+
+            // --- TOP SECTION ---
+            // Title
+            drawText(
+                titleInput.value, 
+                WIDTH / 2, 180, 
+                '700 110px "Rajdhani", sans-serif', 
+                '6.6px', 
+                textColor,
+                24
+            );
+
+            // Subtitle (Slightly smaller 54px, darker slate color #cbd5e1)
+            drawText(
+                subtitleInput.value, 
+                WIDTH / 2, 265, 
+                'italic 400 54px "Sora", sans-serif', 
+                '1.6px', 
+                subtextColor,
+                6
+            );
+
+            // --- BOTTOM SECTION ---
+            const bottomCenterY = (TOP_HEIGHT + MID_HEIGHT) + (BOTTOM_HEIGHT / 2);
+
+            // Name Tag (Lifted slightly higher to y = bottomCenterY + 30, letter-spacing increased to 4.5px)
+            drawText(
+                nameInput.value, 
+                WIDTH / 2, bottomCenterY + 30, 
+                '700 86px "Rajdhani", sans-serif', 
+                '4.5px', 
+                textColor,
+                10
+            );
+
+            // 3. Optional Overlay Guides
+            if (showGuidesInput.checked) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(63, 141, 253, 0.6)';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(0, TOP_HEIGHT, WIDTH, MID_HEIGHT);
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.font = '700 36px "Rajdhani", sans-serif';
+                ctx.letterSpacing = '6px';
+                ctx.textAlign = 'center';
+                ctx.fillText("1536 x 1536 TRANSPARENT IMAGE ZONE", WIDTH / 2, TOP_HEIGHT + (MID_HEIGHT / 2));
+                ctx.restore();
+            }
+        }
+
+        document.fonts.ready.then(() => {
+            drawPoster();
+        });
+
+        [titleInput, subtitleInput, nameInput, textColorInput, subtextColorInput, transparentBgInput, showGuidesInput].forEach(input => {
+            input.addEventListener('input', drawPoster);
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const wereGuidesVisible = showGuidesInput.checked;
+            showGuidesInput.checked = false;
+            drawPoster();
+
+            const link = document.createElement('a');
+            link.download = `poster-overlay-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            showGuidesInput.checked = wereGuidesVisible;
+            drawPoster();
+        });
+    </script>
+</body>
+</html>
