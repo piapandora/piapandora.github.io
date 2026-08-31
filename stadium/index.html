@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stadium</title>
+  <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: monospace;
+    }
+
+    body {
+      background-color: #050505;
+      color: #00ff66;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      user-select: none;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(47, 10px);
+      grid-template-rows: repeat(39, 10px);
+      gap: 2px;
+      background-color: #000c00;
+      padding: 10px;
+      border: 2px solid #00ff66;
+      box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+      border-radius: 4px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .grid.dragover {
+      border-color: #ffffff;
+      box-shadow: 0 0 25px rgba(0, 255, 102, 0.6);
+    }
+
+    .pixel {
+      width: 10px;
+      height: 10px;
+      border-radius: 1px;
+    }
+
+    .pixel.off, .pixel.gap {
+      background-color: #001a00;
+    }
+
+    .pixel.on {
+      background-color: #00ff66;
+      box-shadow: 0 0 6px #00ff66;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="display" class="grid"></div>
+  </div>
+
+  <script>
+    const BLOCK_W = 5;
+    const BLOCK_H = 7;
+    const BLOCK_SIZE = BLOCK_W * BLOCK_H;
+
+    const GRID_X = 8;
+    const GRID_Y = 5;
+    const MAX_CELLS = GRID_X * GRID_Y;
+    const MAX_BITS = MAX_CELLS * BLOCK_SIZE;
+
+    const TOTAL_COLS = (GRID_X * BLOCK_W) + (GRID_X - 1);
+    const TOTAL_ROWS = (GRID_Y * BLOCK_H) + (GRID_Y - 1);
+
+    const displayElement = document.getElementById("display");
+
+    const pixelGrid = Array.from({ length: TOTAL_ROWS }, () => Array(TOTAL_COLS).fill(null));
+
+    function isGap(r, c) {
+      const isColGap = ((c + 1) % (BLOCK_W + 1)) === 0;
+      const isRowGap = ((r + 1) % (BLOCK_H + 1)) === 0;
+      return isColGap || isRowGap;
+    }
+
+    function initDisplay() {
+      displayElement.innerHTML = "";
+      for (let r = 0; r < TOTAL_ROWS; r++) {
+        for (let c = 0; c < TOTAL_COLS; c++) {
+          const pixel = document.createElement("div");
+
+          if (isGap(r, c)) {
+            pixel.className = "pixel gap";
+          } else {
+            pixel.className = "pixel off";
+          }
+
+          displayElement.appendChild(pixel);
+          pixelGrid[r][c] = pixel;
+        }
+      }
+    }
+
+    function clearDisplay() {
+      for (let r = 0; r < TOTAL_ROWS; r++) {
+        for (let c = 0; c < TOTAL_COLS; c++) {
+          if (!isGap(r, c)) {
+            pixelGrid[r][c].className = "pixel off";
+          }
+        }
+      }
+    }
+
+    function renderBuffer(stream) {
+      clearDisplay();
+
+      const totalBlocks = Math.floor(stream.length / BLOCK_SIZE) + (stream.length % BLOCK_SIZE > 0 ? 1 : 0);
+
+      for (let bIdx = 0; bIdx < totalBlocks; bIdx++) {
+        const bRow = Math.floor(bIdx / GRID_X);
+        const bCol = bIdx % GRID_X;
+
+        if (bRow >= GRID_Y) break;
+
+        const blockBits = stream.slice(bIdx * BLOCK_SIZE, (bIdx + 1) * BLOCK_SIZE);
+
+        for (let bitIdx = 0; bitIdx < blockBits.length; bitIdx++) {
+          if (blockBits[bitIdx] === "1") {
+            const localRow = Math.floor(bitIdx / BLOCK_W);
+            const localCol = bitIdx % BLOCK_W;
+
+            const globalRow = (bRow * (BLOCK_H + 1)) + localRow;
+            const globalCol = (bCol * (BLOCK_W + 1)) + localCol;
+
+            pixelGrid[globalRow][globalCol].className = "pixel on";
+          }
+        }
+      }
+    }
+
+    function processFile(file) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const content = e.target.result;
+        let bitString = "";
+
+        if (/^[01\s]+$/.test(content.trim())) {
+          bitString = content.replace(/[^01]/g, "");
+        } 
+        else {
+          for (let i = 0; i < content.length; i++) {
+            const byte = content.charCodeAt(i) & 0xFF;
+            bitString += byte.toString(2).padStart(8, "0");
+          }
+        }
+
+        renderBuffer(bitString.slice(0, MAX_BITS));
+      };
+
+      reader.readAsText(file);
+    }
+
+    window.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      displayElement.classList.add("dragover");
+    });
+
+    window.addEventListener("dragleave", (e) => {
+      if (e.clientX === 0 || e.clientY === 0) {
+        displayElement.classList.remove("dragover");
+      }
+    });
+
+    window.addEventListener("drop", (e) => {
+      e.preventDefault();
+      displayElement.classList.remove("dragover");
+
+      if (e.dataTransfer.files.length > 0) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    initDisplay();
+  </script>
+</body>
+</html>
