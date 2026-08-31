@@ -10,7 +10,6 @@
       box-sizing: border-box;
       font-family: monospace;
     }
-
     body {
       background-color: #050505;
       color: #00ff66;
@@ -23,14 +22,12 @@
       padding: 20px;
       user-select: none;
     }
-
     .container {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 16px;
     }
-
     .grid {
       display: grid;
       grid-template-columns: repeat(47, 10px);
@@ -43,22 +40,24 @@
       border-radius: 4px;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-
     .grid.dragover {
       border-color: #ffffff;
       box-shadow: 0 0 25px rgba(0, 255, 102, 0.6);
     }
-
+    .grid.encoder-mode {
+      cursor: crosshair;
+    }
     .pixel {
       width: 10px;
       height: 10px;
       border-radius: 1px;
     }
-
     .pixel.off, .pixel.gap {
       background-color: #001a00;
     }
-
+    .pixel.gap.encoder-gap {
+      background-color: transparent;
+    }
     .pixel.on {
       background-color: #00ff66;
       box-shadow: 0 0 6px #00ff66;
@@ -84,8 +83,20 @@
     const TOTAL_ROWS = (GRID_Y * BLOCK_H) + (GRID_Y - 1);
 
     const displayElement = document.getElementById("display");
-
     const pixelGrid = Array.from({ length: TOTAL_ROWS }, () => Array(TOTAL_COLS).fill(null));
+
+    let isEncoderMode = false;
+
+    let clickCount = 0;
+    let timerStart = false;
+    let clickTimer = null;
+    const REQS = 13;
+    const INTERVAL = 2666;
+
+    let isDragging = false;
+    let dragAction = null;
+    let lastR = null;
+    let lastC = null;
 
     function isGap(r, c) {
       const isColGap = ((c + 1) % (BLOCK_W + 1)) === 0;
@@ -104,6 +115,9 @@
           } else {
             pixel.className = "pixel off";
           }
+
+          pixel.dataset.r = r;
+          pixel.dataset.c = c;
 
           displayElement.appendChild(pixel);
           pixelGrid[r][c] = pixel;
@@ -157,8 +171,7 @@
 
         if (/^[01\s]+$/.test(content.trim())) {
           bitString = content.replace(/[^01]/g, "");
-        } 
-        else {
+        } else {
           for (let i = 0; i < content.length; i++) {
             const byte = content.charCodeAt(i) & 0xFF;
             bitString += byte.toString(2).padStart(8, "0");
@@ -171,23 +184,198 @@
       reader.readAsText(file);
     }
 
+    function applyActionAt(r, c, action) {
+      if (r < 0 || r >= TOTAL_ROWS || c < 0 || c >= TOTAL_COLS) return;
+
+      if (action === 'draw') {
+        const el = pixelGrid[r][c];
+        if (el && !el.classList.contains('gap')) {
+          el.className = 'pixel on';
+        }
+      } else if (action === 'erase') {
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const nr = r + dr;
+            const nc = c + dc;
+            if (nr >= 0 && nr < TOTAL_ROWS && nc >= 0 && nc < TOTAL_COLS) {
+              const el = pixelGrid[nr][nc];
+              if (el && !el.classList.contains('gap')) {
+                el.className = 'pixel off';
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function interpolateStroke(r0, c0, r1, c1, action) {
+      const dr = Math.abs(r1 - r0);
+      const dc = Math.abs(c1 - c0);
+      const sr = r0 < r1 ? 1 : -1;
+      const sc = c0 < c1 ? 1 : -1;
+      let err = dr - dc;
+
+      let currR = r0;
+      let currC = c0;
+
+      while (true) {
+        applyActionAt(currR, currC, action);
+        if (currR === r1 && currC === c1) break;
+        const e2 = 2 * err;
+        if (e2 > -dc) {
+          err -= dc;
+          currR += sr;
+        }
+        if (e2 < dr) {
+          err += dr;
+          currC += sc;
+        }
+      }
+    }
+
+    function handlePointerTarget(target) {
+      if (!target || !target.dataset || target.dataset.r === undefined) return;
+      const r = parseInt(target.dataset.r, 10);
+      const c = parseInt(target.dataset.c, 10);
+
+      if (lastR !== null && lastC !== null) {
+        interpolateStroke(lastR, lastC, r, c, dragAction);
+      } else {
+        applyActionAt(r, c, dragAction);
+      }
+
+      lastR = r;
+      lastC = c;
+    }
+
+    function generateBinaryString() {
+      let bitString = "";
+
+      for (let bIdx = 0; bIdx < MAX_CELLS; bIdx++) {
+        const bRow = Math.floor(bIdx / GRID_X);
+        const bCol = bIdx % GRID_X;
+
+        for (let bitIdx = 0; bitIdx < BLOCK_SIZE; bitIdx++) {
+          const localRow = Math.floor(bitIdx / BLOCK_W);
+          const localCol = bitIdx % BLOCK_W;
+
+          const globalRow = (bRow * (BLOCK_H + 1)) + localRow;
+          const globalCol = (bCol * (BLOCK_W + 1)) + localCol;
+
+          const pixel = pixelGrid[globalRow][globalCol];
+          if (pixel.classList.contains("on")) {
+            bitString += "1";
+          } else {
+            bitString += "0";
+          }
+        }
+      }
+      return bitString;
+    }
+
+    function downloadTxt() {
+      const data = generateBinaryString();
+      const blob = new Blob([data], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function toggleMode() {
+      isEncoderMode = !isEncoderMode;
+      const gapPixels = document.querySelectorAll('.pixel.gap');
+
+      if (isEncoderMode) {
+        displayElement.classList.add('encoder-mode');
+        gapPixels.forEach(el => el.classList.add('encoder-gap'));
+      } else {
+        displayElement.classList.remove('encoder-mode');
+        gapPixels.forEach(el => el.classList.remove('encoder-gap'));
+      }
+    }
+
+    window.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+
+      if (!timerStart) {
+        timerStart = true;
+        clickTimer = setTimeout(() => {
+          clickCount = 0;
+          timerStart = false;
+        }, INTERVAL);
+      }
+
+      clickCount++;
+
+      if (clickCount >= REQS) {
+        clearTimeout(clickTimer);
+        clickCount = 0;
+        timerStart = false;
+        toggleMode();
+      }
+    });
+
     window.addEventListener("dragover", (e) => {
+      if (isEncoderMode) return;
       e.preventDefault();
       displayElement.classList.add("dragover");
     });
 
     window.addEventListener("dragleave", (e) => {
+      if (isEncoderMode) return;
       if (e.clientX === 0 || e.clientY === 0) {
         displayElement.classList.remove("dragover");
       }
     });
 
     window.addEventListener("drop", (e) => {
+      if (isEncoderMode) return;
       e.preventDefault();
       displayElement.classList.remove("dragover");
 
       if (e.dataTransfer.files.length > 0) {
         processFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    displayElement.addEventListener('mousedown', (e) => {
+      if (!isEncoderMode) return;
+      if (e.button !== 0 && e.button !== 2) return;
+      isDragging = true;
+      dragAction = e.button === 0 ? 'draw' : 'erase';
+      lastR = null;
+      lastC = null;
+      handlePointerTarget(e.target);
+    });
+
+    displayElement.addEventListener('mouseover', (e) => {
+      if (!isEncoderMode || !isDragging) return;
+      handlePointerTarget(e.target);
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!isEncoderMode) return;
+      isDragging = false;
+      dragAction = null;
+      lastR = null;
+      lastC = null;
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (!isEncoderMode) return;
+      if (e.key === "Enter") {
+        e.preventDefault();
+        downloadTxt();
+      } else if (e.key === "Backspace") {
+        e.preventDefault();
+        clearDisplay();
       }
     });
 
