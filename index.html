@@ -115,14 +115,13 @@
             { name: "Pattern Studio", url: "https://piapandora.com/pattern", desc: "Generate tartan, polka dot and stripe patterns for textures", image: "piapandora/pattern.jpg" },
 			{ name: "Dialogue Overlay", url: "https://piapandora.com/dialogue", desc: "Dialogue Overlay for Visual Novels", image: "" },
 			{ name: "Color Me", url: "https://piapandora.com/colorme", desc: "Color in a cute character", image: "piapandora/colorme.jpg" },
-			{ name: "Poster Creator", url: "https://piapandora.com/poster", desc: "Create stylized posters", image: "" }
+			{ name: "Poster Creator", url: "https://piapandora.com/poster", desc: "Create stylized posters", image: "" },
+			{ name: "Stadium", url: "https://piapandora.com/stadium", desc: "Pixel data reader/encoder", image: "" }
         ];
 
         function createAppCard(app) {
             const { name, url, desc, image } = app;
-            const seed = name.replace(/\s/g, '');
-            
-            const displayImage = image ? image : `https://picsum.photos/seed/${seed}/400/225`;
+			const displayImage = image || 'piapandora/generic.jpg';
 
             return `
                 <a href="${url}" target="_blank" class="block group h-full">
