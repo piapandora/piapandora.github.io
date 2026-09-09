@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Canvas</title>
+    <link rel="icon" type="image/png" href="https://piapandora.com/box/misc/green-icon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="pixelCanvas" width="96" height="54"></canvas>
+
+    <script>
+        const canvas = document.getElementById('pixelCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const WIDTH = 96;
+        const HEIGHT = 54;
+        const ASPECT_RATIO = WIDTH / HEIGHT;
+
+        const PALETTE = {
+            '1': '#800000', // red
+            '2': '#000080', // blue
+            '3': '#004040', // green
+            '4': '#520052', // purple
+            '5': '#000000', // black
+            '6': '#222222', // light black
+            '7': '#5A5A5A', // dark gray
+            '8': '#929292', // light gray
+            '9': '#CCCCCC', // dark white
+            '0': '#FFFFFF', // white
+        };
+
+        let currentColor = PALETTE['5'];
+        let rightClickColor = PALETTE['7'];
+        let isMouseDown = false;
+        let activeButton = 0;
+        let lastX = null;
+        let lastY = null;
+
+        ctx.fillStyle = PALETTE['7'];
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+        function resizeCanvas() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const viewportRatio = viewportWidth / viewportHeight;
+
+            let displayWidth, displayHeight;
+
+            if (viewportRatio > ASPECT_RATIO) {
+                displayHeight = viewportHeight;
+                displayWidth = displayHeight * ASPECT_RATIO;
+            } else {
+                displayWidth = viewportWidth;
+                displayHeight = displayWidth / ASPECT_RATIO;
+            }
+
+            canvas.style.width = `${displayWidth}px`;
+            canvas.style.height = `${displayHeight}px`;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        document.addEventListener('fullscreenchange', resizeCanvas);
+
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = WIDTH / rect.width;
+            const scaleY = HEIGHT / rect.height;
+
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+
+            return { x, y };
+        }
+
+        function drawPixel(x, y) {
+            if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+                ctx.fillStyle = activeButton === 2 ? rightClickColor : currentColor;
+                ctx.fillRect(x, y, 1, 1);
+            }
+        }
+
+        function drawLine(x0, y0, x1, y1) {
+            const dx = Math.abs(x1 - x0);
+            const dy = Math.abs(y1 - y0);
+            const sx = x0 < x1 ? 1 : -1;
+            const sy = y0 < y1 ? 1 : -1;
+            let err = dx - dy;
+
+            while (true) {
+                drawPixel(x0, y0);
+                if (x0 === x1 && y0 === y1) break;
+                const e2 = 2 * err;
+                if (e2 > -dy) {
+                    err -= dy;
+                    x0 += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    y0 += sy;
+                }
+            }
+        }
+
+        function paintPixel(e) {
+            const { x, y } = getCanvasCoords(e);
+
+            if (lastX !== null && lastY !== null) {
+                drawLine(lastX, lastY, x, y);
+            } else {
+                drawPixel(x, y);
+            }
+
+            lastX = x;
+            lastY = y;
+        }
+
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        canvas.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            activeButton = e.button;
+            lastX = null;
+            lastY = null;
+            paintPixel(e);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isMouseDown) {
+                paintPixel(e);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isMouseDown = false;
+            lastX = null;
+            lastY = null;
+        });
+
+        window.addEventListener('keydown', (e) => {
+            const digitMatch = e.code.match(/^Digit(\d)$/);
+            const digit = digitMatch ? digitMatch[1] : null;
+
+            if (digit !== null && digit in PALETTE) {
+                if (e.shiftKey) {
+                    rightClickColor = PALETTE[digit];
+                } else {
+                    currentColor = PALETTE[digit];
+                }
+            }
+
+            if (e.key === 'Enter') {
+                const link = document.createElement('a');
+                link.download = `pixel-art-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+        });
+    </script>
+</body>
+</html>
