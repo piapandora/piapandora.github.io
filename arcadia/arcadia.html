@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCADIA - No Pain No Gain</title>
+    <link rel="icon" type="image/png" href="food01.png">
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; cursor: none; }
+        #game-container { position: absolute; width: 1920px; height: 1080px; top: 50%; left: 50%; transform-origin: center; background: #111; }
+        canvas { display: block; width: 100%; height: 100%; cursor: none; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="1920" height="1080"></canvas>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const collectSound = new Audio('Like.wav');
+    collectSound.volume = 0.6;
+
+    const enemyHitSound = new Audio('Error.wav');
+    enemyHitSound.volume = 0.4;
+
+    const stageSound = new Audio('Achievement.wav');
+    stageSound.volume = 0.5;
+
+    const completeSound = new Audio('Start.wav');
+    completeSound.volume = 0.33;
+
+    const bgImgs = [];
+    for (let i = 1; i <= 3; i++) {
+        const img = new Image();
+        const num = i.toString().padStart(2, '0');
+        img.src = `bg${num}.png`;
+        bgImgs.push(img);
+    }
+
+    const playerImgs = [];
+    for (let i = 1; i <= 3; i++) {
+        const img = new Image();
+        const num = i.toString().padStart(2, '0');
+        img.src = `player${num}.png`;
+        playerImgs.push(img);
+    }
+
+    const enemyImgs = [];
+    for (let i = 1; i <= 3; i++) {
+        const img = new Image();
+        const num = i.toString().padStart(2, '0');
+        img.src = `enemy${num}.png`;
+        enemyImgs.push(img);
+    }
+
+    const foodImgs = [];
+    for (let i = 1; i <= 1; i++) {
+        const img = new Image();
+        const num = i.toString().padStart(2, '0');
+        img.src = `food${num}.png`;
+        foodImgs.push(img);
+    }
+
+    const BASE_SPEED = 10;
+    const SPRINT_MULTIPLIER = 1.5;
+    const player = { x: 960, y: 540, w: 100, h: 200, speed: BASE_SPEED };
+    
+    const enemyTemplates = [
+        { id: 1, baseSpeed: 5, w: 150, h: 150 },
+        { id: 2, baseSpeed: 6, w: 150, h: 150 },
+        { id: 3, baseSpeed: 7, w: 150, h: 150 }
+    ];
+
+    const activeEnemies = [];
+
+    const items = [];
+    const ITEM_SIZE = 50;
+    const FOOD_PADDING = 40;
+    const MIN_SPAWN_DIST = 200;
+    
+    let collectedCount = 0;
+    let highestStageIndex = 0;
+    let previousStageIndex = 0;
+    const TARGET_COUNT = 200;
+    
+    let isCompleting = false;
+    let completionStartTime = 0;
+    const CELEBRATION_DELAY_MS = 3000;
+
+    let gameOver = false;
+    let gameOverTime = 0;
+    let canRestart = false;
+
+    let gameStarted = false;
+
+    let isFadingOutStart = false;
+    let startFadeStartTime = 0;
+    const START_FADE_DURATION_MS = 300;
+    const END_FADE_DURATION_MS = 1000;
+
+    const keys = {};
+    let northButtonPressedLastFrame = false;
+    let southButtonPressedLastFrame = false;
+
+    function getStageIndex() {
+        let currentCalculatedStage = 0;
+        if (collectedCount >= 115) currentCalculatedStage = 2;
+        else if (collectedCount >= 50) currentCalculatedStage = 1;
+
+        if (currentCalculatedStage > highestStageIndex) {
+            highestStageIndex = currentCalculatedStage;
+        }
+
+        return highestStageIndex;
+    }
+
+    function checkStageTransition() {
+        const currentStage = getStageIndex();
+        if (currentStage > previousStageIndex) {
+            playStageSound();
+        }
+        previousStageIndex = currentStage;
+    }
+
+    function getTargetItemCount() {
+        const stage = getStageIndex();
+        if (stage === 2) return 3;
+        if (stage === 1) return 2;
+        return 1;
+    }
+
+    function checkOverlap(x1, y1, w1, h1, x2, y2, w2, h2) {
+        return x1 < x2 + w2 &&
+               x1 + w1 > x2 &&
+               y1 < y2 + h2 &&
+               y1 + h1 > y2;
+    }
+
+    function createEnemyInstance(templateIndex) {
+        const template = enemyTemplates[templateIndex];
+        return {
+            img: enemyImgs[templateIndex],
+            x: 200 + templateIndex * 150,
+            y: 200 + templateIndex * 100,
+            w: template.w,
+            h: template.h,
+            speed: template.baseSpeed,
+            vx: 0,
+            vy: 0,
+            changeDirTimer: 0,
+            cooldownTimer: 0,
+            isCooldown: false
+        };
+    }
+
+    function syncEnemiesArray() {
+        if (!gameStarted) return;
+        const targetEnemyCount = getStageIndex() + 1;
+
+        while (activeEnemies.length > targetEnemyCount) {
+            activeEnemies.pop();
+        }
+
+        while (activeEnemies.length < targetEnemyCount) {
+            const nextTemplateIndex = activeEnemies.length;
+            activeEnemies.push(createEnemyInstance(nextTemplateIndex));
+        }
+    }
+
+    function createSingleItem() {
+        const playerCenterX = player.x + player.w / 2;
+        const playerCenterY = player.y + player.h / 2;
+
+        let spawnX, spawnY, dist;
+        let attempts = 0;
+        let validPosition = false;
+
+        do {
+            spawnX = Math.floor(Math.random() * (1920 - ITEM_SIZE));
+            spawnY = Math.floor(Math.random() * (1080 - ITEM_SIZE));
+            const itemCenterX = spawnX + ITEM_SIZE / 2;
+            const itemCenterY = spawnY + ITEM_SIZE / 2;
+            dist = Math.hypot(itemCenterX - playerCenterX, itemCenterY - playerCenterY);
+
+            let overlapsWithOtherFood = false;
+            for (let i = 0; i < items.length; i++) {
+                if (checkOverlap(
+                    spawnX - FOOD_PADDING, 
+                    spawnY - FOOD_PADDING, 
+                    ITEM_SIZE + FOOD_PADDING * 2, 
+                    ITEM_SIZE + FOOD_PADDING * 2, 
+                    items[i].x, 
+                    items[i].y, 
+                    items[i].w, 
+                    items[i].h
+                )) {
+                    overlapsWithOtherFood = true;
+                    break;
+                }
+            }
+
+            if (dist >= MIN_SPAWN_DIST && !overlapsWithOtherFood) {
+                validPosition = true;
+            }
+
+            attempts++;
+        } while (!validPosition && attempts < 100);
+
+        return {
+            x: spawnX,
+            y: spawnY,
+            w: ITEM_SIZE,
+            h: ITEM_SIZE,
+            currentImg: foodImgs[Math.floor(Math.random() * foodImgs.length)]
+        };
+    }
+
+    function syncItemsArray() {
+        if (!gameStarted || isCompleting) return;
+        const remainingToTarget = TARGET_COUNT - collectedCount;
+        const targetCount = Math.min(getTargetItemCount(), remainingToTarget);
+
+        while (items.length > targetCount) {
+            items.pop();
+        }
+
+        while (items.length < targetCount) {
+            items.push(createSingleItem());
+        }
+    }
+
+    function startGame() {
+        if (!gameStarted && !isFadingOutStart) {
+            isFadingOutStart = true;
+            startFadeStartTime = Date.now();
+            
+            gameStarted = true;
+            highestStageIndex = 0;
+            previousStageIndex = 0;
+            syncItemsArray();
+            syncEnemiesArray();
+        }
+    }
+
+    function resetGame() {
+        collectedCount = 0;
+        highestStageIndex = 0;
+        previousStageIndex = 0;
+        isCompleting = false;
+        completionStartTime = 0;
+        gameOver = false;
+        canRestart = false;
+        gameOverTime = 0;
+        gameStarted = false;
+        isFadingOutStart = false;
+        player.x = 960;
+        player.y = 540;
+        items.length = 0;
+        activeEnemies.length = 0;
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen().catch(() => {});
+        }
+    }
+
+    window.addEventListener('keydown', e => {
+        keys[e.key] = true;
+
+        if (e.key === 'F11') return;
+
+        if (e.key === ' ' || e.key === 'Spacebar') {
+            startGame();
+        }
+
+        if (gameOver && canRestart && (e.key === ' ' || e.key === 'Enter')) {
+            resetGame();
+        }
+    });
+
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    window.addEventListener('click', () => {
+        startGame();
+        if (gameOver && canRestart) {
+            resetGame();
+        }
+    });
+
+    function handleGamepadInput() {
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        const gp = gamepads[0];
+        if (!gp) return { x: 0, y: 0, isSprinting: false };
+
+        let dx = 0;
+        let dy = 0;
+
+        const deadzone = 0.2;
+        if (Math.abs(gp.axes[0]) > deadzone) dx = gp.axes[0];
+        if (Math.abs(gp.axes[1]) > deadzone) dy = gp.axes[1];
+
+        if (gp.buttons[12] && gp.buttons[12].pressed) dy = -1;
+        if (gp.buttons[13] && gp.buttons[13].pressed) dy = 1;
+        if (gp.buttons[14] && gp.buttons[14].pressed) dx = -1;
+        if (gp.buttons[15] && gp.buttons[15].pressed) dx = 1;
+
+        const isSouthPressed = gp.buttons[0] && gp.buttons[0].pressed;
+        if (isSouthPressed) {
+            startGame();
+        }
+
+        if (gameOver && canRestart && isSouthPressed && !southButtonPressedLastFrame) {
+            resetGame();
+        }
+        southButtonPressedLastFrame = isSouthPressed;
+
+        const isNorthPressed = gp.buttons[3] && gp.buttons[3].pressed;
+        if (isNorthPressed && !northButtonPressedLastFrame) {
+            toggleFullscreen();
+        }
+        northButtonPressedLastFrame = isNorthPressed;
+
+        return { x: dx, y: dy, isSprinting: isSouthPressed };
+    }
+
+    function playCollectSound() {
+        collectSound.currentTime = 0;
+        collectSound.play().catch(() => {});
+    }
+
+    function playEnemyHitSound() {
+        enemyHitSound.currentTime = 0;
+        enemyHitSound.play().catch(() => {});
+    }
+
+    function playStageSound() {
+        stageSound.currentTime = 0;
+        stageSound.play().catch(() => {});
+    }
+
+    function playCompleteSound() {
+        completeSound.currentTime = 0;
+        completeSound.play().catch(() => {});
+    }
+
+    function getCurrentBg() {
+        return bgImgs[getStageIndex()];
+    }
+
+    function getCurrentPlayerImg() {
+        return playerImgs[getStageIndex()];
+    }
+
+    function updateEnemies() {
+        activeEnemies.forEach(enemy => {
+            if (enemy.isCooldown) {
+                enemy.cooldownTimer--;
+                if (enemy.cooldownTimer <= 0) {
+                    enemy.isCooldown = false;
+                }
+                return;
+            }
+
+            if (enemy.changeDirTimer <= 0) {
+                const angle = Math.random() * Math.PI * 2;
+                const currentSpeed = enemy.speed * (0.8 + Math.random() * 0.6);
+                enemy.vx = Math.cos(angle) * currentSpeed;
+                enemy.vy = Math.sin(angle) * currentSpeed;
+                enemy.changeDirTimer = Math.floor(Math.random() * 60) + 30;
+            }
+            enemy.changeDirTimer--;
+
+            enemy.x += enemy.vx;
+            enemy.y += enemy.vy;
+
+            if (enemy.x < 0) { 
+                enemy.x = 0; 
+                enemy.vx = Math.abs(enemy.vx); 
+                enemy.changeDirTimer = Math.floor(Math.random() * 60) + 30;
+            }
+            if (enemy.x > 1920 - enemy.w) { 
+                enemy.x = 1920 - enemy.w; 
+                enemy.vx = -Math.abs(enemy.vx); 
+                enemy.changeDirTimer = Math.floor(Math.random() * 60) + 30;
+            }
+            if (enemy.y < 0) { 
+                enemy.y = 0; 
+                enemy.vy = Math.abs(enemy.vy); 
+                enemy.changeDirTimer = Math.floor(Math.random() * 60) + 30;
+            }
+            if (enemy.y > 1080 - enemy.h) { 
+                enemy.y = 1080 - enemy.h; 
+                enemy.vy = -Math.abs(enemy.vy); 
+                enemy.changeDirTimer = Math.floor(Math.random() * 60) + 30;
+            }
+
+            if (!isCompleting && checkOverlap(player.x, player.y, player.w, player.h, enemy.x, enemy.y, enemy.w, enemy.h)) {
+                playEnemyHitSound();
+
+                collectedCount = Math.max(0, collectedCount - 10);
+                checkStageTransition();
+                
+                enemy.isCooldown = true;
+                enemy.cooldownTimer = 150;
+                enemy.changeDirTimer = 0;
+                enemy.vx = 0;
+                enemy.vy = 0;
+
+                syncItemsArray();
+                syncEnemiesArray();
+            }
+        });
+    }
+
+    function update() {
+        if (isFadingOutStart) {
+            const elapsed = Date.now() - startFadeStartTime;
+            if (elapsed >= START_FADE_DURATION_MS) {
+                isFadingOutStart = false;
+            } else {
+                handleGamepadInput();
+                return;
+            }
+        }
+
+        if (!gameStarted) {
+            handleGamepadInput();
+            return;
+        }
+
+        if (isCompleting) {
+            handleGamepadInput();
+            const elapsed = Date.now() - completionStartTime;
+            if (elapsed >= CELEBRATION_DELAY_MS) {
+                isCompleting = false;
+                gameOver = true;
+                gameOverTime = Date.now();
+                canRestart = false;
+                items.length = 0;
+            }
+            return;
+        }
+
+        if (gameOver) {
+            handleGamepadInput();
+            if (!canRestart && Date.now() - gameOverTime >= 2000) {
+                canRestart = true;
+            }
+            return;
+        }
+
+        let moveX = 0;
+        let moveY = 0;
+
+        if (keys['w'] || keys['ArrowUp']) moveY -= 1;
+        if (keys['s'] || keys['ArrowDown']) moveY += 1;
+        if (keys['a'] || keys['ArrowLeft']) moveX -= 1;
+        if (keys['d'] || keys['ArrowRight']) moveX += 1;
+
+        const gpInput = handleGamepadInput();
+        moveX += gpInput.x;
+        moveY += gpInput.y;
+
+        const isKeyboardSprinting = keys[' '];
+        const isSprinting = isKeyboardSprinting || gpInput.isSprinting;
+        const currentSpeed = isSprinting ? BASE_SPEED * SPRINT_MULTIPLIER : BASE_SPEED;
+
+        player.x += moveX * currentSpeed;
+        player.y += moveY * currentSpeed;
+
+        player.x = Math.max(0, Math.min(1920 - player.w, player.x));
+        player.y = Math.max(0, Math.min(1080 - player.h, player.y));
+
+        updateEnemies();
+
+        for (let i = items.length - 1; i >= 0; i--) {
+            const item = items[i];
+            if (checkOverlap(player.x, player.y, player.w, player.h, item.x, item.y, item.w, item.h)) {
+                collectedCount++;
+                playCollectSound();
+                checkStageTransition();
+
+                items.splice(i, 1);
+
+                if (collectedCount >= TARGET_COUNT) {
+                    isCompleting = true;
+                    completionStartTime = Date.now();
+                    playCompleteSound();
+                    break;
+                } else {
+                    syncItemsArray();
+                    syncEnemiesArray();
+                }
+            }
+        }
+    }
+
+    function drawStartScreen(alpha = 1.0) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fillRect(0, 0, 1920, 1080);
+
+        ctx.textAlign = 'center';
+        
+        ctx.font = 'bold 72px sans-serif';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 6;
+        ctx.strokeText('ARCADIA', 960, 480);
+        ctx.fillStyle = '#ffff00';
+        ctx.fillText('ARCADIA', 960, 480);
+
+        ctx.font = 'italic 44px sans-serif';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
+        ctx.strokeText('No Pain No Gain', 960, 545);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('No Pain No Gain', 960, 545);
+
+        ctx.font = 'bold 32px sans-serif';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.strokeText('Press Space to Start', 960, 620);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Press Space to Start', 960, 620);
+
+        ctx.restore();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, 1920, 1080);
+
+        const currentBg = getCurrentBg();
+        if (currentBg && currentBg.complete && currentBg.naturalWidth !== 0) {
+            ctx.drawImage(currentBg, 0, 0, 1920, 1080);
+        } else {
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, 1920, 1080);
+        }
+
+        if (!gameStarted) {
+            drawStartScreen(1.0);
+            return;
+        }
+
+        if (!gameOver) {
+            let fadeAlpha = 1.0;
+            if (isCompleting) {
+                const elapsed = Date.now() - completionStartTime;
+                fadeAlpha = Math.max(0, 1.0 - (elapsed / CELEBRATION_DELAY_MS));
+            }
+
+            ctx.save();
+            ctx.globalAlpha = fadeAlpha;
+
+            items.forEach(item => {
+                if (item.currentImg && item.currentImg.complete) {
+                    ctx.drawImage(item.currentImg, item.x, item.y, item.w, item.h);
+                } else {
+                    ctx.fillStyle = '#ff8000';
+                    ctx.fillRect(item.x, item.y, item.w, item.h);
+                }
+            });
+
+            activeEnemies.forEach(enemy => {
+                if (enemy.img && enemy.img.complete && enemy.img.naturalWidth !== 0) {
+                    const enemyAlpha = enemy.isCooldown ? fadeAlpha * 0.5 : fadeAlpha;
+                    ctx.globalAlpha = enemyAlpha;
+                    ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.w, enemy.h);
+                    ctx.globalAlpha = fadeAlpha;
+                } else {
+                    ctx.fillStyle = enemy.isCooldown ? '#880000' : '#ff0000';
+                    ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+                }
+            });
+
+            const playerImg = getCurrentPlayerImg();
+            if (playerImg && playerImg.complete && playerImg.naturalWidth !== 0) {
+                ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
+            } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(player.x, player.y, player.w, player.h);
+            }
+
+            ctx.restore();
+
+            ctx.font = 'bold 72px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 6;
+            ctx.strokeText(collectedCount, 960, 90);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(collectedCount, 960, 90);
+
+            if (isFadingOutStart) {
+                const elapsed = Date.now() - startFadeStartTime;
+                const startAlpha = Math.max(0, 1.0 - (elapsed / START_FADE_DURATION_MS));
+                if (startAlpha > 0) {
+                    drawStartScreen(startAlpha);
+                }
+            }
+        } else {
+            const elapsedGameOver = Date.now() - gameOverTime;
+            const endAlpha = Math.min(1.0, elapsedGameOver / END_FADE_DURATION_MS);
+
+            ctx.save();
+            ctx.globalAlpha = endAlpha;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            ctx.fillRect(0, 0, 1920, 1080);
+
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 72px sans-serif';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 6;
+            ctx.strokeText('CONGRATS, YOU WIN!', 960, 500);
+            ctx.fillStyle = '#ffff00';
+            ctx.fillText('CONGRATS, YOU WIN!', 960, 500);
+
+            if (canRestart) {
+                ctx.font = 'bold 36px sans-serif';
+                ctx.strokeText('Press Space to Restart', 960, 590);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('Press Space to Restart', 960, 590);
+            }
+
+            ctx.restore();
+        }
+    }
+
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function resize() {
+        const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        document.getElementById('game-container').style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
