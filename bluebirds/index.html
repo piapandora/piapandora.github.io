@@ -24,9 +24,23 @@
     const ANIMATION_FRAMES = 2;       // Total PNG frame images (obj01.png through obj02.png)
     const ANIMATION_FPS = 6;          // Target animation speed (frames per second)
 
-    // Load Background Image
-    const bgImg = new Image();
-    bgImg.src = 'bg.png';
+    // Preload both background images
+    const bgNormal = new Image();
+    bgNormal.src = 'bg.png';
+
+    const bgAI = new Image();
+    bgAI.src = 'aibg.png';
+
+    // Active background reference (defaults to bg.png)
+    let currentBg = bgNormal;
+
+    // --- SPACEBAR TOGGLE LOGIC ---
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault(); // Prevent page scrolling on spacebar
+            currentBg = (currentBg === bgNormal) ? bgAI : bgNormal;
+        }
+    });
 
     // Load Object Frame Sequence (obj01.png to obj02.png)
     const objFrames = [];
@@ -140,14 +154,14 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Draw background PNG scaled to cover & centered
-        if (bgImg.complete && bgImg.naturalWidth !== 0) {
-            const scale = Math.max(canvas.width / bgImg.naturalWidth, canvas.height / bgImg.naturalHeight);
-            const drawWidth = bgImg.naturalWidth * scale;
-            const drawHeight = bgImg.naturalHeight * scale;
+        if (currentBg.complete && currentBg.naturalWidth !== 0) {
+            const scale = Math.max(canvas.width / currentBg.naturalWidth, canvas.height / currentBg.naturalHeight);
+            const drawWidth = currentBg.naturalWidth * scale;
+            const drawHeight = currentBg.naturalHeight * scale;
             const offsetX = (canvas.width - drawWidth) / 2;
             const offsetY = (canvas.height - drawHeight) / 2;
 
-            ctx.drawImage(bgImg, offsetX, offsetY, drawWidth, drawHeight);
+            ctx.drawImage(currentBg, offsetX, offsetY, drawWidth, drawHeight);
         } else {
             ctx.fillStyle = '#080c14';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -178,7 +192,7 @@
                 }
             }
 
-            ctx.restore(); // Restore context state to avoid affecting other objects or background
+            ctx.restore(); // Restore context state
         });
     }
 
@@ -190,6 +204,5 @@
 
     requestAnimationFrame(loop);
 </script>
-
 </body>
 </html>
