@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algo Avatar Studio</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    /* Smooth CSS Transitions for SVG Fills & Backgrounds */
+    svg path, svg circle, svg ellipse, svg rect, #svg-card {
+      transition: fill 0.35s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Subtle button click feedback */
+    .btn-active:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 flex flex-col items-center justify-between p-4 sm:p-8 selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navigation / Header -->
+  <header class="w-full max-w-xl flex items-center justify-between py-2 px-1 mb-2">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+        <i class="fa-solid fa-shapes text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-white">Algo Avatar Studio</h1>
+        <p class="text-xs text-slate-400">Geometric Vector Customizer</p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button id="btn-randomize-all" class="btn-active flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium text-xs sm:text-sm transition-all shadow-lg shadow-indigo-600/25">
+        <i class="fa-solid fa-dice text-sm"></i>
+        <span>Randomize</span>
+      </button>
+      <button id="btn-reset" class="btn-active flex items-center justify-center w-9 h-9 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-all border border-slate-700" title="Reset to Original">
+        <i class="fa-solid fa-rotate-left text-sm"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Display Container -->
+  <main class="w-full max-w-xl flex-1 flex flex-col items-center justify-center my-auto">
+    
+    <!-- SVG Container Card (Full-bleed without extra interior paspartout padding) -->
+    <div id="svg-card" class="relative w-full aspect-square max-w-[420px] rounded-3xl border border-slate-700/60 shadow-2xl overflow-hidden transition-colors duration-400">
+      
+      <!-- Display SVG -->
+      <svg id="avatar-svg" class="w-full h-full block" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <!-- SVG Background Rect for solid export rendering -->
+        <rect id="svg-bg-rect" x="0" y="0" width="1024" height="1024" fill="#0f172a" />
+
+        <g stroke="#000000" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+
+          <!-- Base circle (FACE) -->
+          <circle id="svg-face" cx="512" cy="556.02755" r="248.69" fill="#fed7aa" stroke="none" />
+
+          <!-- Green band (VISOR) -->
+          <path id="svg-visor" d="M 277.53,473.12755 H 746.47 A 248.69,248.69 0 0 1 760.69,556.02755 H 263.31 A 248.69,248.69 0 0 1 277.53,473.12755 Z"
+                fill="#16a34a" stroke="none" />
+
+          <!-- Visor boundary lines -->
+          <line x1="263.31" y1="556.02755" x2="760.69" y2="556.02755" />
+          <line x1="277.53" y1="473.12755" x2="746.47" y2="473.12755" />
+
+          <!-- Hair dome (HAIR) -->
+          <path id="svg-hair" fill="#dc2626" fill-rule="evenodd" stroke="none"
+                d="M 160.28,731.88755 A 380.70,380.70 0 1 1 863.72,731.88755 Z
+                   M 336.14,731.88755 V 380.17755 H 687.86 V 731.88755 Z" />
+
+          <!-- Inscribed square frame lines -->
+          <path d="M 336.14,731.88755 V 380.17755 H 687.86 V 731.88755" fill="none" />
+
+          <!-- Extensions to point lines -->
+          <line x1="160.28" y1="731.88755" x2="336.14" y2="731.88755" />
+          <line x1="687.86" y1="731.88755" x2="863.72" y2="731.88755" />
+
+          <!-- Hairline arc + Chin stroke -->
+          <path d="M 160.28,731.88755 A 380.70,380.70 0 1 1 863.72,731.88755" fill="none" />
+          <path d="M 336.14,731.88755 A 248.69,248.69 0 0 0 687.86,731.88755" fill="none" />
+
+          <!-- Nose/Mouth ellipse (NOSE) -->
+          <ellipse id="svg-nose" cx="512" cy="626.19755" rx="43.96" ry="29.31" fill="#d9a87d" />
+
+          <!-- Flattened "X" -->
+          <line x1="468.04" y1="685.87755" x2="555.96" y2="744.49755" />
+          <line x1="468.04" y1="744.49755" x2="555.96" y2="685.87755" />
+
+        </g>
+      </svg>
+    </div>
+
+    <!-- Action Controls Grid (Buttons 1, 2, 3, 4) -->
+    <div class="w-full max-w-xl mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      
+      <!-- Button 1: Background -->
+      <button id="btn-1" class="btn-active group relative bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 rounded-2xl p-3.5 flex flex-col items-center justify-center transition-all shadow-lg hover:border-slate-500">
+        <div class="w-9 h-9 rounded-full border-2 border-slate-600/80 my-0.5 flex items-center justify-center font-bold text-base text-white shadow-inner transition-transform group-hover:scale-110" id="indicator-1">
+          1
+        </div>
+        <span class="text-xs font-semibold text-slate-300 group-hover:text-white mt-1">BG</span>
+        <span class="text-[10px] font-mono text-slate-400 mt-0.5 uppercase" id="code-bg">#0f172a</span>
+      </button>
+
+      <!-- Button 2: Face (+ Auto Darker Nose) -->
+      <button id="btn-2" class="btn-active group relative bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 rounded-2xl p-3.5 flex flex-col items-center justify-center transition-all shadow-lg hover:border-slate-500">
+        <div class="w-9 h-9 rounded-full border-2 border-slate-600/80 my-0.5 flex items-center justify-center font-bold text-base text-white shadow-inner transition-transform group-hover:scale-110" id="indicator-2">
+          2
+        </div>
+        <span class="text-xs font-semibold text-slate-300 group-hover:text-white mt-1">FACE</span>
+        <span class="text-[10px] font-mono text-slate-400 mt-0.5 uppercase" id="code-face">#fed7aa</span>
+      </button>
+
+      <!-- Button 3: Visor -->
+      <button id="btn-3" class="btn-active group relative bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 rounded-2xl p-3.5 flex flex-col items-center justify-center transition-all shadow-lg hover:border-slate-500">
+        <div class="w-9 h-9 rounded-full border-2 border-slate-600/80 my-0.5 flex items-center justify-center font-bold text-base text-white shadow-inner transition-transform group-hover:scale-110" id="indicator-3">
+          3
+        </div>
+        <span class="text-xs font-semibold text-slate-300 group-hover:text-white mt-1">VISOR</span>
+        <span class="text-[10px] font-mono text-slate-400 mt-0.5 uppercase" id="code-visor">#16a34a</span>
+      </button>
+
+      <!-- Button 4: Hair -->
+      <button id="btn-4" class="btn-active group relative bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 rounded-2xl p-3.5 flex flex-col items-center justify-center transition-all shadow-lg hover:border-slate-500">
+        <div class="w-9 h-9 rounded-full border-2 border-slate-600/80 my-0.5 flex items-center justify-center font-bold text-base text-white shadow-inner transition-transform group-hover:scale-110" id="indicator-4">
+          4
+        </div>
+        <span class="text-xs font-semibold text-slate-300 group-hover:text-white mt-1">HAIR</span>
+        <span class="text-[10px] font-mono text-slate-400 mt-0.5 uppercase" id="code-hair">#dc2626</span>
+      </button>
+
+    </div>
+
+    <!-- Clickable Download Trigger Bar -->
+    <button id="btn-download-trigger" class="btn-active mt-5 flex items-center justify-center gap-2.5 text-xs text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/90 px-4 py-2.5 rounded-xl border border-slate-700/70 transition-all shadow-md group cursor-pointer w-full max-w-xl">
+      <kbd class="px-2 py-0.5 text-[10px] font-semibold text-slate-200 bg-slate-700 border border-slate-600 rounded-md shadow-sm group-hover:border-indigo-400 transition-colors">ENTER</kbd>
+      <span class="font-medium">Press <strong class="text-white">ENTER</strong> or <span class="underline decoration-indigo-400 decoration-2 underline-offset-2">Click Here</span> to Download (SVG + PNG)</span>
+      <i class="fa-solid fa-download text-indigo-400 ml-1 group-hover:translate-y-0.5 transition-transform"></i>
+    </button>
+
+  </main>
+
+  <script>
+    // Configurable PNG Export Dimension
+    const PNG_EXPORT_SIZE = 1024;
+
+    // Custom Swatch Palette for Random Cycles
+    const SWATCH_PALETTE = [
+      "#2e222f", "#3e3546", "#625565", "#966c6c", "#ab947a", "#694f62",
+      "#7f708a", "#9babb2", "#c7dcd0", "#ffffff", "#6e2727", "#b33831",
+      "#ea4f36", "#f57d4a", "#ae2334", "#e83b3b", "#fb6b1d", "#f79617",
+      "#f9c22b", "#7a3045", "#9e4539", "#cd683d", "#e6904e", "#fbb954",
+      "#4c3e24", "#676633", "#a2a947", "#d5e04b", "#fbff86", "#165a4c",
+      "#239063", "#1ebc73", "#91db69", "#cddf6c", "#313638", "#374e4a",
+      "#547e64", "#92a984", "#b2ba90", "#0b5e65", "#0b8a8f", "#0eaf9b",
+      "#30e1b9", "#8ff8e2", "#323353", "#484a77", "#4d65b4", "#4d9be6",
+      "#8fd3ff", "#45293f", "#6b3e75", "#905ea9", "#a884f3", "#eaaded",
+      "#753c54", "#a24b6f", "#cf657f", "#ed8099", "#831c5d", "#c32454",
+      "#f04f78", "#f68181", "#fca790", "#fdcbb0", "#5d275d", "#ef7d57",
+      "#ffcd75", "#a7f070", "#38b764", "#257179", "#29366f", "#3b5dc9",
+      "#41a6f6", "#73eff7", "#94b0c2", "#566c86"
+    ];
+
+    // Initial Default State using original colors
+    const DEFAULTS = {
+      bg: '#0f172a',
+      face: '#fed7aa',
+      visor: '#16a34a',
+      hair: '#dc2626',
+      nose: '#d9a87d'
+    };
+
+    // Current State
+    let currentState = { ...DEFAULTS };
+
+    // DOM Elements
+    const elSvgBgRect = document.getElementById('svg-bg-rect');
+    const elSvgCard = document.getElementById('svg-card');
+    const elFace = document.getElementById('svg-face');
+    const elVisor = document.getElementById('svg-visor');
+    const elHair = document.getElementById('svg-hair');
+    const elNose = document.getElementById('svg-nose');
+
+    // Button Indicators
+    const ind1 = document.getElementById('indicator-1');
+    const ind2 = document.getElementById('indicator-2');
+    const ind3 = document.getElementById('indicator-3');
+    const ind4 = document.getElementById('indicator-4');
+
+    // Text Code Elements
+    const txtBg = document.getElementById('code-bg');
+    const txtFace = document.getElementById('code-face');
+    const txtVisor = document.getElementById('code-visor');
+    const txtHair = document.getElementById('code-hair');
+
+    // Convert Hex to HSL
+    function hexToHSL(hex) {
+      let c = hex.replace('#', '');
+      if (c.length === 3) {
+        c = c.split('').map(x => x + x).join('');
+      }
+      const num = parseInt(c, 16);
+      let r = (num >> 16) & 255;
+      let g = (num >> 8) & 255;
+      let b = num & 255;
+
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+
+    // Convert HSL to Hex
+    function hslToHex(h, s, l) {
+      s /= 100;
+      l /= 100;
+      const k = n => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      const toHex = x => {
+        const hex = Math.round(x * 255).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      };
+      return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+    }
+
+    // Pick a random swatch from SWATCH_PALETTE
+    function getRandomSwatch() {
+      const index = Math.floor(Math.random() * SWATCH_PALETTE.length);
+      return SWATCH_PALETTE[index];
+    }
+
+    // Calculate a color 15% darker
+    function getDarkerColor(hex, percent = 15) {
+      const hsl = hexToHSL(hex);
+      const newLightness = Math.max(0, hsl.l - percent);
+      return hslToHex(hsl.h, hsl.s, newLightness);
+    }
+
+    function updateUI() {
+      // 1. Background (Only updates SVG canvas background, not app UI)
+      elSvgCard.style.backgroundColor = currentState.bg;
+      elSvgBgRect.setAttribute('fill', currentState.bg);
+      ind1.style.backgroundColor = currentState.bg;
+      txtBg.textContent = currentState.bg;
+
+      // 2. Face
+      elFace.setAttribute('fill', currentState.face);
+      ind2.style.backgroundColor = currentState.face;
+      txtFace.textContent = currentState.face;
+
+      // 2b. Nose (15% darker than Face)
+      currentState.nose = getDarkerColor(currentState.face, 15);
+      elNose.setAttribute('fill', currentState.nose);
+
+      // 3. Visor
+      elVisor.setAttribute('fill', currentState.visor);
+      ind3.style.backgroundColor = currentState.visor;
+      txtVisor.textContent = currentState.visor;
+
+      // 4. Hair
+      elHair.setAttribute('fill', currentState.hair);
+      ind4.style.backgroundColor = currentState.hair;
+      txtHair.textContent = currentState.hair;
+    }
+
+    // Export artwork as SVG and PNG files
+    function exportArtwork() {
+      const svgElement = document.getElementById('avatar-svg');
+      const serializer = new XMLSerializer();
+      let svgString = serializer.serializeToString(svgElement);
+
+      // 1. Export SVG File
+      const blobSVG = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const urlSVG = URL.createObjectURL(blobSVG);
+      const linkSVG = document.createElement('a');
+      linkSVG.href = urlSVG;
+      linkSVG.download = `avatar-${Date.now()}.svg`;
+      document.body.appendChild(linkSVG);
+      linkSVG.click();
+      document.body.removeChild(linkSVG);
+      URL.revokeObjectURL(urlSVG);
+
+      // 2. Export High-Res PNG File
+      const img = new Image();
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = PNG_EXPORT_SIZE;
+        canvas.height = PNG_EXPORT_SIZE;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.drawImage(img, 0, 0, PNG_EXPORT_SIZE, PNG_EXPORT_SIZE);
+        URL.revokeObjectURL(url);
+
+        const linkPNG = document.createElement('a');
+        linkPNG.href = canvas.toDataURL('image/png');
+        linkPNG.download = `avatar-${PNG_EXPORT_SIZE}px-${Date.now()}.png`;
+        document.body.appendChild(linkPNG);
+        linkPNG.click();
+        document.body.removeChild(linkPNG);
+      };
+
+      img.src = url;
+    }
+
+    // Keydown listener for Enter key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        exportArtwork();
+      }
+    });
+
+    // Click trigger for Download Bar
+    document.getElementById('btn-download-trigger').addEventListener('click', () => {
+      exportArtwork();
+    });
+
+    // Event Listeners for Buttons 1-4 (Using SWATCH_PALETTE)
+    document.getElementById('btn-1').addEventListener('click', () => {
+      currentState.bg = getRandomSwatch();
+      updateUI();
+    });
+
+    document.getElementById('btn-2').addEventListener('click', () => {
+      currentState.face = getRandomSwatch();
+      updateUI();
+    });
+
+    document.getElementById('btn-3').addEventListener('click', () => {
+      currentState.visor = getRandomSwatch();
+      updateUI();
+    });
+
+    document.getElementById('btn-4').addEventListener('click', () => {
+      currentState.hair = getRandomSwatch();
+      updateUI();
+    });
+
+    // Randomize All Button
+    document.getElementById('btn-randomize-all').addEventListener('click', () => {
+      currentState.bg = getRandomSwatch();
+      currentState.face = getRandomSwatch();
+      currentState.visor = getRandomSwatch();
+      currentState.hair = getRandomSwatch();
+      updateUI();
+    });
+
+    // Reset Button
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      currentState = { ...DEFAULTS };
+      updateUI();
+    });
+
+    // Initialize UI on load
+    window.onload = () => {
+      updateUI();
+    };
+  </script>
+</body>
+</html>
