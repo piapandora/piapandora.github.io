@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG to JPG 720 Resizer</title>
+	<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #drop-zone.dragover { border-color: #3b82f6; background-color: #eff6ff; }
+    </style>
+</head>
+<body class="bg-gray-800 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+        <h1 class="text-2xl font-bold mb-4 text-gray-800">PNG to JPG 720 Resizer</h1>
+        
+        <div class="flex items-center justify-between mb-6">
+            <span class="text-sm font-medium text-gray-700">Bulk Mode (ZIP)</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="bulkToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center transition-colors cursor-pointer mb-4">
+            <p class="text-gray-500">Drag & Drop PNGs here or click to upload</p>
+            <input type="file" id="fileInput" multiple accept="image/png" class="hidden">
+        </div>
+
+        <div id="status" class="text-sm text-blue-600 font-medium hidden">Processing...</div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('fileInput');
+        const bulkToggle = document.getElementById('bulkToggle');
+        const status = document.getElementById('status');
+
+        // Trigger file input on click
+        dropZone.onclick = () => fileInput.click();
+
+        // Drag & Drop Handlers
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        };
+
+        fileInput.onchange = (e) => handleFiles(e.target.files);
+
+        async function handleFiles(files) {
+            const pngFiles = Array.from(files).filter(f => f.type === "image/png");
+            if (pngFiles.length === 0) return;
+
+            const isBulk = bulkToggle.checked;
+
+            // Validation: Refuse batch if > 5 and Bulk Mode is OFF
+            if (!isBulk && pngFiles.length > 5) {
+                alert(`You've dropped ${pngFiles.length} files. Please enable "Bulk Mode" to process more than 5 files at once.`);
+                fileInput.value = ""; // Reset for next attempt
+                return;
+            }
+
+            status.classList.remove('hidden');
+            
+            try {
+                if (isBulk) {
+                    const zip = new JSZip();
+                    for (const file of pngFiles) {
+                        const { blob, name } = await processImage(file);
+                        zip.file(name, blob);
+                    }
+                    const content = await zip.generateAsync({type: "blob"});
+                    downloadBlob(content, "resized_images.zip");
+                } else {
+                    for (const file of pngFiles) {
+                        const { blob, name } = await processImage(file);
+                        downloadBlob(blob, name);
+                    }
+                }
+            } catch (err) {
+                console.error("Processing error:", err);
+                alert("Something went wrong while processing the images.");
+            } finally {
+                status.classList.add('hidden');
+                fileInput.value = ""; // Clear selection
+            }
+        }
+
+        function processImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        const targetHeight = 720;
+                        const scaleFactor = targetHeight / img.height;
+                        canvas.width = img.width * scaleFactor;
+                        canvas.height = targetHeight;
+
+                        // Fill white background (JPG doesn't support transparency)
+                        ctx.fillStyle = "white";
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        canvas.toBlob((blob) => {
+                            resolve({
+                                blob,
+                                name: file.name.replace(/\.png$/i, '.jpg')
+                            });
+                        }, 'image/jpeg', 0.9);
+                    };
+                };
+            });
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
