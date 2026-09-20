@@ -101,7 +101,7 @@
       {
         id: 'chest', name: 'Chest (Top Torso)', zIndex: 0, x: 360, y: 220, rot: 0,
         w: 110, h: 100, color: '#8b5cf6', parentId: null, activePivotIdx: 0, isChest: true,
-        imgSrc: 'chest.png', flipX: false,
+        imgSrc: 'parts/chest.png', flipX: false,
         magnets: [
           { id: 'center', relX: 0, relY: 0, hidden: true },
           { id: 'neck', relX: 0, relY: -50 },
@@ -114,39 +114,39 @@
       {
         id: 'head', name: 'Paper Doll Face', zIndex: 1, x: 360, y: 60, rot: 0,
         w: 150, h: 120, color: '#fed7aa', parentId: null, activePivotIdx: 0, isFace: true,
-        imgSrc: 'head.png', flipX: false,
+        imgSrc: 'parts/head.png', flipX: false,
         magnets: [{ id: 'head_bottom', relX: 0, relY: 42 }]
       },
       // HANDS & FEET
       {
         id: 'hand_l', name: 'Left Hand', zIndex: 15, x: 200, y: 300, rot: 0,
         w: 20, h: 50, color: '#fed7aa', parentId: null, activePivotIdx: 0,
-        imgSrc: 'hand.png', flipX: false,
+        imgSrc: 'parts/hand.png', flipX: false,
         magnets: [{ id: 'hand_wrist_l', relX: -3, relY: -18 }]
       },
       {
         id: 'hand_r', name: 'Right Hand', zIndex: 15, x: 520, y: 300, rot: 0,
         w: 20, h: 50, color: '#fed7aa', parentId: null, activePivotIdx: 0,
-        imgSrc: 'hand.png', flipX: true,
+        imgSrc: 'parts/hand.png', flipX: true,
         magnets: [{ id: 'hand_wrist_r', relX: -3, relY: -18 }]
       },
       {
         id: 'foot_l', name: 'Left Foot', zIndex: -20, x: 210, y: 490, rot: 0,
         w: 75, h: 36, color: '#fed7aa', parentId: null, activePivotIdx: 0,
-        imgSrc: 'foot.png', flipX: false,
+        imgSrc: 'parts/foot.png', flipX: false,
         magnets: [{ id: 'foot_ankle_l', relX: -22, relY: -10 }]
       },
       {
         id: 'foot_r', name: 'Right Foot', zIndex: -20, x: 510, y: 490, rot: 0,
         w: 75, h: 36, color: '#fed7aa', parentId: null, activePivotIdx: 0,
-        imgSrc: 'foot.png', flipX: true,
+        imgSrc: 'parts/foot.png', flipX: true,
         magnets: [{ id: 'foot_ankle_r', relX: -22, relY: -10 }]
       },
       // LOWER ARMS & LEGS
       {
         id: 'forearm_l', name: 'Left Forearm', zIndex: 10, x: 235, y: 240, rot: 0,
         w: 30, h: 85, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
-        imgSrc: 'forearm.png', flipX: false,
+        imgSrc: 'parts/forearm.png', flipX: false,
         magnets: [
           { id: 'forearm_elbow_l', relX: 0, relY: -25 },
           { id: 'wrist_l', relX: -2, relY: 35 }
@@ -155,7 +155,7 @@
       {
         id: 'forearm_r', name: 'Right Forearm', zIndex: 10, x: 485, y: 240, rot: 0,
         w: 30, h: 85, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
-        imgSrc: 'forearm.png', flipX: true,
+        imgSrc: 'parts/forearm.png', flipX: true,
         magnets: [
           { id: 'forearm_elbow_r', relX: 0, relY: -25 },
           { id: 'wrist_r', relX: -2, relY: 35 }
@@ -164,7 +164,7 @@
       {
         id: 'shin_l', name: 'Left Shin', zIndex: -15, x: 260, y: 450, rot: 0,
         w: 40, h: 120, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
-        imgSrc: 'shin.png', flipX: false,
+        imgSrc: 'parts/shin.png', flipX: false,
         magnets: [
           { id: 'shin_knee_l', relX: 0, relY: -50 },
           { id: 'ankle_l', relX: 10, relY: 50 }
@@ -173,7 +173,7 @@
       {
         id: 'shin_r', name: 'Right Shin', zIndex: -15, x: 460, y: 450, rot: 0,
         w: 40, h: 120, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
-        imgSrc: 'shin.png', flipX: true,
+        imgSrc: 'parts/shin.png', flipX: true,
         magnets: [
           { id: 'shin_knee_r', relX: 0, relY: -50 },
           { id: 'ankle_r', relX: 10, relY: 50 }
@@ -183,7 +183,7 @@
       {
         id: 'upper_arm_l', name: 'Left Upper Arm', zIndex: 5, x: 280, y: 190, rot: 0,
         w: 30, h: 95, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
-        imgSrc: 'upperarm.png', flipX: false,
+        imgSrc: 'parts/upperarm.png', flipX: false,
         magnets: [
           { id: 'shoulder_l', relX: 3, relY: -35 },
           { id: 'elbow_l', relX: 2, relY: 40 }
@@ -192,7 +192,7 @@
       {
         id: 'upper_arm_r', name: 'Right Upper Arm', zIndex: 5, x: 440, y: 190, rot: 0,
         w: 30, h: 95, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
-        imgSrc: 'upperarm.png', flipX: true,
+        imgSrc: 'parts/upperarm.png', flipX: true,
         magnets: [
           { id: 'shoulder_r', relX: 3, relY: -35 },
           { id: 'elbow_r', relX: 2, relY: 40 }
@@ -201,7 +201,7 @@
       {
         id: 'thigh_l', name: 'Left Thigh', zIndex: -10, x: 300, y: 370, rot: 0,
         w: 60, h: 140, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
-        imgSrc: 'thigh.png', flipX: false,
+        imgSrc: 'parts/thigh.png', flipX: false,
         magnets: [
           { id: 'hip_l', relX: 0, relY: -40},
           { id: 'knee_l', relX: 5, relY: 55 }
@@ -210,7 +210,7 @@
       {
         id: 'thigh_r', name: 'Right Thigh', zIndex: -10, x: 420, y: 370, rot: 0,
         w: 60, h: 140, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
-        imgSrc: 'thigh.png', flipX: true,
+        imgSrc: 'parts/thigh.png', flipX: true,
         magnets: [
           { id: 'hip_r', relX: 0, relY: -40 },
           { id: 'knee_r', relX: 5, relY: 55 }
@@ -220,7 +220,7 @@
       {
         id: 'pelvis', name: 'Pelvis (Bottom Torso)', zIndex: -5, x: 360, y: 320, rot: 0,
         w: 125, h: 144, color: '#1d4ed8', parentId: null, activePivotIdx: 0, isPelvis: true,
-        imgSrc: 'pelvis.png', flipX: false,
+        imgSrc: 'parts/pelvis.png', flipX: false,
         magnets: [
           { id: 'waist_top', relX: 0, relY: -55 },
           { id: 'left_hip', relX: -35, relY: 60 },
@@ -568,7 +568,7 @@
 
         const pngUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
-        link.download = 'paper-doll-puppet.png';
+        link.download = 'paper-doll.png';
         link.href = pngUrl;
         link.click();
 
