@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paper Doll Puppet Rig</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #3b82f6;
+      --text: #f8fafc;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: var(--bg-color);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      max-width: 720px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+    svg {
+      background: #0f172a;
+    /*
+      background: #090d16;
+    */
+      border-radius: 12px;
+      border: 1px solid #334155;
+      width: 100%;
+      height: 520px;
+      user-select: none;
+    }
+    .status {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 1.2em;
+    }
+    .download-btn {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .download-btn:hover {
+      background-color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Paper Doll Puppet Rig</h1>
+    <div class="status" id="status">Chest is locked. Drag parts to move, scroll to rotate, right-click to flip horizontally!</div>
+    <svg id="stage" viewBox="0 0 720 640"></svg>
+    <button class="download-btn" id="downloadBtn">Download PNG</button>
+  </div>
+
+  <script>
+    const stage = document.getElementById('stage');
+    const statusText = document.getElementById('status');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    const STAGE_W = 720;
+    const STAGE_H = 640;
+    const SNAP_DIST = 25;
+
+    const pieces = [
+      // UPPER TORSO
+      {
+        id: 'chest', name: 'Chest (Top Torso)', zIndex: 0, x: 360, y: 220, rot: 0,
+        w: 110, h: 100, color: '#8b5cf6', parentId: null, activePivotIdx: 0, isChest: true,
+        imgSrc: 'chest.png', flipX: false,
+        magnets: [
+          { id: 'center', relX: 0, relY: 0, hidden: true },
+          { id: 'neck', relX: 0, relY: -50 },
+          { id: 'left_shoulder', relX: -45, relY: -10 },
+          { id: 'right_shoulder', relX: 45, relY: -10 },
+          { id: 'waist_bottom', relX: 0, relY: 25 }
+        ]
+      },
+      // FACE / HEAD
+      {
+        id: 'head', name: 'Paper Doll Face', zIndex: 1, x: 360, y: 60, rot: 0,
+        w: 150, h: 120, color: '#fed7aa', parentId: null, activePivotIdx: 0, isFace: true,
+        imgSrc: 'head.png', flipX: false,
+        magnets: [{ id: 'head_bottom', relX: 0, relY: 42 }]
+      },
+      // HANDS & FEET
+      {
+        id: 'hand_l', name: 'Left Hand', zIndex: 15, x: 200, y: 300, rot: 0,
+        w: 20, h: 50, color: '#fed7aa', parentId: null, activePivotIdx: 0,
+        imgSrc: 'hand.png', flipX: false,
+        magnets: [{ id: 'hand_wrist_l', relX: -3, relY: -18 }]
+      },
+      {
+        id: 'hand_r', name: 'Right Hand', zIndex: 15, x: 520, y: 300, rot: 0,
+        w: 20, h: 50, color: '#fed7aa', parentId: null, activePivotIdx: 0,
+        imgSrc: 'hand.png', flipX: true,
+        magnets: [{ id: 'hand_wrist_r', relX: -3, relY: -18 }]
+      },
+      {
+        id: 'foot_l', name: 'Left Foot', zIndex: -20, x: 210, y: 490, rot: 0,
+        w: 75, h: 36, color: '#fed7aa', parentId: null, activePivotIdx: 0,
+        imgSrc: 'foot.png', flipX: false,
+        magnets: [{ id: 'foot_ankle_l', relX: -22, relY: -10 }]
+      },
+      {
+        id: 'foot_r', name: 'Right Foot', zIndex: -20, x: 510, y: 490, rot: 0,
+        w: 75, h: 36, color: '#fed7aa', parentId: null, activePivotIdx: 0,
+        imgSrc: 'foot.png', flipX: true,
+        magnets: [{ id: 'foot_ankle_r', relX: -22, relY: -10 }]
+      },
+      // LOWER ARMS & LEGS
+      {
+        id: 'forearm_l', name: 'Left Forearm', zIndex: 10, x: 235, y: 240, rot: 0,
+        w: 30, h: 85, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
+        imgSrc: 'forearm.png', flipX: false,
+        magnets: [
+          { id: 'forearm_elbow_l', relX: 0, relY: -25 },
+          { id: 'wrist_l', relX: -2, relY: 35 }
+        ]
+      },
+      {
+        id: 'forearm_r', name: 'Right Forearm', zIndex: 10, x: 485, y: 240, rot: 0,
+        w: 30, h: 85, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
+        imgSrc: 'forearm.png', flipX: true,
+        magnets: [
+          { id: 'forearm_elbow_r', relX: 0, relY: -25 },
+          { id: 'wrist_r', relX: -2, relY: 35 }
+        ]
+      },
+      {
+        id: 'shin_l', name: 'Left Shin', zIndex: -15, x: 260, y: 450, rot: 0,
+        w: 40, h: 120, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
+        imgSrc: 'shin.png', flipX: false,
+        magnets: [
+          { id: 'shin_knee_l', relX: 0, relY: -50 },
+          { id: 'ankle_l', relX: 10, relY: 50 }
+        ]
+      },
+      {
+        id: 'shin_r', name: 'Right Shin', zIndex: -15, x: 460, y: 450, rot: 0,
+        w: 40, h: 120, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
+        imgSrc: 'shin.png', flipX: true,
+        magnets: [
+          { id: 'shin_knee_r', relX: 0, relY: -50 },
+          { id: 'ankle_r', relX: 10, relY: 50 }
+        ]
+      },
+      // UPPER ARMS & LEGS
+      {
+        id: 'upper_arm_l', name: 'Left Upper Arm', zIndex: 5, x: 280, y: 190, rot: 0,
+        w: 30, h: 95, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
+        imgSrc: 'upperarm.png', flipX: false,
+        magnets: [
+          { id: 'shoulder_l', relX: 3, relY: -35 },
+          { id: 'elbow_l', relX: 2, relY: 40 }
+        ]
+      },
+      {
+        id: 'upper_arm_r', name: 'Right Upper Arm', zIndex: 5, x: 440, y: 190, rot: 0,
+        w: 30, h: 95, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
+        imgSrc: 'upperarm.png', flipX: true,
+        magnets: [
+          { id: 'shoulder_r', relX: 3, relY: -35 },
+          { id: 'elbow_r', relX: 2, relY: 40 }
+        ]
+      },
+      {
+        id: 'thigh_l', name: 'Left Thigh', zIndex: -10, x: 300, y: 370, rot: 0,
+        w: 60, h: 140, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
+        imgSrc: 'thigh.png', flipX: false,
+        magnets: [
+          { id: 'hip_l', relX: 0, relY: -40},
+          { id: 'knee_l', relX: 5, relY: 55 }
+        ]
+      },
+      {
+        id: 'thigh_r', name: 'Right Thigh', zIndex: -10, x: 420, y: 370, rot: 0,
+        w: 60, h: 140, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
+        imgSrc: 'thigh.png', flipX: true,
+        magnets: [
+          { id: 'hip_r', relX: 0, relY: -40 },
+          { id: 'knee_r', relX: 5, relY: 55 }
+        ]
+      },
+      // LOWER TORSO
+      {
+        id: 'pelvis', name: 'Pelvis (Bottom Torso)', zIndex: -5, x: 360, y: 320, rot: 0,
+        w: 125, h: 144, color: '#1d4ed8', parentId: null, activePivotIdx: 0, isPelvis: true,
+        imgSrc: 'pelvis.png', flipX: false,
+        magnets: [
+          { id: 'waist_top', relX: 0, relY: -55 },
+          { id: 'left_hip', relX: -35, relY: 60 },
+          { id: 'right_hip', relX: 35, relY: 60 }
+        ]
+      }
+    ];
+
+    let selectedId = 'chest';
+    let isDragging = false;
+    let dragOffset = { x: 0, y: 0 };
+    const loadedImages = {};
+
+    // Preload all unique PNG images into inline base64 data URLs
+    const uniqueImageSrcs = [...new Set(pieces.map(p => p.imgSrc).filter(Boolean))];
+    let loadedCount = 0;
+
+    function checkPreloadComplete() {
+      loadedCount++;
+      if (loadedCount === uniqueImageSrcs.length) {
+        render();
+      }
+    }
+
+    uniqueImageSrcs.forEach(src => {
+      const imgObj = new Image();
+      imgObj.crossOrigin = 'anonymous';
+      imgObj.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = imgObj.naturalWidth || 300;
+        canvas.height = imgObj.naturalHeight || 300;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgObj, 0, 0);
+        loadedImages[src] = canvas.toDataURL('image/png');
+        checkPreloadComplete();
+      };
+      imgObj.onerror = () => {
+        loadedImages[src] = src; // Fallback to raw src if file doesn't exist yet
+        checkPreloadComplete();
+      };
+      imgObj.src = src;
+    });
+
+    if (uniqueImageSrcs.length === 0) {
+      render();
+    }
+
+    function getMagnetWorldPos(piece, magnet) {
+      const activeMag = piece.magnets[piece.activePivotIdx || 0];
+      const rad = (piece.rot * Math.PI) / 180;
+      const fx = piece.flipX ? -1 : 1;
+
+      const mRelX = magnet.relX * fx;
+      const mRelY = magnet.relY;
+      const aRelX = activeMag.relX * fx;
+      const aRelY = activeMag.relY;
+
+      const dx = mRelX - aRelX;
+      const dy = mRelY - aRelY;
+
+      const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
+      const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
+
+      return {
+        x: piece.x + aRelX + rx,
+        y: piece.y + aRelY + ry
+      };
+    }
+
+    function isPhysicallyConnected(parentPiece, childPiece) {
+      return parentPiece.magnets.some(pMag => {
+        if (pMag.hidden) return false;
+        const pWorld = getMagnetWorldPos(parentPiece, pMag);
+        return childPiece.magnets.some(cMag => {
+          if (cMag.hidden) return false;
+          const cWorld = getMagnetWorldPos(childPiece, cMag);
+          const dx = pWorld.x - cWorld.x;
+          const dy = pWorld.y - cWorld.y;
+          return Math.sqrt(dx * dx + dy * dy) <= (SNAP_DIST + 5);
+        });
+      });
+    }
+
+    function hasAttachedChildren(pieceId) {
+      const parentPiece = pieces.find(p => p.id === pieceId);
+      if (!parentPiece) return false;
+      return pieces.some(child => child.parentId === pieceId && isPhysicallyConnected(parentPiece, child));
+    }
+
+    function canPieceRotate(p) {
+      return !hasAttachedChildren(p.id);
+    }
+
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+
+    function updateConnections() {
+      pieces.forEach(p => {
+        if (p.parentId) {
+          const parent = pieces.find(item => item.id === p.parentId);
+          if (!parent || !isPhysicallyConnected(parent, p)) {
+            p.parentId = null;
+          }
+        }
+      });
+    }
+
+    function renderPieceGraphics(g, p, isClean = false) {
+      const isSelected = !isClean && (p.id === selectedId);
+
+      if (isSelected) {
+        const outline = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        outline.setAttribute('x', -p.w / 2 - 3);
+        outline.setAttribute('y', -p.h / 2 - 3);
+        outline.setAttribute('width', p.w + 6);
+        outline.setAttribute('height', p.h + 6);
+        outline.setAttribute('rx', 8);
+        outline.setAttribute('fill', 'none');
+        outline.setAttribute('stroke', '#ffffff');
+        outline.setAttribute('stroke-width', '3');
+        g.appendChild(outline);
+      }
+
+      // Render image or fallback shape (Neck extension removed)
+      if (p.imgSrc && loadedImages[p.imgSrc]) {
+        const img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        img.setAttribute('href', loadedImages[p.imgSrc]);
+        img.setAttribute('x', -p.w / 2);
+        img.setAttribute('y', -p.h / 2);
+        img.setAttribute('width', p.w);
+        img.setAttribute('height', p.h);
+        img.setAttribute('preserveAspectRatio', 'none');
+        if (p.flipX) img.setAttribute('transform', 'scale(-1, 1)');
+        g.appendChild(img);
+      } else if (p.isPelvis) {
+        const r = p.w / 2;
+        const b = p.h / 2;
+        const pathData = `M ${-r} ${-28} A ${r} ${r} 0 0 1 ${r} -28 L ${r} ${b} L ${-r} ${b} Z`;
+        const domePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        domePath.setAttribute('d', pathData);
+        domePath.setAttribute('fill', p.color);
+        domePath.setAttribute('stroke', isClean ? '#000' : (isSelected ? '#ffffff' : '#000'));
+        domePath.setAttribute('stroke-width', isClean ? 1 : (isSelected ? 3 : 1));
+        if (p.flipX) domePath.setAttribute('transform', 'scale(-1, 1)');
+        g.appendChild(domePath);
+      } else {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', -p.w / 2);
+        rect.setAttribute('y', -p.h / 2);
+        rect.setAttribute('width', p.w);
+        rect.setAttribute('height', p.h);
+        rect.setAttribute('rx', 8);
+        rect.setAttribute('fill', p.color);
+        rect.setAttribute('stroke', isClean ? '#000' : (isSelected ? '#ffffff' : '#000'));
+        rect.setAttribute('stroke-width', isClean ? 1 : (isSelected ? 3 : 1));
+        if (p.flipX) rect.setAttribute('transform', 'scale(-1, 1)');
+        g.appendChild(rect);
+      }
+    }
+
+    function render() {
+      updateConnections();
+      stage.innerHTML = '';
+
+      const sortedPieces = [...pieces].sort((a, b) => a.zIndex - b.zIndex);
+
+      sortedPieces.forEach(p => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const activeMag = p.magnets[p.activePivotIdx || 0];
+        const scaleX = p.flipX ? -1 : 1;
+        const aRelX = activeMag.relX * scaleX;
+
+        g.setAttribute('transform',
+          `translate(${p.x}, ${p.y}) rotate(${p.rot}, ${aRelX}, ${activeMag.relY})`
+        );
+        g.style.cursor = p.id === 'chest' ? 'default' : 'pointer';
+
+        renderPieceGraphics(g, p, false);
+
+        // Magnet indicators
+        p.magnets.forEach((m, idx) => {
+          if (m.hidden) return;
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', m.relX * scaleX);
+          circle.setAttribute('cy', m.relY);
+          circle.setAttribute('r', 4);
+
+          const isActivePivot = (p.activePivotIdx === idx);
+          circle.setAttribute('fill', isActivePivot ? '#22c55e' : '#ffffff');
+          circle.setAttribute('stroke', '#000');
+          g.appendChild(circle);
+        });
+
+        g.onmousedown = (e) => {
+          if (e.button === 0) startDrag(e, p);
+        };
+        g.oncontextmenu = (e) => {
+          e.preventDefault();
+          selectedId = p.id;
+          p.flipX = !p.flipX;
+          statusText.textContent = `Flipped ${p.name} horizontally (${p.flipX ? 'Flipped' : 'Normal'}).`;
+          render();
+        };
+
+        stage.appendChild(g);
+      });
+    }
+
+    function startDrag(e, piece) {
+      selectedId = piece.id;
+
+      if (piece.id === 'chest') {
+        isDragging = false;
+        statusText.textContent = canPieceRotate(piece)
+          ? `Selected Chest (Locked in place. Rotation active via scroll).`
+          : `Selected Chest (Locked in place. Rotation locked while parts attached).`;
+        render();
+        return;
+      }
+
+      isDragging = true;
+      piece.parentId = null;
+
+      const rect = stage.getBoundingClientRect();
+      dragOffset.x = (e.clientX - rect.left) - piece.x;
+      dragOffset.y = (e.clientY - rect.top) - piece.y;
+
+      render();
+      statusText.textContent = canPieceRotate(piece)
+        ? `Selected ${piece.name}. Drag to move, Scroll wheel to rotate, Right-click to flip.`
+        : `Selected ${piece.name}. Drag to move (Middle limb locked).`;
+    }
+
+    window.onmousemove = (e) => {
+      if (!isDragging) return;
+      const p = pieces.find(item => item.id === selectedId);
+      if (!p || p.id === 'chest') return;
+
+      const rect = stage.getBoundingClientRect();
+      let rawX = (e.clientX - rect.left) - dragOffset.x;
+      let rawY = (e.clientY - rect.top) - dragOffset.y;
+
+      const padding = 15;
+      rawX = clamp(rawX, padding, STAGE_W - padding);
+      rawY = clamp(rawY, padding, STAGE_H - padding);
+
+      let snapped = false;
+
+      p.magnets.forEach((myMag, myIdx) => {
+        if (snapped || myMag.hidden) return;
+
+        pieces.forEach(other => {
+          if (other.id === p.id || snapped) return;
+
+          other.magnets.forEach(targetMag => {
+            if (snapped || targetMag.hidden) return;
+
+            const targetWorld = getMagnetWorldPos(other, targetMag);
+            const fx = p.flipX ? -1 : 1;
+            const dx = (rawX + myMag.relX * fx) - targetWorld.x;
+            const dy = (rawY + myMag.relY) - targetWorld.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < SNAP_DIST) {
+              p.activePivotIdx = myIdx;
+              p.x = targetWorld.x - (myMag.relX * fx);
+              p.y = targetWorld.y - myMag.relY;
+              p.parentId = other.id;
+              snapped = true;
+              statusText.textContent = `Snapped ${p.name} to ${other.name}!`;
+            }
+          });
+        });
+      });
+
+      if (!snapped) {
+        p.x = rawX;
+        p.y = rawY;
+        p.parentId = null;
+      }
+
+      render();
+    };
+
+    window.onmouseup = () => { isDragging = false; };
+
+    function rotateSelected(deg) {
+      const p = pieces.find(item => item.id === selectedId);
+      if (!p) return;
+
+      if (!canPieceRotate(p)) {
+        statusText.textContent = `Rotation disabled for ${p.name} while attached in the middle.`;
+        return;
+      }
+
+      p.rot = (p.rot + deg) % 360;
+      render();
+    }
+
+    stage.onwheel = (e) => {
+      e.preventDefault();
+      rotateSelected(e.deltaY > 0 ? 5 : -5);
+    };
+
+    function triggerDownload() {
+      const exportSvg = stage.cloneNode(false);
+      exportSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      exportSvg.setAttribute('viewBox', `0 0 ${STAGE_W} ${STAGE_H}`);
+
+      const sortedPieces = [...pieces].sort((a, b) => a.zIndex - b.zIndex);
+
+      sortedPieces.forEach(p => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const activeMag = p.magnets[p.activePivotIdx || 0];
+        const scaleX = p.flipX ? -1 : 1;
+        const aRelX = activeMag.relX * scaleX;
+
+        g.setAttribute('transform',
+          `translate(${p.x}, ${p.y}) rotate(${p.rot}, ${aRelX}, ${activeMag.relY})`
+        );
+
+        renderPieceGraphics(g, p, true);
+        exportSvg.appendChild(g);
+      });
+
+      const svgString = new XMLSerializer().serializeToString(exportSvg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 2048;
+        canvas.height = 2048;
+        const ctx = canvas.getContext('2d');
+
+        const scale = 2048 / Math.max(STAGE_W, STAGE_H);
+        const drawW = STAGE_W * scale;
+        const drawH = STAGE_H * scale;
+        const offsetX = (2048 - drawW) / 2;
+        const offsetY = (2048 - drawH) / 2;
+
+        ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = 'paper-doll-puppet.png';
+        link.href = pngUrl;
+        link.click();
+
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+
+    downloadBtn.onclick = triggerDownload;
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        triggerDownload();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
