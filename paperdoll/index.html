@@ -139,7 +139,7 @@
       {
         id: 'foot_r', name: 'Right Foot', zIndex: -20, x: 610, y: 490, rot: 0,
         w: 75, h: 36, color: '#fed7aa', parentId: null, activePivotIdx: 0,
-        imgSrc: 'parts/foot.png', flipX: true,
+        imgSrc: 'parts/foot.png', flipX: false,
         magnets: [{ id: 'foot_ankle_r', relX: -22, relY: -10 }]
       },
       // LOWER ARMS & LEGS
@@ -148,7 +148,7 @@
         w: 30, h: 85, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
         imgSrc: 'parts/forearm.png', flipX: false,
         magnets: [
-          { id: 'forearm_elbow_l', relX: 0, relY: -25 },
+          { id: 'forearm_elbow_l', relX: 0, relY: -30 },
           { id: 'wrist_l', relX: -2, relY: 35 }
         ]
       },
@@ -157,7 +157,7 @@
         w: 30, h: 85, color: '#8b5cf6', parentId: null, activePivotIdx: 0,
         imgSrc: 'parts/forearm.png', flipX: true,
         magnets: [
-          { id: 'forearm_elbow_r', relX: 0, relY: -25 },
+          { id: 'forearm_elbow_r', relX: 0, relY: -30 },
           { id: 'wrist_r', relX: -2, relY: 35 }
         ]
       },
@@ -166,17 +166,17 @@
         w: 40, h: 120, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
         imgSrc: 'parts/shin.png', flipX: false,
         magnets: [
-          { id: 'shin_knee_l', relX: 0, relY: -50 },
-          { id: 'ankle_l', relX: 10, relY: 50 }
+          { id: 'shin_knee_l', relX: 2, relY: -50 },
+          { id: 'ankle_l', relX: 8, relY: 50 }
         ]
       },
       {
         id: 'shin_r', name: 'Right Shin', zIndex: -15, x: 510, y: 450, rot: 0,
         w: 40, h: 120, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
-        imgSrc: 'parts/shin.png', flipX: true,
+        imgSrc: 'parts/shin.png', flipX: false,
         magnets: [
-          { id: 'shin_knee_r', relX: 0, relY: -50 },
-          { id: 'ankle_r', relX: 10, relY: 50 }
+          { id: 'shin_knee_r', relX: 2, relY: -50 },
+          { id: 'ankle_r', relX: 8, relY: 50 }
         ]
       },
       // UPPER ARMS & LEGS
@@ -199,21 +199,21 @@
         ]
       },
       {
-        id: 'thigh_l', name: 'Left Thigh', zIndex: -10, x: 300, y: 520, rot: 0,
-        w: 60, h: 140, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
+        id: 'thigh_l', name: 'Left Thigh', zIndex: -10, x: 300, y: 500, rot: 0,
+        w: 60, h: 130, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
         imgSrc: 'parts/thigh.png', flipX: false,
         magnets: [
           { id: 'hip_l', relX: 0, relY: -40},
-          { id: 'knee_l', relX: 5, relY: 55 }
+          { id: 'knee_l', relX: 5, relY: 50 }
         ]
       },
       {
-        id: 'thigh_r', name: 'Right Thigh', zIndex: -10, x: 420, y: 520, rot: 0,
-        w: 60, h: 140, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
+        id: 'thigh_r', name: 'Right Thigh', zIndex: -10, x: 420, y: 500, rot: 0,
+        w: 60, h: 130, color: '#1d4ed8', parentId: null, activePivotIdx: 0,
         imgSrc: 'parts/thigh.png', flipX: true,
         magnets: [
           { id: 'hip_r', relX: 0, relY: -40 },
-          { id: 'knee_r', relX: 5, relY: 55 }
+          { id: 'knee_r', relX: 5, relY: 50 }
         ]
       },
       // LOWER TORSO
