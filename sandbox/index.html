@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doll Sandbox</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #111827;
+      --accent: #3b82f6;
+      --text: #f3f4f6;
+    }
+    body {
+      background: var(--bg-color);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      margin: 0;
+      overflow: hidden;
+    }
+    .app-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 1300px;
+      border: 1px solid #1f2937;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      align-items: center;
+      gap: 10px;
+    }
+    h1 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #93c5fd;
+      margin: 0;
+      white-space: nowrap;
+    }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    .btn {
+      background: #1f2937;
+      color: #d1d5db;
+      border: 1px solid #374151;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #374151;
+      color: #fff;
+    }
+    .btn-primary {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+    }
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+    /* Fixed 1280x720 Workspace Sandbox */
+    .workspace-wrapper {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      background: #030712;
+      border-radius: 10px;
+      border: 1px solid #374151;
+      overflow: hidden;
+      box-shadow: inset 0 4px 20px rgba(0,0,0,0.8);
+      touch-action: none;
+      flex-shrink: 0;
+    }
+    /* Background Image inside Workspace */
+    .bg-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 0;
+      display: none; /* Controlled by toggle */
+    }
+    .bg-layer.active {
+      display: block;
+    }
+    /* Draggable Magnetic Part */
+    .doll-part {
+      position: absolute;
+      cursor: grab;
+      user-select: none;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+      transition: filter 0.15s ease;
+      transform-origin: center center;
+    }
+    .doll-part:active {
+      cursor: grabbing;
+    }
+    .doll-part.dragging {
+      filter: drop-shadow(0 20px 25px rgba(0,0,0,0.8));
+    }
+    .doll-part img {
+      display: block;
+      pointer-events: none;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .hint-bar {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      background: #1f2937;
+      padding: 4px 12px;
+      border-radius: 14px;
+      border: 1px solid #374151;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-grow: 1;
+      text-align: center;
+    }
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #d1d5db;
+      cursor: pointer;
+      user-select: none;
+      background: #1f2937;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #374151;
+    }
+    .toggle-label input {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <h1>Doll Sandbox</h1>
+      <div class="hint-bar" id="hintBar">
+        Click & drag parts • Scroll to rotate • Right-click to flip • Middle-click / Enter to export
+      </div>
+      <div class="toolbar">
+        <label class="toggle-label" title="Toggle Background Visibility & Export">
+          <input type="checkbox" id="bgToggle"> Show BG
+        </label>
+        <button class="btn btn-primary" id="snapshotBtn">Download PNG</button>
+      </div>
+    </header>
+
+    <div class="workspace-wrapper" id="stage">
+      <!-- Background and parts dynamically injected here -->
+    </div>
+  </div>
+
+  <script>
+    const stage = document.getElementById('stage');
+    const hintBar = document.getElementById('hintBar');
+    const snapshotBtn = document.getElementById('snapshotBtn');
+    const bgToggle = document.getElementById('bgToggle');
+
+    let bgVisible = false; // Starts deactivated
+
+    // =========================================================================
+    // ART SETUP INSTRUCTIONS:
+    // Simply add or modify entries here to register new custom parts.
+    // Properties:
+    // - id: Unique string key for tracking
+    // - name: Display name for tooltips/hints
+    // - url: Relative file path to PNG in your parts/ folder
+    // - scale: Multiplier for sizing relative to natural dimensions
+    // - x, y: Initial spawn coordinate on the 1280x720 canvas
+    // - r: Initial rotation angle in degrees (0 - 360)
+    // - flip: 1 for normal, -1 for horizontal mirror
+    // - z: Layer ordering number (lower renders behind, higher renders in front)
+    // =========================================================================
+    const initialParts = [
+      // 1. Feet (Layer 1)
+      { id: 'foot_l', name: 'Left Foot', url: 'parts/foot.png', scale: 0.25, x: 570, y: 610, r: 30, flip: 1, z: 10 },
+      { id: 'foot_r', name: 'Right Foot', url: 'parts/foot.png', scale: 0.25, x: 670, y: 610, r: 30, flip: 1, z: 10 },
+      // 2. Shins (Layer 2)
+      { id: 'shin_l', name: 'Left Shin', url: 'parts/shin.png', scale: 0.25, x: 575, y: 490, r: 0, flip: 1, z: 20 },
+      { id: 'shin_r', name: 'Right Shin', url: 'parts/shin.png', scale: 0.25, x: 665, y: 490, r: 0, flip: 1, z: 20 },
+      // 3. Thighs (Layer 3)
+      { id: 'thigh_l', name: 'Left Thigh', url: 'parts/thigh.png', scale: 0.25, x: 580, y: 360, r: 0, flip: 1, z: 30 },
+      { id: 'thigh_r', name: 'Right Thigh', url: 'parts/thigh.png', scale: 0.25, x: 650, y: 360, r: 0, flip: -1, z: 30 },
+      
+      // 4. Body (Layer 4)
+      { id: 'body', name: 'Body', url: 'parts/body.png', scale: 0.25, x: 560, y: 180, r: 0, flip: 1, z: 40 },
+
+      // 6. Head (Layer 6)
+      { id: 'head', name: 'Head', url: 'parts/head.png', scale: 0.25, x: 540, y: 30, r: 0, flip: 1, z: 60 },
+      
+      // 7. Upper Arms (Layer 7)
+      { id: 'upper_arm_l', name: 'Left Upper Arm', url: 'parts/upperarm.png', scale: 0.25, x: 500, y: 160, r: 30, flip: 1, z: 70 },
+      { id: 'upper_arm_r', name: 'Right Upper Arm', url: 'parts/upperarm.png', scale: 0.25, x: 720, y: 160, r: -30, flip: -1, z: 70 },
+      // 8. Forearms (Layer 8)
+      { id: 'forearm_l', name: 'Left Forearm', url: 'parts/forearm.png', scale: 0.25, x: 440, y: 250, r: 0, flip: 1, z: 80 },
+      { id: 'forearm_r', name: 'Right Forearm', url: 'parts/forearm.png', scale: 0.25, x: 780, y: 250, r: 0, flip: -1, z: 80 },
+      // 9. Hands (Top Layer 9)
+      { id: 'hand_l', name: 'Left Hand', url: 'parts/hand.png', scale: 0.25, x: 390, y: 330, r: 0, flip: 1, z: 90 },
+      { id: 'hand_r', name: 'Right Hand', url: 'parts/hand.png', scale: 0.25, x: 830, y: 330, r: 0, flip: -1, z: 90 }
+    ];
+
+    let partsState = JSON.parse(JSON.stringify(initialParts));
+    const cachedImages = {};
+    let bgImg = null;
+    let bgLoaded = false;
+    let bgEl = null;
+
+    function preloadAssets() {
+      initialParts.forEach(part => {
+        if (!cachedImages[part.url]) {
+          const img = new Image();
+          img.src = part.url;
+          cachedImages[part.url] = img;
+        }
+      });
+
+      const testBg = new Image();
+      testBg.onload = () => {
+        bgImg = testBg;
+        bgLoaded = true;
+        setupBackgroundElement();
+      };
+      testBg.onerror = () => {
+        bgLoaded = false;
+      };
+      testBg.src = 'parts/bg.png';
+    }
+
+    function setupBackgroundElement() {
+      if (!bgEl) {
+        bgEl = document.createElement('img');
+        bgEl.className = 'bg-layer';
+        bgEl.src = bgImg.src;
+        stage.prepend(bgEl);
+      }
+      updateBgVisibility();
+    }
+
+    function updateBgVisibility() {
+      if (bgEl && bgLoaded) {
+        if (bgVisible) {
+          bgEl.classList.add('active');
+        } else {
+          bgEl.classList.remove('active');
+        }
+      }
+      bgToggle.checked = bgVisible;
+    }
+
+    function toggleBackground() {
+      if (!bgLoaded) {
+        hintBar.textContent = 'No bg.png found in parts/ directory!';
+        return;
+      }
+      bgVisible = !bgVisible;
+      updateBgVisibility();
+      hintBar.textContent = `Background visibility: ${bgVisible ? 'Visible (Will export)' : 'Hidden (Transparent export)'}`;
+    }
+
+    bgToggle.addEventListener('change', () => {
+      if (!bgLoaded && bgToggle.checked) {
+        bgToggle.checked = false;
+        hintBar.textContent = 'No bg.png found in parts/ directory!';
+        return;
+      }
+      bgVisible = bgToggle.checked;
+      updateBgVisibility();
+      hintBar.textContent = `Background visibility: ${bgVisible ? 'Visible (Will export)' : 'Hidden (Transparent export)'}`;
+    });
+
+    stage.addEventListener('mousedown', (e) => {
+      if (e.button === 1) { // Middle click
+        e.preventDefault();
+        toggleBackground();
+      }
+    });
+
+    function renderParts() {
+      const existingParts = stage.querySelectorAll('.doll-part');
+      existingParts.forEach(el => el.remove());
+
+      const sorted = [...partsState].sort((a, b) => a.z - b.z);
+      
+      sorted.forEach((part) => {
+        const el = document.createElement('div');
+        el.className = 'doll-part';
+        el.style.left = part.x + 'px';
+        el.style.top = part.y + 'px';
+        el.style.transform = `rotate(${part.r}deg) scaleX(${part.flip})`;
+        el.style.zIndex = part.z;
+
+        const img = document.createElement('img');
+        img.src = part.url;
+        img.alt = part.name;
+        
+        img.onload = () => {
+          if (!img.dataset.scaled) {
+            img.dataset.scaled = true;
+            const w = Math.round((img.naturalWidth || 200) * part.scale);
+            const h = Math.round((img.naturalHeight || 200) * part.scale);
+            img.style.width = w + 'px';
+            img.style.height = h + 'px';
+            part.w = w;
+            part.h = h;
+          }
+        };
+        img.onerror = () => {
+          img.src = `https://placehold.co/120x150/1e293b/93c5fd?text=${encodeURIComponent(part.name)}`;
+          part.w = 100;
+          part.h = 120;
+        };
+
+        el.appendChild(img);
+        stage.appendChild(el);
+
+        initPartInteractions(el, part);
+      });
+    }
+
+    function initPartInteractions(el, part) {
+      let isDragging = false;
+      let startX = 0, startY = 0;
+
+      el.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        isDragging = true;
+        el.setPointerCapture(e.pointerId);
+        el.classList.add('dragging');
+
+        startX = e.clientX - part.x;
+        startY = e.clientY - part.y;
+
+        hintBar.textContent = `Dragging ${part.name} (Layer ${part.z}) • Scroll to rotate • Right-click to flip`;
+        e.stopPropagation();
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        
+        const maxX = stage.clientWidth - (part.w || 50);
+        const maxY = stage.clientHeight - (part.h || 50);
+        
+        let newX = e.clientX - startX;
+        let newY = e.clientY - startY;
+
+        part.x = Math.max(0, Math.min(newX, maxX));
+        part.y = Math.max(0, Math.min(newY, maxY));
+
+        el.style.left = part.x + 'px';
+        el.style.top = part.y + 'px';
+      });
+
+      const stopDrag = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        el.classList.remove('dragging');
+        try { el.releasePointerCapture(e.pointerId); } catch(err) {}
+      };
+
+      el.addEventListener('pointerup', stopDrag);
+      el.addEventListener('pointercancel', stopDrag);
+
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        part.flip = part.flip === 1 ? -1 : 1;
+        el.style.transform = `rotate(${part.r}deg) scaleX(${part.flip})`;
+        hintBar.textContent = `Flipped ${part.name} horizontally (${part.flip === -1 ? 'Mirrored' : 'Normal'})`;
+      });
+
+      el.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 5 : -5;
+        part.r = (part.r + delta) % 360;
+        el.style.transform = `rotate(${part.r}deg) scaleX(${part.flip})`;
+        hintBar.textContent = `Rotated ${part.name}: ${Math.round(part.r)}°`;
+      }, { passive: false });
+    }
+
+    function exportSnapshot() {
+      hintBar.textContent = 'Generating Full 4K snapshot with drop shadows...';
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = 3840;
+      canvas.height = 2160;
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const scaleX = 3840 / 1280;
+      const scaleY = 2160 / 720;
+
+      const drawDollParts = () => {
+        const sorted = [...partsState].sort((a, b) => a.z - b.z);
+        let loadedCount = 0;
+
+        if (sorted.length === 0) {
+          downloadCanvas(canvas);
+          return;
+        }
+
+        sorted.forEach(part => {
+          const cachedImg = cachedImages[part.url];
+          if (cachedImg && cachedImg.complete && cachedImg.naturalWidth > 0) {
+            drawPartToCanvas(ctx, cachedImg, part, scaleX, scaleY);
+            loadedCount++;
+            if (loadedCount === sorted.length) downloadCanvas(canvas);
+          } else {
+            const img = new Image();
+            img.onload = () => {
+              drawPartToCanvas(ctx, img, part, scaleX, scaleY);
+              loadedCount++;
+              if (loadedCount === sorted.length) downloadCanvas(canvas);
+            };
+            img.onerror = () => {
+              loadedCount++;
+              if (loadedCount === sorted.length) downloadCanvas(canvas);
+            };
+            img.src = part.url;
+          }
+        });
+      };
+
+      if (bgVisible && bgLoaded && bgImg) {
+        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+        drawDollParts();
+      } else {
+        drawDollParts();
+      }
+    }
+
+    function drawPartToCanvas(ctx, img, part, scaleX, scaleY) {
+      ctx.save();
+      const naturalW = img.naturalWidth || 200;
+      const naturalH = img.naturalHeight || 200;
+      const w = naturalW * part.scale * scaleX;
+      const h = naturalH * part.scale * scaleY;
+      
+      const cx = (part.x + (part.w || (naturalW * part.scale)) / 2) * scaleX;
+      const cy = (part.y + (part.h || (naturalH * part.scale)) / 2) * scaleY;
+
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+      ctx.shadowBlur = 18 * scaleX;
+      ctx.shadowOffsetX = 4 * scaleX;
+      ctx.shadowOffsetY = 10 * scaleY;
+
+      ctx.translate(cx, cy);
+      ctx.rotate((part.r * Math.PI) / 180);
+      ctx.scale(part.flip, 1);
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.restore();
+    }
+
+    snapshotBtn.addEventListener('click', exportSnapshot);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        exportSnapshot();
+      }
+    });
+
+    function downloadCanvas(canvas) {
+      const link = document.createElement('a');
+      link.download = `paper-doll-pose-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      hintBar.textContent = 'Full 4K snapshot successfully downloaded!';
+    }
+
+    preloadAssets();
+    renderParts();
+  </script>
+</body>
+</html>
