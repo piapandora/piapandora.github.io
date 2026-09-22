@@ -495,7 +495,7 @@
 
     function downloadCanvas(canvas) {
       const link = document.createElement('a');
-      link.download = `paper-doll-pose-${Date.now()}.png`;
+      link.download = `sandbox-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
       hintBar.textContent = 'Full 4K snapshot successfully downloaded!';
