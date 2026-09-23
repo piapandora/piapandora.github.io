@@ -13,6 +13,26 @@
       --accent: #3b82f6;
       --text: #f3f4f6;
     }
+
+    /* Prevent text/image selection highlight artifacts everywhere */
+    * {
+      -webkit-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+      user-select: none !important;
+      -webkit-user-drag: none !important;
+    }
+
+    *::selection {
+      background: transparent;
+      color: inherit;
+    }
+
+    *::-moz-selection {
+      background: transparent;
+      color: inherit;
+    }
+
     body {
       background: var(--bg-color);
       color: var(--text);
@@ -26,6 +46,7 @@
       margin: 0;
       overflow: hidden;
     }
+
     .app-container {
       background: var(--card-bg);
       border-radius: 12px;
@@ -38,6 +59,13 @@
       width: 1300px;
       border: 1px solid #1f2937;
     }
+
+    /* Keep app styling intact during Browser Fullscreen mode */
+    :fullscreen .app-container,
+    :-webkit-full-screen .app-container {
+      margin: auto;
+    }
+
     header {
       display: flex;
       justify-content: space-between;
@@ -45,6 +73,7 @@
       align-items: center;
       gap: 10px;
     }
+
     h1 {
       font-size: 0.85rem;
       font-weight: 700;
@@ -54,12 +83,14 @@
       margin: 0;
       white-space: nowrap;
     }
+
     .toolbar {
       display: flex;
       gap: 8px;
       flex-shrink: 0;
       align-items: center;
     }
+
     .btn {
       background: #1f2937;
       color: #d1d5db;
@@ -71,18 +102,22 @@
       cursor: pointer;
       transition: all 0.2s;
     }
+
     .btn:hover {
       background: #374151;
       color: #fff;
     }
+
     .btn-primary {
       background-color: var(--accent);
       color: white;
       border: none;
     }
+
     .btn-primary:hover {
       background-color: #2563eb;
     }
+
     /* Fixed 1280x720 Workspace Sandbox */
     .workspace-wrapper {
       position: relative;
@@ -96,6 +131,7 @@
       touch-action: none;
       flex-shrink: 0;
     }
+
     /* Background Image inside Workspace */
     .bg-layer {
       position: absolute;
@@ -105,26 +141,30 @@
       object-fit: cover;
       pointer-events: none;
       z-index: 0;
-      display: none; /* Controlled by toggle */
+      display: none;
     }
+
     .bg-layer.active {
       display: block;
     }
+
     /* Draggable Magnetic Part */
     .doll-part {
       position: absolute;
       cursor: grab;
-      user-select: none;
       filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
       transition: filter 0.15s ease;
       transform-origin: center center;
     }
+
     .doll-part:active {
       cursor: grabbing;
     }
+
     .doll-part.dragging {
       filter: drop-shadow(0 20px 25px rgba(0,0,0,0.8));
     }
+
     .doll-part img {
       display: block;
       pointer-events: none;
@@ -132,6 +172,7 @@
       height: auto;
       object-fit: contain;
     }
+
     .hint-bar {
       font-size: 0.75rem;
       color: #9ca3af;
@@ -145,6 +186,7 @@
       flex-grow: 1;
       text-align: center;
     }
+
     .toggle-label {
       display: flex;
       align-items: center;
@@ -152,24 +194,23 @@
       font-size: 0.75rem;
       color: #d1d5db;
       cursor: pointer;
-      user-select: none;
       background: #1f2937;
       padding: 4px 8px;
       border-radius: 6px;
       border: 1px solid #374151;
     }
+
     .toggle-label input {
       cursor: pointer;
     }
   </style>
 </head>
 <body>
-
   <div class="app-container">
     <header>
       <h1>Doll Sandbox</h1>
       <div class="hint-bar" id="hintBar">
-        Click & drag parts • Scroll to rotate • Right-click to flip • Middle-click / Enter to export
+        Click & drag parts • Scroll to rotate • Right-click to flip • Double-click for Fullscreen • Enter to export
       </div>
       <div class="toolbar">
         <label class="toggle-label" title="Toggle Background Visibility & Export">
@@ -190,47 +231,27 @@
     const snapshotBtn = document.getElementById('snapshotBtn');
     const bgToggle = document.getElementById('bgToggle');
 
-    let bgVisible = true; // Starts deactivated
+    let bgVisible = true;
 
-    // =========================================================================
-    // ART SETUP INSTRUCTIONS:
-    // Simply add or modify entries here to register new custom parts.
-    // Properties:
-    // - id: Unique string key for tracking
-    // - name: Display name for tooltips/hints
-    // - url: Relative file path to PNG in your parts/ folder
-    // - scale: Multiplier for sizing relative to natural dimensions
-    // - x, y: Initial spawn coordinate on the 1280x720 canvas
-    // - r: Initial rotation angle in degrees (0 - 360)
-    // - flip: 1 for normal, -1 for horizontal mirror
-    // - z: Layer ordering number (lower renders behind, higher renders in front)
-    // =========================================================================
+    // Globally prevent native drag/selection behavior
+    document.addEventListener('dragstart', (e) => e.preventDefault());
+    document.addEventListener('selectstart', (e) => e.preventDefault());
+
     const initialParts = [
-      // 1. Feet (Layer 1)
-      { id: 'foot_l', name: 'Left Foot', url: 'parts/foot.png', scale: 0.25, x: 570, y: 610, r: 25, flip: 1, z: 10 },
-      { id: 'foot_r', name: 'Right Foot', url: 'parts/foot.png', scale: 0.25, x: 670, y: 610, r: 25, flip: 1, z: 10 },
-      // 2. Shins (Layer 2)
-      { id: 'shin_l', name: 'Left Shin', url: 'parts/shin.png', scale: 0.25, x: 575, y: 490, r: 0, flip: 1, z: 20 },
-      { id: 'shin_r', name: 'Right Shin', url: 'parts/shin.png', scale: 0.25, x: 665, y: 490, r: 0, flip: 1, z: 20 },
-      // 3. Thighs (Layer 3)
-      { id: 'thigh_l', name: 'Left Thigh', url: 'parts/thigh.png', scale: 0.25, x: 580, y: 360, r: 0, flip: 1, z: 30 },
-      { id: 'thigh_r', name: 'Right Thigh', url: 'parts/thigh.png', scale: 0.25, x: 650, y: 360, r: 0, flip: -1, z: 30 },
-      
-      // 4. Body (Layer 4)
-      { id: 'body', name: 'Body', url: 'parts/body.png', scale: 0.25, x: 560, y: 180, r: 0, flip: 1, z: 40 },
-
-      // 6. Head (Layer 6)
-      { id: 'head', name: 'Head', url: 'parts/head.png', scale: 0.25, x: 540, y: 30, r: 0, flip: 1, z: 60 },
-      
-      // 7. Upper Arms (Layer 7)
-      { id: 'upper_arm_l', name: 'Left Upper Arm', url: 'parts/upperarm.png', scale: 0.25, x: 500, y: 160, r: 30, flip: 1, z: 70 },
-      { id: 'upper_arm_r', name: 'Right Upper Arm', url: 'parts/upperarm.png', scale: 0.25, x: 720, y: 160, r: -30, flip: -1, z: 70 },
-      // 8. Forearms (Layer 8)
-      { id: 'forearm_l', name: 'Left Forearm', url: 'parts/forearm.png', scale: 0.25, x: 440, y: 250, r: 0, flip: 1, z: 80 },
-      { id: 'forearm_r', name: 'Right Forearm', url: 'parts/forearm.png', scale: 0.25, x: 780, y: 250, r: 0, flip: -1, z: 80 },
-      // 9. Hands (Top Layer 9)
-      { id: 'hand_l', name: 'Left Hand', url: 'parts/hand.png', scale: 0.25, x: 390, y: 330, r: 0, flip: 1, z: 90 },
-      { id: 'hand_r', name: 'Right Hand', url: 'parts/hand.png', scale: 0.25, x: 830, y: 330, r: 0, flip: -1, z: 90 }
+      { id: 'foot_l', name: 'Left Foot', url: 'parts/foot.png', scale: 0.25, x: 420, y: 650, r: 25, flip: 1, z: 10 },
+      { id: 'foot_r', name: 'Right Foot', url: 'parts/foot.png', scale: 0.25, x: 880, y: 650, r: 25, flip: 1, z: 10 },
+      { id: 'shin_l', name: 'Left Shin', url: 'parts/shin.png', scale: 0.25, x: 450, y: 560, r: 0, flip: 1, z: 20 },
+      { id: 'shin_r', name: 'Right Shin', url: 'parts/shin.png', scale: 0.25, x: 830, y: 560, r: 0, flip: 1, z: 20 },
+      { id: 'thigh_l', name: 'Left Thigh', url: 'parts/thigh.png', scale: 0.25, x: 500, y: 480, r: 0, flip: 1, z: 30 },
+      { id: 'thigh_r', name: 'Right Thigh', url: 'parts/thigh.png', scale: 0.25, x: 780, y: 480, r: 0, flip: -1, z: 30 },
+      { id: 'body', name: 'Body', url: 'parts/body.png', scale: 0.25, x: 640, y: 380, r: 0, flip: 1, z: 40 },
+      { id: 'head', name: 'Head', url: 'parts/head.png', scale: 0.25, x: 640, y: 180, r: 0, flip: 1, z: 60 },
+      { id: 'upper_arm_l', name: 'Left Upper Arm', url: 'parts/upperarm.png', scale: 0.25, x: 500, y: 260, r: 30, flip: 1, z: 70 },
+      { id: 'upper_arm_r', name: 'Right Upper Arm', url: 'parts/upperarm.png', scale: 0.25, x: 780, y: 260, r: -30, flip: -1, z: 70 },
+      { id: 'forearm_l', name: 'Left Forearm', url: 'parts/forearm.png', scale: 0.25, x: 450, y: 300, r: 0, flip: 1, z: 80 },
+      { id: 'forearm_r', name: 'Right Forearm', url: 'parts/forearm.png', scale: 0.25, x: 830, y: 300, r: 0, flip: -1, z: 80 },
+      { id: 'hand_l', name: 'Left Hand', url: 'parts/hand.png', scale: 0.25, x: 400, y: 350, r: 0, flip: 1, z: 90 },
+      { id: 'hand_r', name: 'Right Hand', url: 'parts/hand.png', scale: 0.25, x: 880, y: 350, r: 0, flip: -1, z: 90 }
     ];
 
     let partsState = JSON.parse(JSON.stringify(initialParts));
@@ -303,9 +324,25 @@
     });
 
     stage.addEventListener('mousedown', (e) => {
-      if (e.button === 1) { // Middle click
+      if (e.button === 1) { // Middle click toggle
         e.preventDefault();
         toggleBackground();
+      }
+    });
+
+    // Double click to toggle FULL APP Fullscreen mode (Header + UI + Stage together)
+    document.addEventListener('dblclick', (e) => {
+      // Ignore double clicks on buttons/inputs
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') {
+        return;
+      }
+
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
       }
     });
 
@@ -320,7 +357,7 @@
         el.className = 'doll-part';
         el.style.left = part.x + 'px';
         el.style.top = part.y + 'px';
-        el.style.transform = `rotate(${part.r}deg) scaleX(${part.flip})`;
+        el.style.transform = `translate(-50%, -50%) rotate(${part.r}deg) scaleX(${part.flip})`;
         el.style.zIndex = part.z;
 
         const img = document.createElement('img');
@@ -371,14 +408,14 @@
       el.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
         
-        const maxX = stage.clientWidth - (part.w || 50);
-        const maxY = stage.clientHeight - (part.h || 50);
+        const halfW = (part.w || 50) / 2;
+        const halfH = (part.h || 50) / 2;
         
         let newX = e.clientX - startX;
         let newY = e.clientY - startY;
 
-        part.x = Math.max(0, Math.min(newX, maxX));
-        part.y = Math.max(0, Math.min(newY, maxY));
+        part.x = Math.max(halfW, Math.min(newX, stage.clientWidth - halfW));
+        part.y = Math.max(halfH, Math.min(newY, stage.clientHeight - halfH));
 
         el.style.left = part.x + 'px';
         el.style.top = part.y + 'px';
@@ -397,7 +434,7 @@
       el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         part.flip = part.flip === 1 ? -1 : 1;
-        el.style.transform = `rotate(${part.r}deg) scaleX(${part.flip})`;
+        el.style.transform = `translate(-50%, -50%) rotate(${part.r}deg) scaleX(${part.flip})`;
         hintBar.textContent = `Flipped ${part.name} horizontally (${part.flip === -1 ? 'Mirrored' : 'Normal'})`;
       });
 
@@ -405,7 +442,7 @@
         e.preventDefault();
         const delta = e.deltaY > 0 ? 5 : -5;
         part.r = (part.r + delta) % 360;
-        el.style.transform = `rotate(${part.r}deg) scaleX(${part.flip})`;
+        el.style.transform = `translate(-50%, -50%) rotate(${part.r}deg) scaleX(${part.flip})`;
         hintBar.textContent = `Rotated ${part.name}: ${Math.round(part.r)}°`;
       }, { passive: false });
     }
@@ -469,8 +506,8 @@
       const w = naturalW * part.scale * scaleX;
       const h = naturalH * part.scale * scaleY;
       
-      const cx = (part.x + (part.w || (naturalW * part.scale)) / 2) * scaleX;
-      const cy = (part.y + (part.h || (naturalH * part.scale)) / 2) * scaleY;
+      const cx = part.x * scaleX;
+      const cy = part.y * scaleY;
 
       ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
       ctx.shadowBlur = 18 * scaleX;
