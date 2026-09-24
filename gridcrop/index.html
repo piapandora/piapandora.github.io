@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Crop & Overlay</title>
+    <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0f172a;
+            color: #f8fafc;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        .hint-bar {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            z-index: 10;
+            max-width: calc(100vw - 24px);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 6px 18px;
+            padding: 8px 16px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 116, 139, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            font-size: 12px;
+            color: #94a3b8;
+            white-space: nowrap;
+            pointer-events: none; /* never blocks dragging a selection underneath it */
+        }
+        .hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .hint kbd {
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            color: #e2e8f0;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: rgba(51, 65, 85, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-bottom-width: 2px;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex items-center justify-center relative bg-[#0f172a]">
+
+    <div id="dropZone" class="absolute inset-0 flex flex-col items-center justify-center bg-[#0f172a] z-20 transition-opacity duration-300">
+        <div class="border-2 border-dashed border-slate-600/80 rounded-2xl p-12 text-center max-w-lg mx-4 bg-[#1e293b]/50 shadow-2xl backdrop-blur-md transition-all hover:border-slate-500">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-slate-800/80 flex items-center justify-center text-indigo-400 border border-slate-700/50 shadow-inner">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 text-white tracking-tight">Drag & Drop Image Here</h2>
+            <p class="text-slate-400 text-sm mb-7 leading-relaxed">Drop a base image to start. Drop a second image later to overlay at custom X,Y coordinates.</p>
+            <label class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm px-6 py-3 rounded-xl cursor-pointer shadow-lg shadow-indigo-600/20 transition transform active:scale-95 inline-block">
+                Browse Files
+                <input type="file" id="fileInput" class="hidden" accept="image/*">
+            </label>
+        </div>
+    </div>
+
+    <div class="hint-bar" aria-label="Controls">
+        <span class="hint"><kbd>Drag</kbd>select</span>
+        <span class="hint"><kbd>Space</kbd>crop</span>
+        <span class="hint"><kbd>WASD</kbd>move overlay</span>
+        <span class="hint"><kbd>Hold Shift</kbd>hide overlay</span>
+        <span class="hint"><kbd>Enter</kbd>export full image</span>
+    </div>
+
+    <canvas id="canvas" tabindex="0"></canvas>
+
+    <script>
+        const GRID = 20;
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        let baseImage = null;
+        let baseFileName = 'base';
+        let overlayImage = null;
+        let overlayX = 0;
+        let overlayY = 0;
+
+        // Render layout metrics (strictly calculated from baseImage dimensions)
+        let renderWidth = 0;
+        let renderHeight = 0;
+        let offsetX = 0;
+        let offsetY = 0;
+        let scaleFactor = 1;
+
+        // Selection & interaction state.
+        // The selection lives in BASE-IMAGE pixels ({x, y, w, h}), never screen pixels,
+        // so it stays glued to the same image pixels when the window is resized.
+        let selection = null;
+        let isDragging = false;
+        let startOriginalX = 0;
+        let startOriginalY = 0;
+        let isShiftPressed = false;
+
+        // ---------- Rendering ----------
+
+        let rafId = 0;
+        function requestRedraw() {
+            if (rafId) return;
+            rafId = requestAnimationFrame(() => {
+                rafId = 0;
+                redraw();
+            });
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (baseImage) {
+                calculateBaseLayout(baseImage);
+                redraw(); // immediate, so the canvas never shows a blank frame after being resized
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function calculateBaseLayout(img) {
+            const screenW = canvas.width;
+            const screenH = canvas.height;
+            const canvasAspect = screenW / screenH;
+            const imgAspect = img.width / img.height;
+
+            if (imgAspect > canvasAspect) {
+                renderWidth = screenW;
+                renderHeight = screenW / imgAspect;
+                offsetX = 0;
+                offsetY = (screenH - renderHeight) / 2;
+                scaleFactor = screenW / img.width;
+            } else {
+                renderHeight = screenH;
+                renderWidth = screenH * imgAspect;
+                offsetX = (screenW - renderWidth) / 2;
+                offsetY = 0;
+                scaleFactor = screenH / img.height;
+            }
+        }
+
+        function redraw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!baseImage) return;
+
+            // 1. Draw Base Image
+            ctx.drawImage(baseImage, offsetX, offsetY, renderWidth, renderHeight);
+
+            // 2. Draw Overlay Image using base image scale factor (hidden if Shift is held)
+            if (overlayImage && !isShiftPressed) {
+                const sX = offsetX + (overlayX * scaleFactor);
+                const sY = offsetY + (overlayY * scaleFactor);
+                const sW = overlayImage.width * scaleFactor;
+                const sH = overlayImage.height * scaleFactor;
+                ctx.drawImage(overlayImage, sX, sY, sW, sH);
+            }
+
+            // 3. Draw Selection Rectangle (converted from image pixels to screen pixels each frame)
+            if (selection && selection.w > 0 && selection.h > 0) {
+                const p = originalToScreen(selection.x, selection.y);
+                const w = selection.w * scaleFactor;
+                const h = selection.h * scaleFactor;
+                ctx.strokeStyle = '#00ffcc';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 6]);
+                ctx.strokeRect(p.x, p.y, w, h);
+                ctx.fillStyle = 'rgba(0, 255, 204, 0.15)';
+                ctx.fillRect(p.x, p.y, w, h);
+                ctx.setLineDash([]);
+            }
+        }
+
+        function screenToOriginal(sX, sY) {
+            return {
+                x: Math.round((sX - offsetX) / scaleFactor),
+                y: Math.round((sY - offsetY) / scaleFactor)
+            };
+        }
+
+        function originalToScreen(oX, oY) {
+            return {
+                x: offsetX + (oX * scaleFactor),
+                y: offsetY + (oY * scaleFactor)
+            };
+        }
+
+        // ---------- Loading images ----------
+
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                processImageFile(files[0]);
+            }
+            fileInput.value = '';
+        });
+
+        window.addEventListener('dragover', (e) => e.preventDefault());
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                processImageFile(files[0]);
+            }
+        });
+
+        function processImageFile(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+
+            // Object URLs avoid base64-encoding the whole file, which is faster and lighter on memory
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+
+            img.onload = function() {
+                URL.revokeObjectURL(url);
+                const cleanName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+
+                if (!baseImage) {
+                    baseImage = img;
+                    baseFileName = cleanName;
+                    overlayImage = null;
+                    overlayX = 0;
+                    overlayY = 0;
+                    selection = null;
+                    calculateBaseLayout(img);
+
+                    dropZone.classList.add('opacity-0', 'pointer-events-none');
+                    setTimeout(() => { dropZone.style.display = 'none'; }, 300);
+                } else if (!overlayImage) {
+                    overlayImage = img;
+                    overlayX = 0;
+                    overlayY = 0;
+                } else {
+                    baseImage = img;
+                    baseFileName = cleanName;
+                    overlayImage = null;
+                    overlayX = 0;
+                    overlayY = 0;
+                    selection = null;
+                    calculateBaseLayout(img);
+                }
+                redraw();
+                canvas.focus();
+            };
+            img.onerror = () => URL.revokeObjectURL(url);
+            img.src = url;
+        }
+
+        // ---------- Selection ----------
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!baseImage) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const rawOrig = screenToOriginal(e.clientX - rect.left, e.clientY - rect.top);
+
+            startOriginalX = Math.max(0, Math.min(Math.round(rawOrig.x / GRID) * GRID, baseImage.width));
+            startOriginalY = Math.max(0, Math.min(Math.round(rawOrig.y / GRID) * GRID, baseImage.height));
+
+            isDragging = true;
+            selection = null; // a plain click clears the selection
+            requestRedraw();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging || !baseImage) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const currentOrig = screenToOriginal(e.clientX - rect.left, e.clientY - rect.top);
+            const deltaX = currentOrig.x - startOriginalX;
+            const deltaY = currentOrig.y - startOriginalY;
+
+            let snappedSide = Math.round(Math.max(Math.abs(deltaX), Math.abs(deltaY)) / GRID) * GRID;
+            if (snappedSide === 0) snappedSide = GRID;
+
+            const dirX = deltaX >= 0 ? 1 : -1;
+            const dirY = deltaY >= 0 ? 1 : -1;
+
+            // Room left inside the image in the drag direction. Limiting the side by BOTH axes
+            // keeps the selection square at the edges (clamping each axis separately would not).
+            const availX = dirX > 0 ? baseImage.width - startOriginalX : startOriginalX;
+            const availY = dirY > 0 ? baseImage.height - startOriginalY : startOriginalY;
+            const side = Math.min(snappedSide, availX, availY);
+
+            selection = side > 0 ? {
+                x: dirX > 0 ? startOriginalX : startOriginalX - side,
+                y: dirY > 0 ? startOriginalY : startOriginalY - side,
+                w: side,
+                h: side
+            } : null;
+
+            requestRedraw();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // ---------- Export ----------
+
+        // Blob-based download: no base64 round-trip, and the URL is released afterwards
+        function downloadBlob(tempCanvas, filename) {
+            tempCanvas.toBlob((blob) => {
+                if (!blob) return;
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Give slower browsers time to start the download before releasing the blob
+                setTimeout(() => {
+                    URL.revokeObjectURL(blobUrl);
+                    canvas.focus();
+                }, 1000);
+            }, 'image/png');
+        }
+
+        // Renders a region of the base image (with the overlay composited on top) to a PNG download
+        function exportRegion(x, y, w, h, filename) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCtx.drawImage(baseImage, x, y, w, h, 0, 0, w, h);
+            if (overlayImage) {
+                tempCtx.drawImage(overlayImage, overlayX - x, overlayY - y);
+            }
+            downloadBlob(tempCanvas, filename);
+        }
+
+        // ---------- Keyboard ----------
+
+        function setShift(pressed) {
+            if (isShiftPressed === pressed) return;
+            isShiftPressed = pressed;
+            requestRedraw();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Shift') {
+                setShift(true);
+                return;
+            }
+
+            if (!baseImage) return;
+
+            // Leave browser shortcuts alone (Ctrl/Cmd+S, Ctrl+D, Cmd+A, etc.)
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            // WASD / arrows: move overlay (key-repeat intentionally allowed for smooth movement)
+            if (overlayImage) {
+                const key = e.key.toLowerCase();
+                let moved = false;
+
+                if (key === 'w' || e.key === 'ArrowUp') { overlayY -= GRID; moved = true; }
+                if (key === 's' || e.key === 'ArrowDown') { overlayY += GRID; moved = true; }
+                if (key === 'a' || e.key === 'ArrowLeft') { overlayX -= GRID; moved = true; }
+                if (key === 'd' || e.key === 'ArrowRight') { overlayX += GRID; moved = true; }
+
+                if (moved) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    overlayX = Math.max(-overlayImage.width, Math.min(overlayX, baseImage.width));
+                    overlayY = Math.max(-overlayImage.height, Math.min(overlayY, baseImage.height));
+                    requestRedraw();
+                    return;
+                }
+            }
+
+            if (e.key !== ' ' && e.key !== 'Enter') return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.repeat) return; // holding the key must not spam downloads
+
+            if (e.key === ' ') {
+                // Spacebar: crop the current selection
+                if (!selection || selection.w <= 0 || selection.h <= 0) return;
+                exportRegion(selection.x, selection.y, selection.w, selection.h,
+                    `${baseFileName}-${selection.x}-${selection.y}.png`);
+            } else {
+                // Enter: full composite export
+                exportRegion(0, 0, baseImage.width, baseImage.height, `${baseFileName}-swapped.png`);
+            }
+        }, true); // Use capture phase to intercept key events safely
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'Shift') setShift(false);
+        });
+
+        // If the window loses focus while Shift is held (e.g. Alt-Tab), keyup never arrives
+        // and the overlay would stay hidden, so reset here.
+        window.addEventListener('blur', () => setShift(false));
+    </script>
+</body>
+</html>
