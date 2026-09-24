@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pia's Dollhouse</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      gap: 16px;
+      user-select: none;
+    }
+
+    .app-container {
+      width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    canvas {
+      width: 640px;
+      height: 640px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      flex: 1;
+      height: 48px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      background-color: #252738;
+      border: 1px solid #3d405b;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      outline: none;
+    }
+
+    button:hover {
+      background-color: #33364d;
+    }
+
+    button:active, button.active {
+      transform: scale(0.96);
+      background-color: #33364d;
+    }
+
+    .special-btn {
+      font-size: 24px;
+    }
+
+    .special-btn:hover {
+      background-color: #41a6f6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <canvas id="canvas" width="640" height="640"></canvas>
+    <div class="controls" id="controls"></div>
+  </div>
+
+  <script>
+    const layerFiles = [
+      ['images/1-1.png', 'images/1-2.png', 'images/1-3.png', 'images/1-4.png', 'images/1-5.png'],
+      ['images/2-1.png', 'images/2-2.png', 'images/2-3.png'],
+      ['images/3-1.png', 'images/3-2.png', 'images/3-3.png', 'images/3-4.png'],
+      ['images/4-1.png', 'images/4-2.png', 'images/4-3.png', 'images/4-4.png'],
+      ['images/5-1.png', 'images/5-2.png', 'images/5-3.png', 'images/5-4.png'],
+      ['images/6-1.png', 'images/6-2.png', 'images/6-3.png'],
+      ['images/7-1.png', 'images/7-2.png', 'images/7-3.png']
+    ];
+
+    const currentIndices = new Array(layerFiles.length).fill(0);
+    const loadedImages = [];
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function buildUIControls() {
+      const controlsContainer = document.getElementById('controls');
+      controlsContainer.innerHTML = '';
+
+      const downloadBtn = document.createElement('button');
+      downloadBtn.className = 'special-btn';
+      downloadBtn.innerHTML = '⬇️';
+      downloadBtn.onclick = downloadPNGs;
+      controlsContainer.appendChild(downloadBtn);
+
+      for (let i = 0; i < layerFiles.length; i++) {
+        const layerBtn = document.createElement('button');
+        layerBtn.textContent = i + 1;
+        layerBtn.onclick = () => cycleLayer(i);
+        controlsContainer.appendChild(layerBtn);
+      }
+
+      const randomizeBtn = document.createElement('button');
+      randomizeBtn.className = 'special-btn';
+      randomizeBtn.innerHTML = '🔄';
+      randomizeBtn.onclick = randomize;
+      controlsContainer.appendChild(randomizeBtn);
+    }
+
+    function preloadAllImages() {
+      for (let layerIndex = 0; layerIndex < layerFiles.length; layerIndex++) {
+        loadedImages[layerIndex] = [];
+        for (let fileIndex = 0; fileIndex < layerFiles[layerIndex].length; fileIndex++) {
+          const img = new Image();
+          img.src = layerFiles[layerIndex][fileIndex];
+          img.onload = render;
+          loadedImages[layerIndex][fileIndex] = img;
+        }
+      }
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let layerIndex = 0; layerIndex < layerFiles.length; layerIndex++) {
+        const activeImageIndex = currentIndices[layerIndex];
+        const img = loadedImages[layerIndex][activeImageIndex];
+
+        if (img && img.complete) {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+      }
+    }
+
+    function cycleLayer(layerIndex) {
+      const totalVariations = layerFiles[layerIndex].length;
+      currentIndices[layerIndex] = (currentIndices[layerIndex] + 1) % totalVariations;
+      render();
+    }
+
+    function randomize() {
+      for (let layerIndex = 0; layerIndex < layerFiles.length; layerIndex++) {
+        const totalVariations = layerFiles[layerIndex].length;
+        currentIndices[layerIndex] = Math.floor(Math.random() * totalVariations);
+      }
+      render();
+    }
+
+    function saveCanvasToDisk(canvasElement, fileName) {
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = canvasElement.toDataURL('image/png');
+      link.click();
+    }
+
+    function exportCanvasAtSize(size, startLayer) {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = size;
+      exportCanvas.height = size;
+      const exportCtx = exportCanvas.getContext('2d');
+
+      for (let layerIndex = startLayer; layerIndex < layerFiles.length; layerIndex++) {
+        const activeImageIndex = currentIndices[layerIndex];
+        const img = loadedImages[layerIndex][activeImageIndex];
+        if (img && img.complete) {
+          exportCtx.drawImage(img, 0, 0, size, size);
+        }
+      }
+
+      return exportCanvas;
+    }
+
+    function downloadPNGs() {
+      const timestamp = Date.now();
+      const exportSize = 2048;
+
+      const fullCanvas = exportCanvasAtSize(exportSize, 0);
+      saveCanvasToDisk(fullCanvas, `dollhouse-${timestamp}.png`);
+
+      setTimeout(function() {
+        const transparentCanvas = exportCanvasAtSize(exportSize, 1);
+        saveCanvasToDisk(transparentCanvas, `dollhouse-cutout-${timestamp}.png`);
+      }, 250);
+    }
+
+    function flashButton(button) {
+      if (!button) return;
+      button.classList.add('active');
+      setTimeout(function() {
+        button.classList.remove('active');
+      }, 120);
+    }
+
+    document.body.addEventListener('dblclick', function(e) {
+      if (e.target.tagName.toLowerCase() === 'button') return;
+
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    });
+
+    window.addEventListener('keydown', function(e) {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+
+      const buttons = document.querySelectorAll('.controls button');
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        flashButton(buttons[buttons.length - 1]);
+        randomize();
+      } else if (e.code === 'Enter') {
+        e.preventDefault();
+        flashButton(buttons[0]);
+        downloadPNGs();
+      } else if (e.key >= '1' && e.key <= '9') {
+        const layerIndex = parseInt(e.key) - 1;
+        if (layerIndex < layerFiles.length) {
+          e.preventDefault();
+          flashButton(buttons[layerIndex + 1]);
+          cycleLayer(layerIndex);
+        }
+      } else if (e.key === '0') {
+        const layerIndex = 9;
+        if (layerIndex < layerFiles.length) {
+          e.preventDefault();
+          flashButton(buttons[layerIndex + 1]);
+          cycleLayer(layerIndex);
+        }
+      }
+    });
+
+    buildUIControls();
+    preloadAllImages();
+    render();
+  </script>
+</body>
+</html>
