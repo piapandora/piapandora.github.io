@@ -252,10 +252,15 @@
 
                     dropZone.classList.add('opacity-0', 'pointer-events-none');
                     setTimeout(() => { dropZone.style.display = 'none'; }, 300);
-                } else if (!overlayImage) {
-                    overlayImage = img;
-                    overlayX = 0;
-                    overlayY = 0;
+				} else if (!overlayImage) {
+					overlayImage = img;
+					if (selection) {
+						overlayX = selection.x;
+						overlayY = selection.y;
+					} else {
+						overlayX = 0;
+						overlayY = 0;
+					}
                 } else {
                     baseImage = img;
                     baseFileName = cleanName;
