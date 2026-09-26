@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="referrer" content="no-referrer">
+  <title>Vertical Image Deck v3</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <script src="https://piapandora.com/box/pandora.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000000;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Auth Screen Overlay */
+    #auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000000;
+      display: none; /* Controlled dynamically by boot logic */
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      touch-action: auto;
+    }
+    .auth-box {
+      background: #141414;
+      padding: 36px 28px;
+      border-radius: 16px;
+      width: 92%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border: 1px solid #222;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
+    }
+    .auth-box h3 {
+      color: #2ecc71;
+      font-size: 16px;
+      letter-spacing: 2.5px;
+      margin-bottom: 4px;
+    }
+    .auth-box input {
+      padding: 15px 14px;
+      background: #080808;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      text-align: center;
+      outline: none;
+      font-size: 15px;
+      font-family: monospace;
+    }
+    .auth-box input:focus {
+      border-color: #2ecc71;
+    }
+    .auth-box button {
+      padding: 15px;
+      background: #2ecc71;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 1.5px;
+    }
+    #error-msg {
+      color: #ff5555;
+      font-size: 12px;
+      font-family: monospace;
+      min-height: 16px;
+    }
+
+    /* Toast Notification */
+    #toast-msg {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(20, 20, 20, 0.85);
+      border: 1px solid #2ecc71;
+      color: #2ecc71;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    #toast-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Deck Container */
+    #deck-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: none; /* Revealed upon initialization */
+      justify-content: center;
+      align-items: center;
+    }
+    #slides-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      will-change: transform;
+    }
+    .slide {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      pointer-events: none;
+    }
+    .img-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    .caption-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 30px 20px 25px;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+      color: #ffffff;
+      text-align: center;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: opacity 0.2s ease;
+    }
+    .caption-overlay:empty {
+      display: none;
+    }
+    .caption-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #2ecc71;
+    }
+    .caption-text {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div id="toast-msg"></div>
+
+  <!-- Authentication Lock Screen -->
+  <div id="auth-overlay">
+    <div class="auth-box">
+      <h3>PANDORA DECK</h3>
+      <input 
+        type="text" 
+        id="key-input" 
+        placeholder="DECK No."
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="none"
+        spellcheck="false"
+        autofocus
+      >
+      <input 
+        type="password" 
+        id="pass-input" 
+        placeholder="PASSWORD" 
+        autocomplete="new-password"
+        autocorrect="off"
+        autocapitalize="none"
+        spellcheck="false"
+      >
+      <button onclick="unlockGallery()">ENTER</button>
+      <div id="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- Vertical Image Deck -->
+  <div id="deck-container">
+    <div id="slides-track">
+      <div class="slide" id="slide-prev">
+        <div class="img-wrapper">
+          <img id="img-prev" src="" alt="" />
+          <div class="caption-overlay" id="cap-prev"></div>
+        </div>
+      </div>
+      <div class="slide" id="slide-curr">
+        <div class="img-wrapper">
+          <img id="img-curr" src="" alt="" />
+          <div class="caption-overlay" id="cap-curr"></div>
+        </div>
+      </div>
+      <div class="slide" id="slide-next">
+        <div class="img-wrapper">
+          <img id="img-next" src="" alt="" />
+          <div class="caption-overlay" id="cap-next"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Default In-Code Fallback Array
+    const defaultCategories = ['red', 'blonde', 'dark'];
+    const defaultImages = defaultCategories.flatMap(cat => 
+      Array.from({ length: 10 }, (_, i) => {
+        const num = String(i + 1).padStart(2, '0');
+        return {
+          url: `https://piapandora.com/tickletrio/images/${cat}/${cat}${num}.jpg`,
+          title: '',
+          caption: ''
+        };
+      })
+    );
+
+    // Active Engine State
+    let deckItems = [];
+    let currentIndex = 0;
+    let windowHeight = window.innerHeight;
+    let imageCache = {};
+
+    let startY = 0;
+    let currentY = 0;
+    let deltaY = 0;
+    let isDragging = false;
+    let isAnimating = false;
+
+    let lastY = 0;
+    let lastTime = 0;
+    let velocityY = 0;
+    let lastTapTime = 0;
+
+    // DOM References
+    const track = document.getElementById('slides-track');
+    const slidePrev = document.getElementById('slide-prev');
+    const slideCurr = document.getElementById('slide-curr');
+    const slideNext = document.getElementById('slide-next');
+
+    const imgPrev = document.getElementById('img-prev');
+    const imgCurr = document.getElementById('img-curr');
+    const imgNext = document.getElementById('img-next');
+
+    const capPrev = document.getElementById('cap-prev');
+    const capCurr = document.getElementById('cap-curr');
+    const capNext = document.getElementById('cap-next');
+
+    // Toast Controller
+    function showToast(message) {
+      const toast = document.getElementById('toast-msg');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    // 1. Conditional Boot Controller
+    function bootApp() {
+      const urlParams = new URLSearchParams(window.location.search);
+      // Handles both /deck?pandora and /deck/?pandora path variations
+      const isPandoraRequested = urlParams.has('pandora') || window.location.href.includes('pandora');
+
+      if (isPandoraRequested) {
+        // Show Pandora Authentication Screen
+        document.getElementById('auth-overlay').style.display = 'flex';
+      } else {
+        // Boot instantly into v3 Engine with default images
+        deckItems = defaultImages;
+        document.getElementById('deck-container').style.display = 'flex';
+        updateImages();
+      }
+    }
+
+    // 2. Unlock & Dynamic Hydration via Pandora KV
+    async function unlockGallery() {
+      const pass = document.getElementById('pass-input').value;
+      const key = document.getElementById('key-input').value;
+      const err = document.getElementById('error-msg');
+
+      if (!pass || !key) {
+        err.innerText = "BOTH FIELDS REQUIRED";
+        return;
+      }
+
+      err.innerText = "FETCHING...";
+
+      try {
+        let rawData = await pandoraStorage.getItem(key, pass);
+
+        if (!rawData) {
+          err.innerText = "INVALID KEY OR ACCESS DENIED";
+          return;
+        }
+
+        deckItems = parsePayload(rawData);
+
+        if (!deckItems.length) {
+          err.innerText = "NO VALID IMAGES FOUND";
+          return;
+        }
+
+        // Hide lock screen & reveal deck
+        document.getElementById('auth-overlay').style.display = 'none';
+        document.getElementById('deck-container').style.display = 'flex';
+
+        // Clear password input DOM value
+        document.getElementById('pass-input').value = '';
+
+        // Clean Address Bar: remove ?pandora parameter from browser history
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Reset slide state and boot renderer
+        currentIndex = 0;
+        updateImages();
+
+        // Trigger brief success toast confirmation
+        showToast(`✓ DECK LOADED (${deckItems.length} ITEMS)`);
+
+      } catch (e) {
+        console.error(e);
+        err.innerText = "PARSING ERROR";
+      }
+    }
+
+    // Parses string arrays or JSON objects with sanitization
+    function parsePayload(rawPayload) {
+      let data = rawPayload;
+      if (typeof rawPayload === 'string') {
+        const bracketIdx = rawPayload.indexOf('[');
+        if (bracketIdx !== -1) {
+          rawPayload = rawPayload.substring(bracketIdx);
+        }
+        data = JSON.parse(rawPayload);
+      }
+
+      const list = Array.isArray(data) ? data : (data.images || []);
+
+      return list.map(item => {
+        if (typeof item === 'string') {
+          return { url: item.trim(), title: '', caption: '' };
+        }
+        return {
+          url: item.url || item.src || '',
+          title: item.title || '',
+          caption: item.caption || item.text || ''
+        };
+      });
+    }
+
+    // 3. Low-RAM Garbage Collection & Memory Management
+    function syncMemoryWindow() {
+      if (!deckItems.length) return;
+
+      const keepIndices = new Set();
+      const offsets = [-2, -1, 0, 1, 2];
+
+      // Step A: Calculate active buffer range (+/- 2 items)
+      offsets.forEach(offset => {
+        keepIndices.add(getWrappedIndex(currentIndex + offset));
+      });
+
+      // Step B: Load required images into active memory
+      keepIndices.forEach(idx => {
+        const url = deckItems[idx].url;
+        if (url && !imageCache[url]) {
+          const img = new Image();
+          img.src = url;
+          imageCache[url] = img;
+        }
+      });
+
+      // Step C: Explicit Garbage Collection — Purge off-screen images from RAM
+      Object.keys(imageCache).forEach(cachedUrl => {
+        const isNeeded = Array.from(keepIndices).some(idx => deckItems[idx].url === cachedUrl);
+        if (!isNeeded) {
+          imageCache[cachedUrl].src = ''; // Sever image decode buffer
+          delete imageCache[cachedUrl];   // Release reference for JS GC
+        }
+      });
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    }
+
+    function getWrappedIndex(idx) {
+      const len = deckItems.length;
+      if (len === 0) return 0;
+      return ((idx % len) + len) % len;
+    }
+
+    function renderCaption(el, item) {
+      if (!item.title && !item.caption) {
+        el.innerHTML = '';
+        return;
+      }
+      let html = '';
+      if (item.title) html += `<div class="caption-title">${item.title}</div>`;
+      if (item.caption) html += `<div class="caption-text">${item.caption}</div>`;
+      el.innerHTML = html;
+    }
+
+    function updateImages() {
+      if (!deckItems.length) return;
+
+      const prevIndex = getWrappedIndex(currentIndex - 1);
+      const currIndex = getWrappedIndex(currentIndex);
+      const nextIndex = getWrappedIndex(currentIndex + 1);
+
+      const itemPrev = deckItems[prevIndex];
+      const itemCurr = deckItems[currIndex];
+      const itemNext = deckItems[nextIndex];
+
+      imgPrev.src = itemPrev.url;
+      imgCurr.src = itemCurr.url;
+      imgNext.src = itemNext.url;
+
+      renderCaption(capPrev, itemPrev);
+      renderCaption(capCurr, itemCurr);
+      renderCaption(capNext, itemNext);
+
+      slidePrev.style.transform = `translate3d(0, ${-windowHeight}px, 0)`;
+      slideCurr.style.transform = `translate3d(0, 0, 0)`;
+      slideNext.style.transform = `translate3d(0, ${windowHeight}px, 0)`;
+
+      syncMemoryWindow();
+    }
+
+    // 4. Gesture & Touch Mechanics
+    function onTouchStart(e) {
+      if (isAnimating) return;
+
+      const currentTime = performance.now();
+      const tapLength = currentTime - lastTapTime;
+
+      if (tapLength < 300 && tapLength > 0) {
+        toggleFullscreen();
+        lastTapTime = 0;
+      } else {
+        lastTapTime = currentTime;
+      }
+
+      isDragging = true;
+      const touch = e.touches ? e.touches[0] : e;
+      startY = touch.clientY;
+      currentY = startY;
+      lastY = startY;
+      lastTime = performance.now();
+      velocityY = 0;
+
+      track.style.transition = 'none';
+    }
+
+    function onTouchMove(e) {
+      if (!isDragging) return;
+
+      const touch = e.touches ? e.touches[0] : e;
+      currentY = touch.clientY;
+      deltaY = currentY - startY;
+
+      if (Math.abs(deltaY) > 10) {
+        lastTapTime = 0;
+      }
+
+      const now = performance.now();
+      const dt = now - lastTime;
+      if (dt > 0) {
+        const dy = currentY - lastY;
+        velocityY = (dy / dt) * 1000;
+        lastY = currentY;
+        lastTime = now;
+      }
+
+      track.style.transform = `translate3d(0, ${deltaY}px, 0)`;
+    }
+
+    function onTouchEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const swipeDistanceThreshold = windowHeight * 0.22;
+      const velocityThreshold = 450;
+      let targetIndexDelta = 0;
+
+      if (deltaY < -swipeDistanceThreshold || velocityY < -velocityThreshold) {
+        targetIndexDelta = 1;
+      } else if (deltaY > swipeDistanceThreshold || velocityY > velocityThreshold) {
+        targetIndexDelta = -1;
+      }
+
+      snapToSlide(targetIndexDelta);
+    }
+
+    function snapToSlide(indexDelta) {
+      isAnimating = true;
+
+      const targetY = -indexDelta * windowHeight;
+      const duration = 0.38;
+
+      track.style.transition = `transform ${duration}s cubic-bezier(0.25, 1, 0.5, 1)`;
+      track.style.transform = `translate3d(0, ${targetY}px, 0)`;
+
+      setTimeout(() => {
+        currentIndex = getWrappedIndex(currentIndex + indexDelta);
+        track.style.transition = 'none';
+        track.style.transform = `translate3d(0, 0, 0)`;
+        updateImages();
+        isAnimating = false;
+        deltaY = 0;
+      }, duration * 1000);
+    }
+
+    // Wheel Scroll Handling
+    let wheelTimeout = null;
+    let accumulatedWheel = 0;
+
+    function onWheel(e) {
+      e.preventDefault();
+      if (isAnimating) return;
+
+      accumulatedWheel += e.deltaY;
+      clearTimeout(wheelTimeout);
+      wheelTimeout = setTimeout(() => { accumulatedWheel = 0; }, 200);
+
+      if (Math.abs(accumulatedWheel) > 50) {
+        const delta = accumulatedWheel > 0 ? 1 : -1;
+        accumulatedWheel = 0;
+        snapToSlide(delta);
+      }
+    }
+
+    function onResize() {
+      windowHeight = window.innerHeight;
+      updateImages();
+    }
+
+    // Global Event Listeners
+    window.addEventListener('resize', onResize);
+    window.addEventListener('wheel', onWheel, { passive: false });
+
+    const container = document.getElementById('deck-container');
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: true });
+    container.addEventListener('touchend', onTouchEnd);
+
+    container.addEventListener('mousedown', onTouchStart);
+    container.addEventListener('dblclick', toggleFullscreen);
+    window.addEventListener('mousemove', onTouchMove);
+    window.addEventListener('mouseup', onTouchEnd);
+
+    // Trigger unlock on 'Enter' keypress
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && document.getElementById('auth-overlay').style.display !== 'none') {
+        unlockGallery();
+      }
+    });
+
+    // Boot App Engine
+    window.onload = function() {
+      bootApp();
+    };
+  </script>
+</body>
+</html>
