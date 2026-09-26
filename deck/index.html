@@ -296,21 +296,22 @@
     }
 
     // 1. Conditional Boot Controller
-    function bootApp() {
-      const urlParams = new URLSearchParams(window.location.search);
-      // Handles both /deck?pandora and /deck/?pandora path variations
-      const isPandoraRequested = urlParams.has('pandora') || window.location.href.includes('pandora');
+	function bootApp() {
+	  const urlParams = new URLSearchParams(window.location.search);
+	  
+	  // Checks strictly for the ?pandora query parameter
+	  const isPandoraRequested = urlParams.has('pandora');
 
-      if (isPandoraRequested) {
-        // Show Pandora Authentication Screen
-        document.getElementById('auth-overlay').style.display = 'flex';
-      } else {
-        // Boot instantly into v3 Engine with default images
-        deckItems = defaultImages;
-        document.getElementById('deck-container').style.display = 'flex';
-        updateImages();
-      }
-    }
+	  if (isPandoraRequested) {
+		// Show Pandora Authentication Screen
+		document.getElementById('auth-overlay').style.display = 'flex';
+	  } else {
+		// Boot instantly into v3 Engine with default images
+		deckItems = defaultImages;
+		document.getElementById('deck-container').style.display = 'flex';
+		updateImages();
+	  }
+	}
 
     // 2. Unlock & Dynamic Hydration via Pandora KV
     async function unlockGallery() {
