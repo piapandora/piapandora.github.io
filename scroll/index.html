@@ -15,7 +15,7 @@
 		const randomScroll = scrolls[Math.floor(Math.random() * scrolls.length)];
         async function loadApp() {
             try {
-                const content = await pandoraStorage.getItem(randomScroll, pass);
+                const content = await publicStorage.getItem(randomScroll, pass);
                 
                 if (content) {
                     document.open();
