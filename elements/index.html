@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elements of Portraiture</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <style>
+    :root {
+      --bg: #121316;
+      --card-bg: #1a1c23;
+      --input-bg: #22252e;
+      --border: #2e323e;
+      --accent: #d97706;
+      --accent-hover: #b45309;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --radius: 8px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    header {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header img {
+      width: 32px;
+      height: 32px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 850px) {
+      .layout {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-family: var(--font);
+      transition: border-color 0.15s ease;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 50px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background-color: var(--border);
+    }
+
+    button.primary {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background-color: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .output-box {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #e2e8f0;
+      min-height: 400px;
+    }
+
+    .copy-status {
+      font-size: 0.8rem;
+      color: #10b981;
+      margin-left: 8px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .copy-status.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <img src="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png" alt="Feather Icon">
+    <h1>PIA - Elements of Portraiture</h1>
+  </header>
+
+  <div class="layout">
+    <!-- FORM COLUMN -->
+    <div class="form-col">
+      <form id="portraitForm">
+        
+        <!-- SUBJECT SECTION -->
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="section-title">Subject Specification</div>
+          
+          <div class="form-group">
+            <label for="body">Body</label>
+            <input type="text" id="body" placeholder="e.g. 4 head design, stylized big head">
+          </div>
+
+          <div class="form-group">
+            <label for="face">Face</label>
+            <input type="text" id="face" placeholder="e.g. cute young lady with green eyes">
+          </div>
+
+          <div class="form-group">
+            <label for="hair">Hair</label>
+            <input type="text" id="hair" placeholder="e.g. red braided hair">
+          </div>
+
+          <div class="form-group">
+            <label for="expression">Expression</label>
+            <input type="text" id="expression" placeholder="e.g. smile, relaxed">
+          </div>
+
+          <div class="form-group">
+            <label for="pose">Pose</label>
+            <input type="text" id="pose" placeholder="e.g. funny pose, arms & hands straight on, hip tilt">
+          </div>
+
+          <div class="form-group">
+            <label for="clothes">Clothes</label>
+            <input type="text" id="clothes" placeholder="e.g. t-shirt with flower logo + pink skirt with tartan pattern">
+          </div>
+
+          <div class="form-group">
+            <label for="composition">Composition</label>
+            <input type="text" id="composition" placeholder="e.g. full body shot: girl on leftside or rightside third of canvas">
+          </div>
+
+          <div class="form-group">
+            <label for="background">Background</label>
+            <input type="text" id="background" placeholder="e.g. castle, hills and sky">
+          </div>
+
+          <div class="form-group">
+            <label for="props">Props</label>
+            <input type="text" id="props" placeholder="e.g. holding an old staff with a feather on end">
+          </div>
+
+          <div class="form-group">
+            <label for="pets">Pets</label>
+            <input type="text" id="pets" placeholder="e.g. silly cat on opposite third of canvas">
+          </div>
+        </div>
+
+        <!-- GLOBAL ENVIRONMENT SECTION -->
+        <div class="card">
+          <div class="section-title">Global Environment</div>
+
+          <div class="form-group">
+            <label for="style">Style / Medium</label>
+            <input type="text" id="style" placeholder="e.g. Inkscape flat vector, 2D cell-shaded">
+          </div>
+
+          <div class="form-group">
+            <label for="palette">Palette / Colors</label>
+            <input type="text" id="palette" placeholder="e.g. pastel tones, warm autumnal, limited 4-color">
+          </div>
+
+          <div class="form-group">
+            <label for="lighting">Lighting / Atmosphere</label>
+            <input type="text" id="lighting" placeholder="e.g. golden hour rim light, overcast soft glow">
+          </div>
+
+          <div class="form-group">
+            <label for="camera">Camera Angle</label>
+            <input type="text" id="camera" placeholder="e.g. low-angle looking up, eye-level, isometric">
+          </div>
+
+          <div class="form-group">
+            <label for="focal">Focal Depth</label>
+            <input type="text" id="focal" placeholder="e.g. sharp midground girl, soft/blurred background">
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- OUTPUT COLUMN -->
+    <div class="output-col">
+      <div class="card" style="position: sticky; top: 24px;">
+        <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Formatted Output</span>
+          <span class="copy-status" id="copyStatus">Copied to clipboard!</span>
+        </div>
+        <div class="output-box" id="output">=== PORTRAIT SPECIFICATION BRIEF ===</div>
+        <div class="actions">
+          <button type="button" class="primary" onclick="copyOutput()">Copy Text</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fieldLabels = {
+    body: 'BODY',
+    face: 'FACE',
+    hair: 'HAIR',
+    expression: 'EXPRESSION',
+    pose: 'POSE',
+    clothes: 'CLOTHES',
+    composition: 'COMPOSITION',
+    background: 'BACKGROUND',
+    props: 'PROPS',
+    pets: 'PETS',
+    style: 'STYLE / MEDIUM',
+    palette: 'PALETTE / COLORS',
+    lighting: 'LIGHTING / ATMOSPHERE',
+    camera: 'CAMERA ANGLE',
+    focal: 'FOCAL DEPTH'
+  };
+
+  const form = document.getElementById('portraitForm');
+  const outputEl = document.getElementById('output');
+
+  function updateOutput() {
+    let out = "=== PORTRAIT SPECIFICATION BRIEF ===\n\n";
+    let hasContent = false;
+
+    // Subject fields
+    const subjectFields = ['body', 'face', 'hair', 'expression', 'pose', 'clothes', 'composition', 'background', 'props', 'pets'];
+
+    subjectFields.forEach(id => {
+      const val = document.getElementById(id).value.trim();
+      if (val) {
+        out += `[${fieldLabels[id]}]\n${val}\n\n`;
+        hasContent = true;
+      }
+    });
+
+    // Global Environment fields
+    const envFields = ['style', 'palette', 'lighting', 'camera', 'focal'];
+    let envHeaderAdded = false;
+
+    envFields.forEach(id => {
+      const val = document.getElementById(id).value.trim();
+      if (val) {
+        if (!envHeaderAdded) {
+          out += "--- GLOBAL ENVIRONMENT ---\n\n";
+          envHeaderAdded = true;
+        }
+        out += `[${fieldLabels[id]}]\n${val}\n\n`;
+        hasContent = true;
+      }
+    });
+
+    if (!hasContent) {
+      outputEl.textContent = "=== PORTRAIT SPECIFICATION BRIEF ===\n\n(Fill in fields to generate output brief)";
+    } else {
+      outputEl.textContent = out.trim();
+    }
+  }
+
+  form.addEventListener('input', updateOutput);
+
+  function copyOutput() {
+    const text = outputEl.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const status = document.getElementById('copyStatus');
+      status.classList.add('visible');
+      setTimeout(() => {
+        status.classList.remove('visible');
+      }, 2000);
+    });
+  }
+
+  // Initial call
+  updateOutput();
+</script>
+
+</body>
+</html>
