@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Image Studio</title>
+	<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Phosphor Icons for modern UI symbols -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Custom scrollbar styling for slick dark aesthetic */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* Canvas checkerboard pattern for transparent previews */
+        .bg-checkerboard {
+            background-color: #0f172a;
+            background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), 
+                              linear-gradient(-45deg, #1e293b 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #1e293b 75%), 
+                              linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <i class="ph-bold ph-layers-intersect text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white tracking-tight leading-none">Hybrid Image Studio</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">High-Precision Canvas Layer Compositor</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="reset-btn" class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5">
+                    <i class="ph-bold ph-arrows-counter-clockwise"></i> Reset
+                </button>
+                <button id="download-btn" disabled class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-emerald-950/20 disabled:shadow-none transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+                    <i class="ph-bold ph-download-simple text-base"></i> Export Hybrid
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Sidebar: Controls & Uploads (5 Columns) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i class="ph-bold ph-images text-emerald-400"></i> Source Images
+                    </h2>
+                    <button id="swap-btn" disabled title="Swap Image A and Image B order" class="px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 rounded-lg border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed">
+                        <i class="ph-bold ph-arrows-down-up text-sm"></i> Swap Stack Order
+                    </button>
+                </div>
+
+                <!-- Image A Drop Zone (Bottom/Base Layer) -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-medium text-slate-300 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span> Image A (Base Canvas)
+                        </span>
+                        <span id="file-a-name" class="text-slate-500 truncate max-w-[180px]">No file selected</span>
+                    </div>
+                    <label id="drop-zone-a" class="flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-700 hover:border-slate-500 bg-slate-950/50 hover:bg-slate-800/40 rounded-xl cursor-pointer transition-all relative overflow-hidden group">
+                        <input type="file" id="input-image-a" accept="image/*" class="hidden">
+                        <div id="preview-container-a" class="absolute inset-0 hidden">
+                            <img id="thumb-a" class="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity">
+                            <div class="absolute inset-0 flex items-center justify-center bg-slate-950/40 text-xs font-medium text-white gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="ph-bold ph-arrow-counter-clockwise"></i> Change Image A
+                            </div>
+                        </div>
+                        <div id="prompt-a" class="flex flex-col items-center text-center p-3">
+                            <i class="ph-bold ph-cloud-arrow-up text-2xl text-slate-400 group-hover:text-emerald-400 mb-1 transition-colors"></i>
+                            <span class="text-xs text-slate-300 font-medium">Click or drag Image A</span>
+                            <span class="text-[10px] text-slate-500">PNG, JPG, WEBP</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Image B Drop Zone (Top/Blend Layer) -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-medium text-slate-300 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Image B (Top Overlay)
+                        </span>
+                        <span id="file-b-name" class="text-slate-500 truncate max-w-[180px]">No file selected</span>
+                    </div>
+                    <label id="drop-zone-b" class="flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-700 hover:border-slate-500 bg-slate-950/50 hover:bg-slate-800/40 rounded-xl cursor-pointer transition-all relative overflow-hidden group">
+                        <input type="file" id="input-image-b" accept="image/*" class="hidden">
+                        <div id="preview-container-b" class="absolute inset-0 hidden">
+                            <img id="thumb-b" class="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity">
+                            <div class="absolute inset-0 flex items-center justify-center bg-slate-950/40 text-xs font-medium text-white gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="ph-bold ph-arrow-counter-clockwise"></i> Change Image B
+                            </div>
+                        </div>
+                        <div id="prompt-b" class="flex flex-col items-center text-center p-3">
+                            <i class="ph-bold ph-cloud-arrow-up text-2xl text-slate-400 group-hover:text-emerald-400 mb-1 transition-colors"></i>
+                            <span class="text-xs text-slate-300 font-medium">Click or drag Image B</span>
+                            <span class="text-[10px] text-slate-500">PNG, JPG, WEBP</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-5 flex-1">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-3 flex items-center gap-2">
+                    <i class="ph-bold ph-sliders text-emerald-400"></i> Compositing Controls
+                </h2>
+
+                <!-- Blend Mode Selection -->
+                <div class="space-y-2">
+                    <label for="blend-mode" class="block text-xs font-medium text-slate-300">
+                        Blend Mode
+                    </label>
+                    <div class="relative">
+                        <select id="blend-mode" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none appearance-none cursor-pointer">
+                            <option value="normal" selected>Normal (50/50 standard blend)</option>
+                            <option value="multiply">Multiply (Darken)</option>
+                            <option value="screen">Screen (Lighten)</option>
+                            <option value="overlay">Overlay (Contrast)</option>
+                            <option value="soft-light">Soft Light (Subtle Contrast)</option>
+                            <option value="hard-light">Hard Light (Vivid Blend)</option>
+                            <option value="color-dodge">Color Dodge (Brighten)</option>
+                            <option value="color-burn">Color Burn (Deepen)</option>
+                            <option value="difference">Difference (Invert/Compare)</option>
+                            <option value="exclusion">Exclusion (Soft Difference)</option>
+                            <option value="darken">Darken Only</option>
+                            <option value="lighten">Lighten Only</option>
+                            <option value="hue">Hue</option>
+                            <option value="saturation">Saturation</option>
+                            <option value="color">Color</option>
+                            <option value="luminosity">Luminosity</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down absolute right-3 top-3.5 text-slate-400 pointer-events-none"></i>
+                    </div>
+                    <p id="blend-mode-desc" class="text-[11px] text-slate-500 leading-normal italic">
+                        Standard normal opacity blend across both images.
+                    </p>
+                </div>
+
+                <!-- Top Layer Opacity Slider -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <label for="opacity-slider" class="font-medium text-slate-300">Top Layer Opacity</label>
+                        <span id="opacity-val" class="font-mono text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">50%</span>
+                    </div>
+                    <input type="range" id="opacity-slider" min="0" max="100" value="50" class="w-full h-2 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                    <div class="flex justify-between text-[10px] text-slate-500">
+                        <span>0% (Base Only)</span>
+                        <span>50% (Equal)</span>
+                        <span>100% (Top Only)</span>
+                    </div>
+                </div>
+
+                <!-- Resize Mode Option -->
+                <div class="space-y-2 pt-2 border-t border-slate-800">
+                    <label class="block text-xs font-medium text-slate-300">Canvas Dimension Fitting</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="fit-a" class="fit-opt-btn active px-3 py-2 text-xs rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-400 font-medium transition-all text-center">
+                            Fit to Image A
+                        </button>
+                        <button id="fit-b" class="fit-opt-btn px-3 py-2 text-xs rounded-xl border border-slate-700 bg-slate-950 text-slate-400 hover:text-slate-200 font-medium transition-all text-center">
+                            Fit to Image B
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Output Filename Preview Tag -->
+                <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 text-xs space-y-1">
+                    <span class="text-[10px] uppercase font-semibold text-slate-500 tracking-wider block">Target Export Filename</span>
+                    <span id="filename-preview" class="font-mono text-slate-400 break-all text-[11px]">hybrid-imageA-imageB-date.png</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Main Viewport: Live Render Canvas (7 Columns) -->
+        <section class="lg:col-span-7 flex flex-col">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex-1 flex flex-col h-full min-h-[420px]">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Live Canvas Composite</h2>
+                    </div>
+                    <div id="resolution-badge" class="text-xs font-mono text-slate-500 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800">
+                        0 x 0 px
+                    </div>
+                </div>
+
+                <!-- Canvas Preview Container -->
+                <div class="flex-1 bg-checkerboard rounded-xl border border-slate-800/80 relative flex items-center justify-center overflow-hidden min-h-[360px] p-2">
+                    
+                    <!-- Empty State Placeholder -->
+                    <div id="canvas-placeholder" class="flex flex-col items-center justify-center text-center p-6 space-y-3">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-slate-500">
+                            <i class="ph-bold ph-image-square text-3xl"></i>
+                        </div>
+                        <div class="max-w-xs">
+                            <p class="text-sm font-medium text-slate-300">No Canvas Generated Yet</p>
+                            <p class="text-xs text-slate-500 mt-1">Upload both Image A and Image B on the left panel to render live hybrid blend.</p>
+                        </div>
+                    </div>
+
+                    <!-- Output HTML5 Canvas -->
+                    <canvas id="composite-canvas" class="max-w-full max-h-[600px] object-contain shadow-2xl rounded hidden transition-opacity duration-300"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Application State
+        const state = {
+            imageA: null,
+            imageB: null,
+            filenameA: 'imageA',
+            filenameB: 'imageB',
+            opacity: 0.5,
+            blendMode: 'normal',
+            fitDimensionMode: 'A', // 'A' or 'B'
+            isSwapped: false
+        };
+
+        // DOM Element Cache
+        const elements = {
+            inputA: document.getElementById('input-image-a'),
+            inputB: document.getElementById('input-image-b'),
+            dropZoneA: document.getElementById('drop-zone-a'),
+            dropZoneB: document.getElementById('drop-zone-b'),
+            previewA: document.getElementById('preview-container-a'),
+            previewB: document.getElementById('preview-container-b'),
+            thumbA: document.getElementById('thumb-a'),
+            thumbB: document.getElementById('thumb-b'),
+            promptA: document.getElementById('prompt-a'),
+            promptB: document.getElementById('prompt-b'),
+            fileAName: document.getElementById('file-a-name'),
+            fileBName: document.getElementById('file-b-name'),
+            opacitySlider: document.getElementById('opacity-slider'),
+            opacityVal: document.getElementById('opacity-val'),
+            blendModeSelect: document.getElementById('blend-mode'),
+            blendModeDesc: document.getElementById('blend-mode-desc'),
+            swapBtn: document.getElementById('swap-btn'),
+            resetBtn: document.getElementById('reset-btn'),
+            downloadBtn: document.getElementById('download-btn'),
+            canvas: document.getElementById('composite-canvas'),
+            canvasPlaceholder: document.getElementById('canvas-placeholder'),
+            resBadge: document.getElementById('resolution-badge'),
+            filenamePreview: document.getElementById('filename-preview'),
+            fitABtn: document.getElementById('fit-a'),
+            fitBBtn: document.getElementById('fit-b')
+        };
+
+        const ctx = elements.canvas.getContext('2d');
+
+        // Descriptions for blend modes
+        const blendDescriptions = {
+            'normal': 'Standard alpha blend. At 50% opacity, both opaque images contribute equally.',
+            'multiply': 'Multiplies pixel values. Result is always darker; white becomes transparent.',
+            'screen': 'Inverts, multiplies, and inverts pixels. Result is always lighter; black becomes transparent.',
+            'overlay': 'Combines Multiply and Screen. Preserves base highlights/shadows while blending colors.',
+            'soft-light': 'Applies subtle lightening or darkening based on overlay brightness.',
+            'hard-light': 'Combines Multiply and Screen based on top layer brightness for high contrast.',
+            'color-dodge': 'Brightens base layer pixels to reflect top layer color.',
+            'color-burn': 'Darkens base layer pixels to reflect top layer color.',
+            'difference': 'Subtracts lighter pixels from darker ones. Identical areas become black.',
+            'exclusion': 'Similar to difference with lower contrast; white inverts, black leaves unchanged.',
+            'darken': 'Keeps the darkest pixels between both layers.',
+            'lighten': 'Keeps the lightest pixels between both layers.',
+            'hue': 'Combines hue of top layer with saturation and luminosity of base layer.',
+            'saturation': 'Combines saturation of top layer with hue and luminosity of base layer.',
+            'color': 'Combines hue/saturation of top layer with luminosity of base layer.',
+            'luminosity': 'Combines luminosity of top layer with hue/saturation of base layer.'
+        };
+
+        // Utility to extract filename without extension
+        function sanitizeFilename(filename) {
+            if (!filename) return 'image';
+            const name = filename.substring(0, filename.lastIndexOf('.')) || filename;
+            return name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+        }
+
+        // Format current timestamp as Unix epoch in milliseconds
+        function getFormattedTimestamp() {
+            return Date.now();
+        }
+
+        // Generate target download filename according to spec
+        function buildOutputFilename() {
+            const first = state.filenameA || 'imagea';
+            const second = state.filenameB || 'imageb';
+            const timestamp = getFormattedTimestamp();
+            return `hybrid-${first}-${second}-${timestamp}.png`;
+        }
+
+        // Update target filename badge
+        function updateFilenamePreview() {
+            elements.filenamePreview.textContent = buildOutputFilename();
+        }
+
+        // Read file as Image object
+        function handleFileSelect(file, targetKey) {
+            if (!file || !file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    state[targetKey] = img;
+                    if (targetKey === 'imageA') {
+                        state.filenameA = sanitizeFilename(file.name);
+                        elements.fileAName.textContent = file.name;
+                        elements.thumbA.src = e.target.result;
+                        elements.previewA.classList.remove('hidden');
+                        elements.promptA.classList.add('hidden');
+                    } else {
+                        state.filenameB = sanitizeFilename(file.name);
+                        elements.fileBName.textContent = file.name;
+                        elements.thumbB.src = e.target.result;
+                        elements.previewB.classList.remove('hidden');
+                        elements.promptB.classList.add('hidden');
+                    }
+                    
+                    updateUIState();
+                    renderCanvas();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Setup Drag & Drop listeners
+        function setupDropZone(dropZone, inputEl, targetKey) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('border-emerald-500', 'bg-emerald-500/10');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('border-emerald-500', 'bg-emerald-500/10');
+                });
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    inputEl.files = files;
+                    handleFileSelect(files[0], targetKey);
+                }
+            });
+
+            inputEl.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0], targetKey);
+                }
+            });
+        }
+
+        setupDropZone(elements.dropZoneA, elements.inputA, 'imageA');
+        setupDropZone(elements.dropZoneB, elements.inputB, 'imageB');
+
+        function renderCanvas() {
+            const { imageA, imageB, opacity, blendMode, fitDimensionMode } = state;
+
+            // Only render when both images are loaded
+            if (!imageA || !imageB) {
+                elements.canvas.classList.add('hidden');
+                elements.canvasPlaceholder.classList.remove('hidden');
+                elements.downloadBtn.disabled = true;
+                elements.swapBtn.disabled = true;
+                elements.resBadge.textContent = '0 x 0 px';
+                updateFilenamePreview();
+                return;
+            }
+
+            elements.canvasPlaceholder.classList.add('hidden');
+            elements.canvas.classList.remove('hidden');
+            elements.downloadBtn.disabled = false;
+            elements.swapBtn.disabled = false;
+
+            // Base dimension reference
+            const baseImg = fitDimensionMode === 'A' ? imageA : imageB;
+            const topImg = fitDimensionMode === 'A' ? imageB : imageA;
+
+            const width = baseImg.naturalWidth || baseImg.width;
+            const height = baseImg.naturalHeight || baseImg.height;
+
+            // Match canvas dimensions to base image for full quality
+            elements.canvas.width = width;
+            elements.canvas.height = height;
+            elements.resBadge.textContent = `${width} x ${height} px`;
+
+            // Clear Canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Step 1: Draw Base Layer (100% Opaque)
+            ctx.globalAlpha = 1.0;
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.drawImage(baseImg, 0, 0, width, height);
+
+            // Step 2: Draw Top Layer with opacity and blend mode
+            ctx.globalAlpha = parseFloat(opacity);
+            ctx.globalCompositeOperation = blendMode;
+            ctx.drawImage(topImg, 0, 0, width, height);
+
+            // Reset composite mode
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1.0;
+
+            updateFilenamePreview();
+        }
+
+        function updateUIState() {
+            // Update dimension buttons
+            if (state.fitDimensionMode === 'A') {
+                elements.fitABtn.className = "fit-opt-btn px-3 py-2 text-xs rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-400 font-medium transition-all text-center";
+                elements.fitBBtn.className = "fit-opt-btn px-3 py-2 text-xs rounded-xl border border-slate-700 bg-slate-950 text-slate-400 hover:text-slate-200 font-medium transition-all text-center";
+            } else {
+                elements.fitBBtn.className = "fit-opt-btn px-3 py-2 text-xs rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-400 font-medium transition-all text-center";
+                elements.fitABtn.className = "fit-opt-btn px-3 py-2 text-xs rounded-xl border border-slate-700 bg-slate-950 text-slate-400 hover:text-slate-200 font-medium transition-all text-center";
+            }
+        }
+
+        // Opacity Slider Event Listener
+        elements.opacitySlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            state.opacity = val / 100;
+            elements.opacityVal.textContent = `${val}%`;
+            renderCanvas();
+        });
+
+        // Blend Mode Event Listener
+        elements.blendModeSelect.addEventListener('change', (e) => {
+            state.blendMode = e.target.value;
+            elements.blendModeDesc.textContent = blendDescriptions[state.blendMode] || '';
+            renderCanvas();
+        });
+
+        // Swap Stack Order
+        elements.swapBtn.addEventListener('click', () => {
+            // Swap images and filenames in state
+            const tempImg = state.imageA;
+            state.imageA = state.imageB;
+            state.imageB = tempImg;
+
+            const tempName = state.filenameA;
+            state.filenameA = state.filenameB;
+            state.filenameB = tempName;
+
+            const tempDisplayName = elements.fileAName.textContent;
+            elements.fileAName.textContent = elements.fileBName.textContent;
+            elements.fileBName.textContent = tempDisplayName;
+
+            const tempSrc = elements.thumbA.src;
+            elements.thumbA.src = elements.thumbB.src;
+            elements.thumbB.src = tempSrc;
+
+            state.isSwapped = !state.isSwapped;
+            renderCanvas();
+        });
+
+        // Fit buttons
+        elements.fitABtn.addEventListener('click', () => {
+            state.fitDimensionMode = 'A';
+            updateUIState();
+            renderCanvas();
+        });
+
+        elements.fitBBtn.addEventListener('click', () => {
+            state.fitDimensionMode = 'B';
+            updateUIState();
+            renderCanvas();
+        });
+
+        // Reset App
+        elements.resetBtn.addEventListener('click', () => {
+            state.imageA = null;
+            state.imageB = null;
+            state.filenameA = 'imageA';
+            state.filenameB = 'imageB';
+            state.opacity = 0.5;
+            state.blendMode = 'normal';
+            state.fitDimensionMode = 'A';
+
+            elements.inputA.value = '';
+            elements.inputB.value = '';
+            elements.fileAName.textContent = 'No file selected';
+            elements.fileBName.textContent = 'No file selected';
+            
+            elements.previewA.classList.add('hidden');
+            elements.promptA.classList.remove('hidden');
+            elements.previewB.classList.add('hidden');
+            elements.promptB.classList.remove('hidden');
+
+            elements.opacitySlider.value = 50;
+            elements.opacityVal.textContent = '50%';
+            elements.blendModeSelect.value = 'normal';
+            elements.blendModeDesc.textContent = blendDescriptions['normal'];
+
+            updateUIState();
+            renderCanvas();
+        });
+
+        elements.downloadBtn.addEventListener('click', () => {
+            if (!state.imageA || !state.imageB) return;
+
+            const filename = buildOutputFilename();
+            const dataUrl = elements.canvas.toDataURL('image/png');
+
+            // Trigger immediate browser download
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Initial setup on load
+        window.onload = () => {
+            updateUIState();
+        };
+    </script>
+</body>
+</html>
