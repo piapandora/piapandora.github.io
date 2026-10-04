@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tickle Your Memory</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #0b0d12;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      touch-action: manipulation;
+    }
+
+    .game-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw;
+      max-height: 100vh;
+      max-width: 177.78vh;
+      background-color: #11141d;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+      overflow: hidden;
+    }
+
+    .grid-container {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      gap: 0;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      perspective: 1000px;
+      cursor: pointer;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      opacity: 1;
+    }
+
+    .card.matched {
+      opacity: 0;
+      transform: scale(0.92);
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .card.hidden-slot {
+      visibility: hidden;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .card-back {
+      background-image: url("https://piapandora.com/tickletrio/misc/card-back.jpg");
+      background-color: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .card-front {
+      transform: rotateY(180deg);
+      background-color: #0f172a;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background-size: 100% 100%;
+    }
+
+    .win-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(8, 11, 18, 0.92);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease-in-out;
+      z-index: 30;
+    }
+
+    .win-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .win-title {
+      background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: clamp(2.5rem, 5.5vw, 6rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      filter: drop-shadow(0 0 35px rgba(245, 158, 11, 0.5));
+      animation: pulseWin 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseWin {
+      0%, 100% { transform: scale(0.96); }
+      50% { transform: scale(1.04); }
+    }
+
+    canvas#confetti {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 31;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-wrapper" id="gameWrapper">
+    <div class="grid-container" id="grid"></div>
+
+    <div class="win-overlay" id="winOverlay">
+      <h1 class="win-title">Congratulation, You Win!</h1>
+      <button id="restartBtn" class="mt-8 px-8 py-3.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-black text-xl rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer">
+        Play Again
+      </button>
+    </div>
+
+    <canvas id="confetti"></canvas>
+  </div>
+
+  <script>
+    const GRID_ROWS = 5;
+    const GRID_COLS = 12;
+    const UNFLIP_DELAY_MS = 1666;
+
+    const portraitPool = {
+      'dark': [
+        'dark01.jpg', 'dark02.jpg', 'dark03.jpg', 'dark04.jpg', 'dark05.jpg',
+        'dark06.jpg', 'dark07.jpg', 'dark08.jpg', 'dark09.jpg', 'dark10.jpg'
+      ],
+      'blonde': [
+        'blonde01.jpg', 'blonde02.jpg', 'blonde03.jpg', 'blonde04.jpg', 'blonde05.jpg',
+        'blonde06.jpg', 'blonde07.jpg', 'blonde08.jpg', 'blonde09.jpg', 'blonde10.jpg'
+      ],
+      'red': [
+        'red01.jpg', 'red02.jpg', 'red03.jpg', 'red04.jpg', 'red05.jpg',
+        'red06.jpg', 'red07.jpg', 'red08.jpg', 'red09.jpg', 'red10.jpg'
+      ]
+    };
+
+    const BASE_URL = 'https://piapandora.com/tickletrio/images/';
+
+    const fullMasterDeck = [];
+    Object.keys(portraitPool).forEach(folder => {
+      portraitPool[folder].forEach(filename => {
+        const fullUrl = `${BASE_URL}${folder}/${filename}`;
+        fullMasterDeck.push(fullUrl);
+        const img = new Image();
+        img.src = fullUrl;
+      });
+    });
+
+    const TOTAL_CARDS = GRID_ROWS * GRID_COLS;
+    const REQUIRED_PAIRS = Math.floor(TOTAL_CARDS / 2);
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function generateGameCards() {
+      const shuffledMaster = shuffleArray(fullMasterDeck);
+      const chosenFaces = [];
+
+      for (let i = 0; i < REQUIRED_PAIRS; i++) {
+        chosenFaces.push(shuffledMaster[i % shuffledMaster.length]);
+      }
+
+      let deck = [...chosenFaces, ...chosenFaces];
+      return shuffleArray(deck);
+    }
+
+    const grid = document.getElementById('grid');
+    const winOverlay = document.getElementById('winOverlay');
+    const restartBtn = document.getElementById('restartBtn');
+
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let matchedPairs = 0;
+    let animationFrameId = null;
+
+    function initGame() {
+      stopConfetti();
+
+      grid.innerHTML = '';
+      firstCard = null;
+      secondCard = null;
+      lockBoard = false;
+      matchedPairs = 0;
+      winOverlay.classList.remove('show');
+
+      grid.style.gridTemplateRows = `repeat(${GRID_ROWS}, 1fr)`;
+      grid.style.gridTemplateColumns = `repeat(${GRID_COLS}, 1fr)`;
+
+      const gameCards = generateGameCards();
+
+      gameCards.forEach((imgUrl) => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.cardValue = imgUrl;
+
+        card.innerHTML = `
+          <div class="card-inner">
+            <div class="card-face card-back"></div>
+            <div class="card-face card-front" style="background-image: url('${imgUrl}');"></div>
+          </div>
+        `;
+
+        card.addEventListener('click', flipCard);
+        grid.appendChild(card);
+      });
+    }
+
+    function flipCard() {
+      if (lockBoard) return;
+      if (this === firstCard) return;
+
+      this.classList.add('flipped');
+
+      if (!firstCard) {
+        firstCard = this;
+        return;
+      }
+
+      secondCard = this;
+      lockBoard = true;
+
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      const isMatch = firstCard.dataset.cardValue === secondCard.dataset.cardValue;
+      isMatch ? disableCards() : unflipCards();
+    }
+
+    function disableCards() {
+      const card1 = firstCard;
+      const card2 = secondCard;
+
+      setTimeout(() => {
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+
+        setTimeout(() => {
+          card1.classList.add('hidden-slot');
+          card2.classList.add('hidden-slot');
+        }, 500);
+
+        resetBoardState();
+        matchedPairs++;
+
+        if (matchedPairs === REQUIRED_PAIRS) {
+          triggerWinScreen();
+        }
+      }, 1000);
+    }
+
+    function unflipCards() {
+      const card1 = firstCard;
+      const card2 = secondCard;
+
+      setTimeout(() => {
+        if (card1) card1.classList.remove('flipped');
+        if (card2) card2.classList.remove('flipped');
+        resetBoardState();
+      }, UNFLIP_DELAY_MS);
+    }
+
+    function resetBoardState() {
+      firstCard = null;
+      secondCard = null;
+      lockBoard = false;
+    }
+
+    function triggerWinScreen() {
+      setTimeout(() => {
+        winOverlay.classList.add('show');
+        startConfetti();
+      }, 500);
+    }
+
+    function stopConfetti() {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function startConfetti() {
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      const gameWrapper = document.getElementById('gameWrapper');
+
+      canvas.width = gameWrapper.offsetWidth;
+      canvas.height = gameWrapper.offsetHeight;
+
+      const particles = Array.from({ length: 180 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        color: `hsl(${Math.random() * 360}, 95%, 65%)`,
+        size: Math.random() * 8 + 4,
+        speedY: Math.random() * 4 + 2,
+        speedX: Math.random() * 3 - 1.5,
+        rotation: Math.random() * 360,
+        rotSpeed: Math.random() * 6 - 3
+      }));
+
+      function renderAnimation() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.rotSpeed;
+
+          if (p.y > canvas.height) p.y = -10;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+
+        if (winOverlay.classList.contains('show')) {
+          animationFrameId = requestAnimationFrame(renderAnimation);
+        }
+      }
+
+      renderAnimation();
+    }
+
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('confetti');
+      const gameWrapper = document.getElementById('gameWrapper');
+      if (canvas && gameWrapper) {
+        canvas.width = gameWrapper.offsetWidth;
+        canvas.height = gameWrapper.offsetHeight;
+      }
+    });
+
+    document.addEventListener('dblclick', (e) => {
+      const isGridClick = grid.contains(e.target);
+      const isOverlayClick = winOverlay.contains(e.target);
+
+      if (!isGridClick && !isOverlayClick) {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
+      }
+    });
+
+    restartBtn.addEventListener('click', initGame);
+
+    window.onload = function () {
+      initGame();
+    };
+  </script>
+</body>
+</html>
