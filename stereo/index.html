@@ -23,8 +23,8 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
       background: rgba(15, 23, 42, 0.6);
@@ -39,62 +39,62 @@
                         linear-gradient(-45deg, #182232 25%, transparent 25%),
                         linear-gradient(45deg, transparent 75%, #182232 75%),
                         linear-gradient(-45deg, transparent 75%, #182232 75%);
-      background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
     }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between custom-scrollbar">
 
   <!-- HEADER -->
-  <header class="border-b border-gray-800/80 bg-slate-900/50 backdrop-blur px-6 py-2.5 sticky top-0 z-50 flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-        <i class="fa-solid fa-cubes text-white text-lg"></i>
+  <header class="border-b border-gray-800/80 bg-slate-900/50 backdrop-blur px-4 py-2 shrink-0 flex items-center justify-between">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-md shadow-indigo-500/20">
+        <i class="fa-solid fa-cubes text-white text-sm"></i>
       </div>
       <div>
-        <h1 class="font-bold text-lg tracking-wide text-white flex items-center gap-2">
+        <h1 class="font-bold text-sm tracking-wide text-white flex items-center gap-1.5 leading-none">
           StereoView 3D
-          <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">v1.0</span>
+          <span class="text-[10px] font-normal px-1.5 py-0.2 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">v1.0</span>
         </h1>
-        <p class="text-xs text-gray-400">Photo & Depth Map Stereogram Generator</p>
+        <p class="text-[10px] text-gray-400 leading-none mt-0.5">Photo & Depth Map Stereogram Generator</p>
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <div id="modeBadge" class="text-xs px-3 py-1.5 rounded-full font-semibold transition-all duration-300 flex items-center gap-2 bg-purple-500/10 text-purple-400 border border-purple-500/30">
-        <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+    <div class="flex items-center gap-2">
+      <div id="modeBadge" class="text-[11px] px-2.5 py-1 rounded-full font-semibold transition-all duration-300 flex items-center gap-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/30">
+        <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
         <span id="modeBadgeText">MODE: CROSS-VIEW (R / L)</span>
       </div>
-      <button id="btnHelp" title="Help & Instructions" class="text-gray-400 hover:text-white text-sm w-8 h-8 rounded-lg flex items-center justify-center bg-gray-800/50 border border-gray-700/50 transition hover:border-gray-600">
+      <button id="btnHelp" title="Help & Instructions" class="text-gray-400 hover:text-white text-xs w-7 h-7 rounded-lg flex items-center justify-center bg-gray-800/50 border border-gray-700/50 transition hover:border-gray-600">
         <i class="fa-solid fa-question"></i>
       </button>
     </div>
   </header>
 
   <!-- MAIN APP CONTAINER -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-3 md:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 grid grid-cols-1 lg:grid-cols-12 gap-3">
 
     <!-- LEFT COLUMN: CONTROLS & INPUTS -->
-    <div class="lg:col-span-4 flex flex-col gap-4">
+    <div class="lg:col-span-4 space-y-3">
 
       <!-- INPUT CARDS -->
-      <div class="glass-panel rounded-2xl p-3.5 space-y-2.5">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+      <div class="glass-panel rounded-xl p-3 space-y-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
           <i class="fa-solid fa-folder-open"></i> Source Inputs
         </h2>
         
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-2">
           <!-- RGB PHOTO SLOT -->
-          <div class="space-y-1.5">
+          <div class="space-y-1">
             <label class="text-xs font-medium text-gray-300 flex justify-between">
-              <span>Photo</span>
+              <span>Source Photograph</span>
               <span id="rgbStatus" class="text-gray-500 text-[10px]">Empty</span>
             </label>
-            <div id="dropRgb" class="relative group aspect-square rounded-xl border-2 border-dashed border-gray-700 hover:border-indigo-500 bg-gray-900/60 transition cursor-pointer flex flex-col items-center justify-center overflow-hidden">
+            <div id="dropRgb" class="relative group aspect-[4/3] rounded-lg border border-dashed border-gray-700 hover:border-indigo-500 bg-gray-900/60 transition cursor-pointer flex flex-col items-center justify-center overflow-hidden">
               <img id="previewRgb" class="hidden absolute inset-0 w-full h-full object-cover" alt="Photo Preview">
               <div id="placeholderRgb" class="flex flex-col items-center text-center p-2 text-gray-400">
-                <i class="fa-solid fa-image text-xl mb-1 text-gray-500 group-hover:text-indigo-400 transition"></i>
+                <i class="fa-solid fa-image text-lg mb-1 text-gray-500 group-hover:text-indigo-400 transition"></i>
                 <span class="text-[11px]">Upload Photo</span>
               </div>
               <input type="file" id="inputRgb" accept="image/*" class="hidden">
@@ -102,45 +102,54 @@
           </div>
 
           <!-- DEPTH MAP SLOT -->
-          <div class="space-y-1.5">
+          <div class="space-y-1">
             <label class="text-xs font-medium text-gray-300 flex justify-between">
-              <span>Depth Map</span>
+              <span>Grayscale Depth Map</span>
               <span id="depthStatus" class="text-gray-500 text-[10px]">Empty</span>
             </label>
-            <div id="dropDepth" class="relative group aspect-square rounded-xl border-2 border-dashed border-gray-700 hover:border-indigo-500 bg-gray-900/60 transition cursor-pointer flex flex-col items-center justify-center overflow-hidden">
+            <div id="dropDepth" class="relative group aspect-[4/3] rounded-lg border border-dashed border-gray-700 hover:border-indigo-500 bg-gray-900/60 transition cursor-pointer flex flex-col items-center justify-center overflow-hidden">
               <img id="previewDepth" class="hidden absolute inset-0 w-full h-full object-cover" alt="Depth Preview">
               <div id="placeholderDepth" class="flex flex-col items-center text-center p-2 text-gray-400">
-                <i class="fa-solid fa-layer-group text-xl mb-1 text-gray-500 group-hover:text-indigo-400 transition"></i>
+                <i class="fa-solid fa-layer-group text-lg mb-1 text-gray-500 group-hover:text-indigo-400 transition"></i>
                 <span class="text-[11px]">Upload Depth</span>
               </div>
               <input type="file" id="inputDepth" accept="image/*" class="hidden">
             </div>
           </div>
         </div>
+
+        <!-- STREAMLINED TIP BOX -->
+        <div class="p-2 bg-indigo-950/30 border border-indigo-800/30 rounded-lg text-[11px] text-gray-300 leading-snug flex items-start gap-2">
+          <i class="fa-solid fa-circle-info text-indigo-400 text-xs mt-0.5 shrink-0"></i>
+          <span>
+            Generate grayscale depth maps using <a href="https://huggingface.co/spaces/depth-anything/Depth-Anything-V2" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 underline font-medium">Depth Anything V2</a> on Hugging Face. DO NOT USE COLORED HEATMAPS.
+          </span>
+        </div>
+
       </div>
 
       <!-- PARALLAX & MODE CONTROLS -->
-      <div class="glass-panel rounded-2xl p-3.5 space-y-3">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+      <div class="glass-panel rounded-xl p-3 space-y-3">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
           <i class="fa-solid fa-sliders"></i> Stereo Engine Controls
         </h2>
 
         <!-- MODE SELECTOR -->
-        <div class="space-y-2">
+        <div class="space-y-1.5">
           <label class="text-xs font-medium text-gray-300">Viewing Format</label>
-          <div class="grid grid-cols-2 gap-2 p-1 bg-gray-900/80 rounded-xl border border-gray-800">
-            <button id="btnCross" class="py-2 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
-              <i class="fa-solid fa-eye text-xs"></i> Cross-View
+          <div class="grid grid-cols-2 gap-1.5 p-1 bg-gray-900/80 rounded-lg border border-gray-800">
+            <button id="btnCross" class="py-1.5 px-2 rounded-md text-xs font-medium transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow">
+              <i class="fa-solid fa-eye text-[11px]"></i> Cross-View
             </button>
-            <button id="btnParallel" class="py-2 px-3 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition flex items-center justify-center gap-2">
-              <i class="fa-solid fa-arrows-split-up-and-left text-xs"></i> Parallel
+            <button id="btnParallel" class="py-1.5 px-2 rounded-md text-xs font-medium text-gray-400 hover:text-white transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-arrows-split-up-and-left text-[11px]"></i> Parallel
             </button>
           </div>
-          <p class="text-[11px] text-gray-500 italic text-center">Tip: Press <kbd class="px-1.5 py-0.5 text-[10px] bg-gray-800 text-gray-300 rounded font-mono border border-gray-700">SPACEBAR</kbd> anywhere to switch modes</p>
+          <p class="text-[10px] text-gray-500 italic text-center leading-none mt-1">Press <kbd class="px-1 py-0.2 text-[9px] bg-gray-800 text-gray-300 rounded font-mono border border-gray-700">SPACEBAR</kbd> to switch modes</p>
         </div>
 
         <!-- PARALLAX SLIDER -->
-        <div class="space-y-2">
+        <div class="space-y-1">
           <div class="flex justify-between text-xs">
             <label class="font-medium text-gray-300">Parallax / Depth Intensity</label>
             <span id="valParallax" class="text-indigo-400 font-mono font-semibold">20 px</span>
@@ -149,7 +158,7 @@
         </div>
 
         <!-- EDGE BLUR SLIDER -->
-        <div class="space-y-2">
+        <div class="space-y-1">
           <div class="flex justify-between text-xs">
             <label class="font-medium text-gray-300">Depth Edge Blur (Anti-Distortion)</label>
             <span id="valBlur" class="text-indigo-400 font-mono font-semibold">3 px</span>
@@ -160,52 +169,52 @@
 
       <!-- ACTION BUTTONS -->
       <div class="space-y-2">
-        <button id="btnDownload" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:opacity-95 transition flex items-center justify-center gap-2 focus:outline-none">
-          <i class="fa-solid fa-download"></i> Download Side-by-Side Image
+        <button id="btnDownload" class="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-xs shadow-md shadow-indigo-500/20 hover:opacity-95 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download text-sm"></i> Download Side-by-Side Image
         </button>
-        <button id="btnDownloadSeparate" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:opacity-95 transition flex items-center justify-center gap-2 focus:outline-none">
-          <i class="fa-solid fa-images"></i> Download Images Separately
+        <button id="btnDownloadSeparate" class="w-full py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white font-medium text-xs transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-images text-sm"></i> Download Images Separately
         </button>
       </div>
 
     </div>
 
     <!-- RIGHT COLUMN: PREVIEW PANEL -->
-    <div class="lg:col-span-8 flex flex-col">
-      <div class="glass-panel rounded-2xl p-4 h-fit flex flex-col justify-between overflow-hidden relative">
+    <div class="lg:col-span-8">
+      <div class="glass-panel rounded-xl p-3 h-full flex flex-col justify-between relative min-h-[480px]">
         
-        <div class="flex items-center justify-between mb-3 px-1">
-          <span class="text-xs font-semibold text-gray-400 flex items-center gap-2">
+        <div class="flex items-center justify-between shrink-0 mb-2 px-0.5">
+          <span class="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
             <i class="fa-solid fa-desktop text-indigo-400"></i> STEREOGRAM PREVIEW
           </span>
-          <span id="canvasRes" class="text-[11px] font-mono text-gray-500">0 x 0 px</span>
+          <span id="canvasRes" class="text-[10px] font-mono text-gray-500">0 x 0 px</span>
         </div>
 
         <!-- CANVAS CONTAINER -->
-        <div class="relative flex-1 min-h-[260px] checkered-bg rounded-xl border border-gray-800 flex items-center justify-center p-2 overflow-auto custom-scrollbar">
-          <canvas id="mainCanvas" class="max-w-full max-h-[48vh] rounded shadow-2xl object-contain hidden"></canvas>
+        <div class="relative flex-1 checkered-bg rounded-lg border border-gray-800 flex items-center justify-center p-2 min-h-[380px] overflow-hidden">
+          <canvas id="mainCanvas" class="max-w-full max-h-[70vh] rounded shadow-xl object-contain hidden"></canvas>
           
           <!-- EMPTY PROMPT -->
           <div id="emptyPrompt" class="flex flex-col items-center justify-center text-center p-6 text-gray-500 space-y-2">
-            <i class="fa-solid fa-images text-4xl mb-2 text-gray-600"></i>
-            <p class="text-sm font-medium text-gray-400">Upload a Photo and Depth Map to start</p>
-            <p class="text-xs text-gray-600">Drag and drop files into the left panel slots</p>
+            <i class="fa-solid fa-images text-4xl mb-1 text-gray-600"></i>
+            <p class="text-xs font-medium text-gray-400">Upload a Photo and Depth Map to start</p>
+            <p class="text-[10px] text-gray-600">Drag and drop files into the left panel slots</p>
           </div>
 
           <!-- SPINNER OVERLAY -->
-          <div id="renderSpinner" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
-            <div class="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <div id="renderSpinner" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
+            <div class="w-7 h-7 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
             <span class="text-xs text-indigo-300 font-medium">Processing Depth Parallax...</span>
           </div>
         </div>
 
         <!-- PERSPECTIVE LABELS -->
-        <div class="mt-3 flex items-center justify-between px-1 text-[11px] text-gray-400">
-          <div class="flex items-center gap-2">
-            <span id="lblLeftEye" class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-indigo-400"></i> RIGHT PERSPECTIVE (LEFT IMAGE)</span>
+        <div class="mt-2 shrink-0 flex items-center justify-between px-0.5 text-[10px] text-gray-400">
+          <div class="flex items-center gap-1.5">
+            <span id="lblLeftEye" class="flex items-center gap-1"><i class="fa-solid fa-circle text-[6px] text-indigo-400"></i> RIGHT PERSPECTIVE (LEFT IMAGE)</span>
           </div>
-          <div class="flex items-center gap-2">
-            <span id="lblRightEye" class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] text-purple-400"></i> LEFT PERSPECTIVE (RIGHT IMAGE)</span>
+          <div class="flex items-center gap-1.5">
+            <span id="lblRightEye" class="flex items-center gap-1"><i class="fa-solid fa-circle text-[6px] text-purple-400"></i> LEFT PERSPECTIVE (RIGHT IMAGE)</span>
           </div>
         </div>
 
@@ -216,22 +225,22 @@
 
   <!-- HELP MODAL -->
   <div id="modalHelp" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-panel max-w-md w-full rounded-2xl p-6 space-y-4 border border-gray-700 shadow-2xl">
-      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-        <h3 class="font-bold text-white text-base">How to View Stereograms</h3>
-        <button id="btnCloseHelp" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div class="glass-panel max-w-sm w-full rounded-xl p-4 space-y-3 border border-gray-700 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+        <h3 class="font-bold text-white text-sm">How to View Stereograms</h3>
+        <button id="btnCloseHelp" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-base"></i></button>
       </div>
       
-      <div class="space-y-3 text-xs text-gray-300 leading-relaxed">
+      <div class="space-y-2 text-xs text-gray-300 leading-relaxed">
         <p><strong class="text-indigo-400">Cross-View Mode (Default):</strong> Cross your eyes slightly so the two images overlap into a third 3D image in the middle.</p>
         <p><strong class="text-purple-400">Parallel View Mode:</strong> Relax your focus and look "through" the screen as if looking at a distant object until the two halves merge.</p>
-        <div class="p-3 bg-indigo-950/40 rounded-xl border border-indigo-800/40 text-[11px] space-y-1">
+        <div class="p-2 bg-indigo-950/40 rounded-lg border border-indigo-800/40 text-[10px] space-y-1">
           <p><i class="fa-solid fa-keyboard text-indigo-400 mr-1"></i> Press <strong>SPACEBAR</strong> anywhere to toggle viewing modes.</p>
           <p><i class="fa-solid fa-level-down text-indigo-400 mr-1 rotate-90"></i> Press <strong>ENTER</strong> anywhere to download the result.</p>
         </div>
       </div>
 
-      <button id="btnOkHelp" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition">Got it!</button>
+      <button id="btnOkHelp" class="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition">Got it!</button>
     </div>
   </div>
 
@@ -278,19 +287,19 @@
     function setViewMode(mode) {
       state.viewMode = mode;
       if (mode === 'cross') {
-        btnCross.className = "py-2 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30";
-        btnParallel.className = "py-2 px-3 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition flex items-center justify-center gap-2";
+        btnCross.className = "py-1.5 px-2 rounded-md text-xs font-medium transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow";
+        btnParallel.className = "py-1.5 px-2 rounded-md text-xs font-medium text-gray-400 hover:text-white transition flex items-center justify-center gap-1.5";
         modeBadgeText.innerText = "MODE: CROSS-VIEW (R / L)";
-        modeBadge.className = "text-xs px-3 py-1.5 rounded-full font-semibold transition-all duration-300 flex items-center gap-2 bg-purple-500/10 text-purple-400 border border-purple-500/30";
-        lblLeftEye.innerHTML = '<i class="fa-solid fa-circle text-[8px] text-indigo-400"></i> RIGHT PERSPECTIVE (LEFT IMAGE)';
-        lblRightEye.innerHTML = '<i class="fa-solid fa-circle text-[8px] text-purple-400"></i> LEFT PERSPECTIVE (RIGHT IMAGE)';
+        modeBadge.className = "text-[11px] px-2.5 py-1 rounded-full font-semibold transition-all duration-300 flex items-center gap-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/30";
+        lblLeftEye.innerHTML = '<i class="fa-solid fa-circle text-[6px] text-indigo-400"></i> RIGHT PERSPECTIVE (LEFT IMAGE)';
+        lblRightEye.innerHTML = '<i class="fa-solid fa-circle text-[6px] text-purple-400"></i> LEFT PERSPECTIVE (RIGHT IMAGE)';
       } else {
-        btnParallel.className = "py-2 px-3 rounded-lg text-xs font-medium transition flex items-center justify-center gap-2 bg-purple-600 text-white shadow-lg shadow-purple-600/30";
-        btnCross.className = "py-2 px-3 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition flex items-center justify-center gap-2";
+        btnParallel.className = "py-1.5 px-2 rounded-md text-xs font-medium transition flex items-center justify-center gap-1.5 bg-purple-600 text-white shadow";
+        btnCross.className = "py-1.5 px-2 rounded-md text-xs font-medium text-gray-400 hover:text-white transition flex items-center justify-center gap-1.5";
         modeBadgeText.innerText = "MODE: PARALLEL VIEW (L / R)";
-        modeBadge.className = "text-xs px-3 py-1.5 rounded-full font-semibold transition-all duration-300 flex items-center gap-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30";
-        lblLeftEye.innerHTML = '<i class="fa-solid fa-circle text-[8px] text-purple-400"></i> LEFT PERSPECTIVE (LEFT IMAGE)';
-        lblRightEye.innerHTML = '<i class="fa-solid fa-circle text-[8px] text-indigo-400"></i> RIGHT PERSPECTIVE (RIGHT IMAGE)';
+        modeBadge.className = "text-[11px] px-2.5 py-1 rounded-full font-semibold transition-all duration-300 flex items-center gap-1.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30";
+        lblLeftEye.innerHTML = '<i class="fa-solid fa-circle text-[6px] text-purple-400"></i> LEFT PERSPECTIVE (LEFT IMAGE)';
+        lblRightEye.innerHTML = '<i class="fa-solid fa-circle text-[6px] text-indigo-400"></i> RIGHT PERSPECTIVE (RIGHT IMAGE)';
       }
       renderStereogram();
     }
