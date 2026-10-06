@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vision Studio</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://piapandora.com/box/vault.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #090d16;
+      color: #f1f5f9;
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .pulse-dot {
+      box-shadow: 0 0 10px #10b981;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 flex justify-center items-center">
+
+  <div class="w-full max-w-4xl space-y-4">
+
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-800/80">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-violet-400 via-indigo-300 to-sky-400 bg-clip-text text-transparent">
+          Vision Studio
+        </h1>
+        <p class="text-xs text-slate-400 mt-0.5">High-Precision Image Reverse Prompting Powered by Vision AI</p>
+      </div>
+      <div id="statusBadge" class="hidden items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs px-3 py-1.5 rounded-full border border-emerald-500/20">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot animate-pulse"></span>
+        <span>Uplink Decrypted</span>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+
+      <!-- Left Column: Controls & Image Upload -->
+      <div class="md:col-span-5 space-y-4 flex flex-col justify-between">
+        
+        <!-- Box 1: App Password -->
+        <div class="glass-panel p-4 rounded-2xl space-y-3 shadow-xl">
+          <div class="flex items-center justify-between">
+            <label for="passInput" class="text-xs font-semibold uppercase tracking-wider text-violet-400">
+              App Password
+            </label>
+            <span id="fpDisplay" class="text-[10px] font-mono text-slate-500">ID: ----</span>
+          </div>
+          
+          <div class="relative">
+            <input 
+              type="password" 
+              id="passInput" 
+              placeholder="Enter decryption password..." 
+              autocomplete="off"
+              class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+            />
+          </div>
+        </div>
+
+        <!-- Box 2: Image Selection -->
+        <div class="glass-panel p-4 rounded-2xl space-y-3 shadow-xl">
+          <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400 block">
+            Target Image
+          </span>
+
+          <div 
+            id="dropZone" 
+            class="border-2 border-dashed border-slate-700 hover:border-violet-500/80 bg-slate-900/40 hover:bg-slate-900/80 rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[140px]"
+          >
+            <input type="file" id="imageInput" accept="image/*" class="hidden" />
+            
+            <div id="dropPrompt" class="space-y-1">
+              <svg class="w-8 h-8 mx-auto text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <p class="text-xs font-medium text-slate-300">Drop image here or click to browse</p>
+              <p class="text-[10px] text-slate-500">Supports PNG, JPG, WEBP, GIF</p>
+            </div>
+
+            <div id="previewWrapper" class="hidden w-full space-y-2">
+              <img id="imagePreview" alt="Upload Preview" class="max-h-36 mx-auto rounded-lg shadow-md object-contain" />
+              <button id="clearImgBtn" type="button" class="text-xs text-rose-400 hover:text-rose-300 underline font-medium">Remove Image</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Box 3: Output Mode Toggle -->
+        <div class="glass-panel p-4 rounded-2xl space-y-2.5 shadow-xl">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-sky-400 block">
+              Prompt Length Mode
+            </span>
+          </div>
+          <div class="grid grid-cols-3 gap-1 p-1 bg-slate-900/90 rounded-xl border border-slate-800">
+            <button 
+              id="modeConcise" 
+              type="button" 
+              class="py-1.5 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200"
+            >
+              Concise
+            </button>
+            <button 
+              id="modeBalanced" 
+              type="button" 
+              class="py-1.5 text-xs font-medium rounded-lg transition bg-violet-600 text-white shadow"
+            >
+              Balanced
+            </button>
+            <button 
+              id="modeDetailed" 
+              type="button" 
+              class="py-1.5 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200"
+            >
+              Detailed
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button 
+          id="analyzeBtn" 
+          disabled 
+          class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:hover:from-violet-600 disabled:hover:to-indigo-600 text-white font-medium py-2.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-sm"
+        >
+          <span>Generate Reverse Prompt</span>
+          <svg id="btnSpinner" class="hidden animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+
+      </div>
+
+      <!-- Right Column: Output -->
+      <div class="md:col-span-7 flex flex-col">
+        <div class="glass-panel p-5 rounded-2xl h-full flex flex-col justify-between shadow-xl space-y-3">
+          <div class="space-y-3 flex-1 flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <span class="text-xs font-semibold uppercase tracking-wider text-sky-400">
+                Description Output
+              </span>
+              <button 
+                id="copyBtn" 
+                class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition border border-slate-700/60 flex items-center gap-1.5"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                <span>Copy</span>
+              </button>
+            </div>
+
+            <div 
+              id="outputBox" 
+              class="flex-1 min-h-[300px] max-h-[460px] overflow-y-auto text-sm text-slate-300 leading-relaxed font-normal p-4 bg-slate-900/60 rounded-xl border border-slate-800/80 whitespace-pre-wrap selection:bg-violet-500 selection:text-white"
+            >Enter your App password, select an image, and click generate (or press Enter) to receive a breakdown...</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    const MAP_STRING = "238,27,102,93,82,134,186,102,62,62,42,71,169,22,35,1,182,71,232,162,61,60,158,152,190,135,90,137,43,157,192,177,99,55,10,14,180,184,223,87,155,184,190,45,177,142,90,239,40,195,32,20,37,24,237,42";
+    const MODEL_NAME = "qwen/qwen3.8-27b"; 
+
+    const passInput = document.getElementById('passInput');
+    const fpDisplay = document.getElementById('fpDisplay');
+    const statusBadge = document.getElementById('statusBadge');
+    
+    const modeConciseBtn = document.getElementById('modeConcise');
+    const modeBalancedBtn = document.getElementById('modeBalanced');
+    const modeDetailedBtn = document.getElementById('modeDetailed');
+    
+    let promptMode = 'balanced';
+
+    const dropZone = document.getElementById('dropZone');
+    const imageInput = document.getElementById('imageInput');
+    const dropPrompt = document.getElementById('dropPrompt');
+    const previewWrapper = document.getElementById('previewWrapper');
+    const imagePreview = document.getElementById('imagePreview');
+    const clearImgBtn = document.getElementById('clearImgBtn');
+    
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const outputBox = document.getElementById('outputBox');
+    const copyBtn = document.getElementById('copyBtn');
+
+    let fullDataUrl = null;
+
+    const PROMPTS = {
+      concise: {
+        maxTokens: 120,
+        text: "Provide a quick, high-level reverse-prompt caption for this image suitable for AI image generation. Keep it strictly under 3 sentences (30-50 words). Focus only on the primary subject, main outfit/element, core background, and overall color theme. Jump straight into the description; omit intros or conversational filler."
+      },
+      balanced: {
+        maxTokens: 250,
+        text: "Generate a well-balanced reverse prompt for AI image generation (75-110 words, 4-6 sentences). Describe the primary subject, outfit/pose, background environment, lighting quality (e.g. volumetric, rim lighting, soft diffuse), color palette, and exact artistic style or camera perspective. Keep it rich enough for accurate rendering without overwhelming token fatigue. Jump straight into the description; omit intros or conversational filler."
+      },
+      detailed: {
+        maxTokens: 600,
+        text: "Generate an exhaustive, highly descriptive reverse-prompt paragraph (160-250 words) designed for advanced AI image generators. Systematically describe the visual layout from foreground to background: subject facial features, micro-expressions, garments, material textures (e.g. leather grain, metallic sheen), exact color shades, light sources and shadows, depth of field, camera framing, and precise rendering medium or art style. Jump straight into the description; omit intros or conversational filler."
+      }
+    };
+
+    function updateModeUI(mode) {
+      promptMode = mode;
+      const activeClass = "py-1.5 text-xs font-medium rounded-lg transition bg-violet-600 text-white shadow";
+      const inactiveClass = "py-1.5 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200";
+
+      modeConciseBtn.className = mode === 'concise' ? activeClass : inactiveClass;
+      modeBalancedBtn.className = mode === 'balanced' ? activeClass : inactiveClass;
+      modeDetailedBtn.className = mode === 'detailed' ? activeClass : inactiveClass;
+    }
+
+    modeConciseBtn.addEventListener('click', () => updateModeUI('concise'));
+    modeBalancedBtn.addEventListener('click', () => updateModeUI('balanced'));
+    modeDetailedBtn.addEventListener('click', () => updateModeUI('detailed'));
+
+    function cycleMode() {
+      if (promptMode === 'balanced') {
+        updateModeUI('detailed');
+      } else if (promptMode === 'detailed') {
+        updateModeUI('concise');
+      } else {
+        updateModeUI('balanced');
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const activeElement = document.activeElement;
+      const isInteractive = activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' || 
+        activeElement.tagName === 'BUTTON'
+      );
+
+      if (e.key === 'Enter') {
+        if (!analyzeBtn.disabled) {
+          e.preventDefault();
+          if (activeElement && activeElement.blur) activeElement.blur();
+          analyzeBtn.click();
+        }
+        return;
+      }
+
+      if (e.key === ' ' || e.code === 'Space') {
+        if (!isInteractive) {
+          e.preventDefault();
+          cycleMode();
+        }
+      }
+    });
+
+    passInput.addEventListener('input', () => {
+      const pass = passInput.value;
+      if (pass && typeof Vault !== 'undefined') {
+        try {
+          fpDisplay.textContent = "ID: " + Vault.fingerprint(pass);
+          statusBadge.classList.remove('hidden');
+          statusBadge.classList.add('flex');
+        } catch(e) {
+          fpDisplay.textContent = "ID: ----";
+          statusBadge.classList.add('hidden');
+        }
+      } else {
+        fpDisplay.textContent = "ID: ----";
+        statusBadge.classList.add('hidden');
+      }
+      checkReadyState();
+    });
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      window.addEventListener(eventName, (e) => e.preventDefault(), false);
+    });
+
+    dropZone.addEventListener('click', (e) => {
+      if (e.target !== clearImgBtn && !clearImgBtn.contains(e.target)) {
+        imageInput.click();
+      }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-violet-500', 'bg-slate-900/80');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-violet-500', 'bg-slate-900/80');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-violet-500', 'bg-slate-900/80');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleImageFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    imageInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleImageFile(e.target.files[0]);
+      }
+    });
+
+    function handleImageFile(file) {
+      if (!file.type.startsWith('image/')) {
+        alert("Please select a valid image file.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        fullDataUrl = e.target.result;
+        imagePreview.src = fullDataUrl;
+        dropPrompt.classList.add('hidden');
+        previewWrapper.classList.remove('hidden');
+        checkReadyState();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    clearImgBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fullDataUrl = null;
+      imageInput.value = "";
+      imagePreview.src = "";
+      previewWrapper.classList.add('hidden');
+      dropPrompt.classList.remove('hidden');
+      checkReadyState();
+    });
+
+    function checkReadyState() {
+      analyzeBtn.disabled = !(passInput.value.trim() !== "" && fullDataUrl !== null);
+    }
+
+    analyzeBtn.addEventListener('click', async () => {
+      const pass = passInput.value.trim();
+      if (!pass || !fullDataUrl) return;
+
+      let apiKey = "";
+      try {
+        apiKey = Vault.reconstruct(MAP_STRING, pass);
+      } catch (err) {
+        outputBox.textContent = "[ERROR]: Decryption failed. Please verify your App password.";
+        return;
+      }
+
+      const activePrompt = PROMPTS[promptMode];
+
+      outputBox.textContent = `Analyzing image (${promptMode.toUpperCase()} mode)...`;
+      analyzeBtn.disabled = true;
+      btnSpinner.classList.remove('hidden');
+
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: MODEL_NAME,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: activePrompt.text },
+                  { type: "image_url", image_url: { url: fullDataUrl } }
+                ]
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: activePrompt.maxTokens
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (data.choices && data.choices[0]?.message?.content) {
+          outputBox.textContent = data.choices[0].message.content;
+        } else {
+          outputBox.textContent = "Received unexpected response layout from model endpoint.";
+        }
+      } catch (err) {
+        outputBox.textContent = `[API ERROR]: ${err.message}`;
+      } finally {
+        analyzeBtn.disabled = false;
+        btnSpinner.classList.add('hidden');
+      }
+    });
+
+    copyBtn.addEventListener('click', () => {
+      if (!outputBox.textContent || outputBox.textContent.startsWith("Enter your App password") || outputBox.textContent.startsWith("[ERROR]") || outputBox.textContent.startsWith("[API ERROR]")) return;
+      
+      navigator.clipboard.writeText(outputBox.textContent)
+        .then(() => {
+          const labelSpan = copyBtn.querySelector('span');
+          const origText = labelSpan.textContent;
+          labelSpan.textContent = "Copied!";
+          setTimeout(() => {
+            labelSpan.textContent = origText;
+          }, 2000);
+        })
+        .catch(() => {
+          alert("Failed to copy text to clipboard.");
+        });
+    });
+  </script>
+</body>
+</html>
