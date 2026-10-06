@@ -130,6 +130,8 @@
             mainImg.style.opacity = '1';
             genBtn.disabled = false;
             genBtn.innerText = "Generate Image";
+            
+            // Only add to history if this image was generated fresh (not restored from history)
             if (!isHistoricalView && mainImg.src) {
                 addToHistory(mainImg.src);
             }
@@ -148,11 +150,16 @@
                 return alert("Access denied. Incorrect password.");
             }
 
-            const prompt = document.getElementById('promptInput').value || "a touch of sadness";
-            const style = document.getElementById('styleInput').value.replace(/\n/g, ', ');
-            const h = document.getElementById('heightInput').value;
-            const w = document.getElementById('widthInput').value;
-            const fullPrompt = `${prompt}, ${style}`;
+            // Clean prompt inputs and set defaults
+            const promptRaw = document.getElementById('promptInput').value.trim();
+            const prompt = promptRaw || "a touch of sadness";
+            const style = document.getElementById('styleInput').value.trim().replace(/\n/g, ', ');
+            
+            // Dimensions with defaults
+            const h = parseInt(document.getElementById('heightInput').value) || 1024;
+            const w = parseInt(document.getElementById('widthInput').value) || 768;
+            
+            const fullPrompt = style ? `${prompt}, ${style}` : prompt;
             const seed = Math.floor(Math.random() * 9000000) + 1000000;
 
             isHistoricalView = false;
@@ -181,11 +188,14 @@
             const container = document.createElement('div');
             container.className = "aspect-square bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden cursor-pointer hover:border-primary transition-all active:scale-95 group shadow-lg";
             container.innerHTML = `<img src="${url}" class="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity">`;
+            
             container.onclick = () => {
                 isHistoricalView = true;
+                mainImg.style.opacity = '1';
                 mainImg.src = url;
                 emptyUI.classList.add('hidden');
             };
+            
             historyGrid.prepend(container);
             if (historyGrid.children.length > 20) historyGrid.lastChild.remove();
         }
