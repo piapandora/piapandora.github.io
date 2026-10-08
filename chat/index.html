@@ -48,7 +48,7 @@
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
                     </button>
                     <button class="icon-btn" title="Download Log" onclick="downloadChat()">
-                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4m4-10l5 5 5-5m-5 5V3"></path></svg>
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-10l5 5 5-5m-5 5V3"></path></svg>
                     </button>
                     <button class="icon-btn" title="System Settings" onclick="openSettings()">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -105,10 +105,8 @@
                     <label class="field-tag">AI Model</label>
                     <select id="set-model" class="w-full bg-black border border-zinc-800 p-2.5 rounded focus:border-zinc-500 outline-none text-zinc-300 text-xs">
                         <option value="1">GPT-OSS 120B</option>
-                        <option value="2">Llama 3.3 70B</option>
-                        <option value="3">Llama 4 Scout 17B</option>
-                        <option value="4">Llama 3.1 8B</option>
-                        <option value="5">Qwen 3.8 27B</option>
+                        <option value="2">Llama 4 Scout 17B</option>
+                        <option value="3">Qwen 3.8 27B</option>
                     </select>
                 </div>
             </div>
@@ -140,10 +138,8 @@
 
         const MODELS = {
             "1": { name: "openai/gpt-oss-120b", color: "#00ff41", desc: "GPT-OSS // 120B MoE" },
-            "2": { name: "llama-3.3-70b-versatile", color: "#00d4ff", desc: "LLAMA 3.3 // 70B" },
-            "3": { name: "meta-llama/llama-4-scout-17b-16e-instruct", color: "#ff00d4", desc: "LLAMA 4 // SCOUT" },
-            "4": { name: "llama-3.1-8b-instant", color: "#ffcc00", desc: "LLAMA 3.1 // 8B" },
-            "5": { name: "qwen/qwen3.8-27b", color: "#ff0000", desc: "QWEN 3.8 // 27B" }
+            "2": { name: "meta-llama/llama-4-scout-17b-16e-instruct", color: "#ff00d4", desc: "LLAMA 4 // SCOUT" },
+            "3": { name: "qwen/qwen3.8-27b", color: "#ff0000", desc: "QWEN 3.8 // 27B" }
         };
 
         let config = {
