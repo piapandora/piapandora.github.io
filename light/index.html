@@ -24,7 +24,11 @@
       background: #ffffff !important; 
       cursor: none; 
     }
-
+	
+	.on.show-cursor {
+      cursor: default !important;
+    }
+	
     button { 
       background-color: #f8f9fa; 
       color: #1a1a1a; 
@@ -78,6 +82,7 @@
       const turnOn = forceOn !== undefined ? forceOn : !isCurrentlyOn;
       
       document.body.classList.toggle('on', turnOn);
+      if (!turnOn) document.body.classList.remove('show-cursor');
       b.classList.toggle('hide', turnOn);
       b.blur();
       
@@ -87,6 +92,12 @@
         document.exitFullscreen?.().catch(() => {});
       }
     }
+
+    window.addEventListener('mousemove', e => {
+      if (document.body.classList.contains('on')) {
+        document.body.classList.toggle('show-cursor', e.clientY < window.innerHeight * 0.16);
+      }
+    });
 
     window.onkeydown = e => {
       if ((e.code === 'Space' || e.code === 'Enter') && document.activeElement !== b) {
