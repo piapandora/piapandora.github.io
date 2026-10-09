@@ -55,7 +55,7 @@
       <div>
         <h1 class="font-bold text-sm tracking-wide text-white flex items-center gap-1.5 leading-none">
           StereoView 3D
-          <span class="text-[10px] font-normal px-1.5 py-0.2 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">v1.0</span>
+          <span class="text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">v2.0</span>
         </h1>
         <p class="text-[10px] text-gray-400 leading-none mt-0.5">Photo & Depth Map Stereogram Generator</p>
       </div>
@@ -145,16 +145,16 @@
               <i class="fa-solid fa-arrows-split-up-and-left text-[11px]"></i> ParallelView
             </button>
           </div>
-          <p class="text-[10px] text-gray-500 italic text-center leading-none mt-1">Press <kbd class="px-1 py-0.2 text-[9px] bg-gray-800 text-gray-300 rounded font-mono border border-gray-700">SPACEBAR</kbd> to switch modes</p>
+          <p class="text-[10px] text-gray-500 italic text-center leading-none mt-1">Press <kbd class="px-1 py-0.5 text-[9px] bg-gray-800 text-gray-300 rounded font-mono border border-gray-700">SPACEBAR</kbd> to switch modes</p>
         </div>
 
         <!-- PARALLAX SLIDER -->
         <div class="space-y-1">
           <div class="flex justify-between text-xs">
             <label class="font-medium text-gray-300">Parallax / Depth Intensity</label>
-            <span id="valParallax" class="text-indigo-400 font-mono font-semibold">20 px</span>
+            <span id="valParallax" class="text-indigo-400 font-mono font-semibold">3.0 %</span>
           </div>
-          <input type="range" id="sliderParallax" min="0" max="40" value="20" class="w-full accent-indigo-500 bg-gray-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+          <input type="range" id="sliderParallax" min="0" max="10" step="0.1" value="3.0" class="w-full accent-indigo-500 bg-gray-800 h-1.5 rounded-lg appearance-none cursor-pointer">
         </div>
 
         <!-- EDGE BLUR SLIDER -->
@@ -170,11 +170,17 @@
       <!-- ACTION BUTTONS -->
       <div class="space-y-2">
         <button id="btnDownload" class="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-xs shadow-md shadow-indigo-500/20 hover:opacity-95 transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-download text-sm"></i> Download Side-by-Side Image
+          <i class="fa-solid fa-download text-sm"></i> Download Side-by-Side Pair
         </button>
-        <button id="btnDownloadSeparate" class="w-full py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white font-medium text-xs transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-images text-sm"></i> Download Images Separately
-        </button>
+        
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btnDownloadLeft" class="py-2 px-3 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white font-medium text-[11px] transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-arrow-left text-xs"></i> Save Left Image
+          </button>
+          <button id="btnDownloadRight" class="py-2 px-3 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white font-medium text-[11px] transition flex items-center justify-center gap-1.5">
+            Save Right Image <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -245,13 +251,28 @@
   </div>
 
   <script>
+    const MAX_DIMENSION = 2048; // Safe pixel cap for browser/memory compatibility
+
     const state = {
       viewMode: 'cross',
-      parallax: 20,
+      parallax: 3.0,
       blurRadius: 3,
       rgbImg: null,
       depthImg: null
     };
+
+    let renderPending = false;
+
+    // Prevent accidental full-page navigation on missed drag and drops
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => e.preventDefault());
+
+    // Helper to drop focus on buttons after clicks to keep global Enter working
+    function blurActiveElement() {
+      if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+      }
+    }
 
     const mainCanvas = document.getElementById('mainCanvas');
     const ctx = mainCanvas.getContext('2d');
@@ -282,7 +303,8 @@
     const canvasRes = document.getElementById('canvasRes');
     const renderSpinner = document.getElementById('renderSpinner');
     const btnDownload = document.getElementById('btnDownload');
-    const btnDownloadSeparate = document.getElementById('btnDownloadSeparate');
+    const btnDownloadLeft = document.getElementById('btnDownloadLeft');
+    const btnDownloadRight = document.getElementById('btnDownloadRight');
 
     function setViewMode(mode) {
       state.viewMode = mode;
@@ -301,28 +323,25 @@
         lblLeftEye.innerHTML = '<i class="fa-solid fa-circle text-[6px] text-purple-400"></i> LEFT PERSPECTIVE (LEFT IMAGE)';
         lblRightEye.innerHTML = '<i class="fa-solid fa-circle text-[6px] text-indigo-400"></i> RIGHT PERSPECTIVE (RIGHT IMAGE)';
       }
-      renderStereogram();
+      requestRender();
     }
 
+    // Fast 2-pass separable box blur (O(r))
     function boxBlurCanvas(ctx, width, height, radius) {
       if (radius <= 0) return;
       const imgData = ctx.getImageData(0, 0, width, height);
       const data = imgData.data;
       const copy = new Uint8ClampedArray(data);
 
+      // Horizontal Pass
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
           let count = 0, sum = 0;
-          for (let dy = -radius; dy <= radius; dy++) {
-            const ny = y + dy;
-            if (ny >= 0 && ny < height) {
-              for (let dx = -radius; dx <= radius; dx++) {
-                const nx = x + dx;
-                if (nx >= 0 && nx < width) {
-                  sum += copy[(ny * width + nx) * 4];
-                  count++;
-                }
-              }
+          for (let dx = -radius; dx <= radius; dx++) {
+            const nx = x + dx;
+            if (nx >= 0 && nx < width) {
+              sum += copy[(y * width + nx) * 4];
+              count++;
             }
           }
           const idx = (y * width + x) * 4;
@@ -332,7 +351,38 @@
           data[idx+2] = avg;
         }
       }
+
+      const copy2 = new Uint8ClampedArray(data);
+
+      // Vertical Pass
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          let count = 0, sum = 0;
+          for (let dy = -radius; dy <= radius; dy++) {
+            const ny = y + dy;
+            if (ny >= 0 && ny < height) {
+              sum += copy2[(ny * width + x) * 4];
+              count++;
+            }
+          }
+          const idx = (y * width + x) * 4;
+          const avg = sum / count;
+          data[idx] = avg;
+          data[idx+1] = avg;
+          data[idx+2] = avg;
+        }
+      }
+
       ctx.putImageData(imgData, 0, 0);
+    }
+
+    function requestRender() {
+      if (renderPending) return;
+      renderPending = true;
+      requestAnimationFrame(() => {
+        renderPending = false;
+        renderStereogram();
+      });
     }
 
     function renderStereogram() {
@@ -347,8 +397,8 @@
       renderSpinner.classList.remove('hidden');
 
       setTimeout(() => {
-        const w = state.rgbImg.naturalWidth || state.rgbImg.width;
-        const h = state.rgbImg.naturalHeight || state.rgbImg.height;
+        const w = state.rgbImg.width;
+        const h = state.rgbImg.height;
 
         const cRGB = document.createElement('canvas');
         cRGB.width = w; 
@@ -361,6 +411,9 @@
         cD.width = w; 
         cD.height = h;
         const ctxD = cD.getContext('2d');
+        // Paint black background to handle transparent PNG depth maps cleanly
+        ctxD.fillStyle = '#000000';
+        ctxD.fillRect(0, 0, w, h);
         ctxD.drawImage(state.depthImg, 0, 0, w, h);
 
         if (state.blurRadius > 0) {
@@ -376,66 +429,74 @@
         const outImgData = ctx.createImageData(totalWidth, h);
         const outPixels = outImgData.data;
 
-        function sampleRGB(x, y) {
-          let sx = x;
-          if (sx < 0) sx = -sx;
-          if (sx >= w) sx = 2 * w - sx - 1;
-          sx = Math.max(0, Math.min(w - 1, sx));
+        const maxShift = (state.parallax / 100) * w;
 
-          const sy = Math.max(0, Math.min(h - 1, y));
-
-          const x0 = Math.floor(sx);
-          const x1 = Math.min(w - 1, x0 + 1);
-          const fx = sx - x0;
-
-          const idx0 = (sy * w + x0) * 4;
-          const idx1 = (sy * w + x1) * 4;
-
-          return [
-            rgbData[idx0] * (1 - fx) + rgbData[idx1] * fx,
-            rgbData[idx0 + 1] * (1 - fx) + rgbData[idx1 + 1] * fx,
-            rgbData[idx0 + 2] * (1 - fx) + rgbData[idx1 + 2] * fx,
-            255
-          ];
-        }
-
-        const maxShift = state.parallax;
-
+        // Loop 1: Left Eye / First Perspective (Inlined sampling for maximum speed)
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             const dIdx = (y * w + x) * 4;
             const normDepth = depthData[dIdx] / 255.0;
 
             const shift = normDepth * maxShift;
-            const srcX = x - shift * 0.5;
+            let sx = x - shift * 0.5;
 
-            const color = sampleRGB(srcX, y);
+            if (sx < 0) sx = -sx;
+            if (sx >= w) sx = 2 * w - sx - 1;
+            sx = Math.max(0, Math.min(w - 1, sx));
+            const sy = Math.max(0, Math.min(h - 1, y));
+
+            const x0 = Math.floor(sx);
+            const x1 = Math.min(w - 1, x0 + 1);
+            const fx = sx - x0;
+
+            const idx0 = (sy * w + x0) * 4;
+            const idx1 = (sy * w + x1) * 4;
+
+            const r = rgbData[idx0] * (1 - fx) + rgbData[idx1] * fx;
+            const g = rgbData[idx0 + 1] * (1 - fx) + rgbData[idx1 + 1] * fx;
+            const b = rgbData[idx0 + 2] * (1 - fx) + rgbData[idx1 + 2] * fx;
+
             const targetX = (state.viewMode === 'cross') ? x + w : x;
             const outIdx = (y * totalWidth + targetX) * 4;
 
-            outPixels[outIdx]     = color[0];
-            outPixels[outIdx + 1] = color[1];
-            outPixels[outIdx + 2] = color[2];
+            outPixels[outIdx]     = r;
+            outPixels[outIdx + 1] = g;
+            outPixels[outIdx + 2] = b;
             outPixels[outIdx + 3] = 255;
           }
         }
 
+        // Loop 2: Right Eye / Second Perspective
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             const dIdx = (y * w + x) * 4;
             const normDepth = depthData[dIdx] / 255.0;
 
             const shift = normDepth * maxShift;
-            const srcX = x + shift * 0.5;
+            let sx = x + shift * 0.5;
 
-            const color = sampleRGB(srcX, y);
+            if (sx < 0) sx = -sx;
+            if (sx >= w) sx = 2 * w - sx - 1;
+            sx = Math.max(0, Math.min(w - 1, sx));
+            const sy = Math.max(0, Math.min(h - 1, y));
+
+            const x0 = Math.floor(sx);
+            const x1 = Math.min(w - 1, x0 + 1);
+            const fx = sx - x0;
+
+            const idx0 = (sy * w + x0) * 4;
+            const idx1 = (sy * w + x1) * 4;
+
+            const r = rgbData[idx0] * (1 - fx) + rgbData[idx1] * fx;
+            const g = rgbData[idx0 + 1] * (1 - fx) + rgbData[idx1 + 1] * fx;
+            const b = rgbData[idx0 + 2] * (1 - fx) + rgbData[idx1 + 2] * fx;
 
             const targetX = (state.viewMode === 'cross') ? x : x + w;
             const outIdx = (y * totalWidth + targetX) * 4;
 
-            outPixels[outIdx]     = color[0];
-            outPixels[outIdx + 1] = color[1];
-            outPixels[outIdx + 2] = color[2];
+            outPixels[outIdx]     = r;
+            outPixels[outIdx + 1] = g;
+            outPixels[outIdx + 2] = b;
             outPixels[outIdx + 3] = 255;
           }
         }
@@ -446,29 +507,67 @@
       }, 20);
     }
 
-    function handleFileSelect(file, type) {
-      if (!file) return;
+    function processAndStoreImage(img, type) {
+      let targetW = img.naturalWidth || img.width;
+      let targetH = img.naturalHeight || img.height;
+
+      if (targetW > MAX_DIMENSION || targetH > MAX_DIMENSION) {
+        if (targetW > targetH) {
+          targetH = Math.round((targetH * MAX_DIMENSION) / targetW);
+          targetW = MAX_DIMENSION;
+        } else {
+          targetW = Math.round((targetW * MAX_DIMENSION) / targetH);
+          targetH = MAX_DIMENSION;
+        }
+      }
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = targetW;
+      tempCanvas.height = targetH;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(img, 0, 0, targetW, targetH);
+
+      const scaledImg = new Image();
+      scaledImg.onload = () => {
+        if (type === 'rgb') {
+          state.rgbImg = scaledImg;
+          previewRgb.src = scaledImg.src;
+          previewRgb.classList.remove('hidden');
+          placeholderRgb.classList.add('hidden');
+          rgbStatus.innerText = 'Loaded';
+          rgbStatus.className = 'text-emerald-400 text-[10px]';
+        } else {
+          state.depthImg = scaledImg;
+          previewDepth.src = scaledImg.src;
+          previewDepth.classList.remove('hidden');
+          placeholderDepth.classList.add('hidden');
+          depthStatus.innerText = 'Loaded';
+          depthStatus.className = 'text-emerald-400 text-[10px]';
+        }
+        requestRender();
+      };
+      scaledImg.src = tempCanvas.toDataURL('image/png');
+    }
+
+    function handleFileSelect(file, type, inputEl) {
+      if (!file || !file.type.startsWith('image/')) {
+        const statusEl = (type === 'rgb') ? rgbStatus : depthStatus;
+        statusEl.innerText = 'Invalid File';
+        statusEl.className = 'text-rose-400 text-[10px]';
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
-        img.onload = () => {
-          if (type === 'rgb') {
-            state.rgbImg = img;
-            previewRgb.src = e.target.result;
-            previewRgb.classList.remove('hidden');
-            placeholderRgb.classList.add('hidden');
-            rgbStatus.innerText = 'Loaded';
-            rgbStatus.className = 'text-emerald-400 text-[10px]';
-          } else {
-            state.depthImg = img;
-            previewDepth.src = e.target.result;
-            previewDepth.classList.remove('hidden');
-            placeholderDepth.classList.add('hidden');
-            depthStatus.innerText = 'Loaded';
-            depthStatus.className = 'text-emerald-400 text-[10px]';
-          }
-          renderStereogram();
+        img.onerror = () => {
+          const statusEl = (type === 'rgb') ? rgbStatus : depthStatus;
+          statusEl.innerText = 'Error Loading';
+          statusEl.className = 'text-rose-400 text-[10px]';
+          if (inputEl) inputEl.value = '';
         };
+        img.onload = () => processAndStoreImage(img, type);
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
@@ -476,7 +575,7 @@
 
     function setupDropzone(el, input, type) {
       el.addEventListener('click', () => input.click());
-      input.addEventListener('change', (e) => handleFileSelect(e.target.files[0], type));
+      input.addEventListener('change', (e) => handleFileSelect(e.target.files[0], type, input));
 
       el.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -491,7 +590,7 @@
         e.preventDefault();
         el.classList.remove('border-indigo-500', 'bg-indigo-950/30');
         if (e.dataTransfer.files.length) {
-          handleFileSelect(e.dataTransfer.files[0], type);
+          handleFileSelect(e.dataTransfer.files[0], type, input);
         }
       });
     }
@@ -499,44 +598,46 @@
     setupDropzone(dropRgb, inputRgb, 'rgb');
     setupDropzone(dropDepth, inputDepth, 'depth');
 
-    btnCross.addEventListener('click', () => setViewMode('cross'));
-    btnParallel.addEventListener('click', () => setViewMode('parallel'));
+    btnCross.addEventListener('click', () => {
+      setViewMode('cross');
+      blurActiveElement();
+    });
+    
+    btnParallel.addEventListener('click', () => {
+      setViewMode('parallel');
+      blurActiveElement();
+    });
 
     [sliderParallax, sliderBlur].forEach(slider => {
-      slider.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') {
-          e.preventDefault();
-          slider.blur();
-          setViewMode(state.viewMode === 'cross' ? 'parallel' : 'cross');
-        }
-      });
       slider.addEventListener('change', () => slider.blur());
       slider.addEventListener('mouseup', () => slider.blur());
       slider.addEventListener('touchend', () => slider.blur());
     });
 
     sliderParallax.addEventListener('input', (e) => {
-      state.parallax = parseInt(e.target.value);
-      valParallax.innerText = `${state.parallax} px`;
-      renderStereogram();
+      state.parallax = parseFloat(e.target.value);
+      valParallax.innerText = `${state.parallax.toFixed(1)} %`;
+      requestRender();
     });
 
     sliderBlur.addEventListener('input', (e) => {
       state.blurRadius = parseInt(e.target.value);
       valBlur.innerText = `${state.blurRadius} px`;
-      renderStereogram();
+      requestRender();
     });
 
     window.addEventListener('keydown', (e) => {
+      const modalHelp = document.getElementById('modalHelp');
+      if (!modalHelp.classList.contains('hidden')) return;
       if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+      if (e.target.tagName === 'A') return; // Allow normal link navigation
 
       if (e.code === 'Space') {
         e.preventDefault();
-        if (document.activeElement && document.activeElement.blur) {
-          document.activeElement.blur();
-        }
+        blurActiveElement();
         setViewMode(state.viewMode === 'cross' ? 'parallel' : 'cross');
       } else if (e.code === 'Enter') {
+        if (document.activeElement && document.activeElement.tagName === 'BUTTON') return;
         e.preventDefault();
         triggerDownload();
       }
@@ -545,59 +646,75 @@
     function triggerDownload() {
       if (!state.rgbImg || !state.depthImg) return;
       const timestamp = Date.now();
-      const link = document.createElement('a');
-      link.download = `stereo-${state.viewMode}-${timestamp}.png`;
-      link.href = mainCanvas.toDataURL('image/png');
-      link.click();
+      mainCanvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `stereo-${state.viewMode}-${timestamp}.png`;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/png');
     }
 
-    function triggerDownloadSeparate() {
+    // Single-eye download helper (Side parameter: 'left' or 'right')
+    function triggerDownloadSingleEye(side) {
       if (!state.rgbImg || !state.depthImg) return;
-      
+
       const halfWidth = mainCanvas.width / 2;
       const height = mainCanvas.height;
       const timestamp = Date.now();
 
-      let leftSliceX = 0;
-      let rightSliceX = halfWidth;
+      const sliceX = (side === 'left') ? 0 : halfWidth;
 
-      if (state.viewMode === 'parallel') {
-        leftSliceX = halfWidth;
-        rightSliceX = 0;
-      }
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = halfWidth;
+      sliceCanvas.height = height;
+      const sliceCtx = sliceCanvas.getContext('2d');
+      sliceCtx.drawImage(mainCanvas, sliceX, 0, halfWidth, height, 0, 0, halfWidth, height);
 
-      const canvasA = document.createElement('canvas');
-      canvasA.width = halfWidth;
-      canvasA.height = height;
-      const ctxA = canvasA.getContext('2d');
-      ctxA.drawImage(mainCanvas, leftSliceX, 0, halfWidth, height, 0, 0, halfWidth, height);
-
-      const canvasB = document.createElement('canvas');
-      canvasB.width = halfWidth;
-      canvasB.height = height;
-      const ctxB = canvasB.getContext('2d');
-      ctxB.drawImage(mainCanvas, rightSliceX, 0, halfWidth, height, 0, 0, halfWidth, height);
-
-      const linkA = document.createElement('a');
-      linkA.download = `stereo-A-${timestamp}.png`;
-      linkA.href = canvasA.toDataURL('image/png');
-      linkA.click();
-
-      setTimeout(() => {
-        const linkB = document.createElement('a');
-        linkB.download = `stereo-B-${timestamp}.png`;
-        linkB.href = canvasB.toDataURL('image/png');
-        linkB.click();
-      }, 800);
+      sliceCanvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `stereo-${side}-view-${timestamp}.png`;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/png');
     }
 
-    btnDownload.addEventListener('click', triggerDownload);
-    btnDownloadSeparate.addEventListener('click', triggerDownloadSeparate);
+    btnDownload.addEventListener('click', () => {
+      triggerDownload();
+      blurActiveElement();
+    });
+
+    btnDownloadLeft.addEventListener('click', () => {
+      triggerDownloadSingleEye('left');
+      blurActiveElement();
+    });
+
+    btnDownloadRight.addEventListener('click', () => {
+      triggerDownloadSingleEye('right');
+      blurActiveElement();
+    });
 
     const modalHelp = document.getElementById('modalHelp');
-    document.getElementById('btnHelp').addEventListener('click', () => modalHelp.classList.remove('hidden'));
-    document.getElementById('btnCloseHelp').addEventListener('click', () => modalHelp.classList.add('hidden'));
-    document.getElementById('btnOkHelp').addEventListener('click', () => modalHelp.classList.add('hidden'));
+    
+    document.getElementById('btnHelp').addEventListener('click', () => {
+      modalHelp.classList.remove('hidden');
+      blurActiveElement();
+    });
+    
+    document.getElementById('btnCloseHelp').addEventListener('click', () => {
+      modalHelp.classList.add('hidden');
+      blurActiveElement();
+    });
+    
+    document.getElementById('btnOkHelp').addEventListener('click', () => {
+      modalHelp.classList.add('hidden');
+      blurActiveElement();
+    });
 
   </script>
 </body>
