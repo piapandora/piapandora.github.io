@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Shuffle</title>
+    <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .csv-output {
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-teal-500 selection:text-white">
+
+    <header class="w-full border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold text-lg">
+                    ⇄
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white">Smart Shuffle</h1>
+                    <p class="text-xs text-slate-400">Continuous loop shuffle with anti-repetition boundary guard</p>
+                </div>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-teal-400 border border-slate-700">
+                Forward Fisher-Yates
+            </span>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto px-6 py-8 flex flex-col gap-6">
+        
+        <section class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6 shadow-lg backdrop-blur-sm flex flex-col gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-3 flex flex-col gap-2">
+                    <label for="deckInput" class="text-sm font-medium text-slate-300 flex items-center justify-between">
+                        <span>Unique Deck / Items (Comma separated)</span>
+                        <span class="text-xs text-slate-500">e.g., Apple, Banana, Orange, Mango</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="deckInput" 
+                        value="A, B, C, D, E, F" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-sm"
+                        placeholder="Enter items separated by commas..."
+                    />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="loopCount" class="text-sm font-medium text-slate-300">
+                        Loop Count
+                    </label>
+                    <input 
+                        type="number" 
+                        id="loopCount" 
+                        value="5" 
+                        min="1" 
+                        max="500" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-sm"
+                    />
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-700/40">
+                <button 
+                    id="shuffleBtn" 
+                    class="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-medium rounded-lg shadow-md transition-all active:scale-95 text-sm flex items-center space-x-2"
+                >
+                    <span>Generate Shuffled Loops</span>
+                </button>
+                <button 
+                    id="copyCsvBtn" 
+                    class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-lg border border-slate-600 transition-all text-sm flex items-center space-x-1.5"
+                    style="display: none;"
+                >
+                    <span>Copy Continuous CSV</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                    CSV Output <span id="loopStatusBadge" class="normal-case font-normal text-xs text-slate-400 ml-2">(0 loops)</span>
+                </h2>
+                <span class="text-xs text-slate-500">Alternating colors distinguish loops</span>
+            </div>
+
+            <div 
+                id="csvOutputContainer" 
+                class="csv-output w-full bg-slate-950 border border-slate-800 rounded-xl p-5 min-h-[280px] max-h-[500px] overflow-y-auto flex flex-col gap-2 text-sm leading-relaxed shadow-inner"
+            >
+                <div class="text-slate-500 flex flex-col items-center justify-center h-40 w-full text-center">
+                    <p class="text-sm font-medium">Configure items and click generate to view CSV loops.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="customModal" role="dialog" aria-modal="true" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl p-5 max-w-sm w-full shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center space-x-3">
+                <div id="modalIcon" class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center text-sm font-bold">i</div>
+                <h3 id="modalTitle" class="text-sm font-semibold text-white">Notice</h3>
+            </div>
+            <p id="modalMessage" class="text-xs text-slate-300 leading-relaxed">Message...</p>
+            <button id="modalCloseBtn" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg border border-slate-700 transition-all text-xs">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <footer class="w-full border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        <p>Smart Shuffle • Forward Fisher-Yates with boundary loop-guard.</p>
+    </footer>
+
+    <script>
+        let lastTriggerElement = null;
+
+        function showModal(title, message, isError = false) {
+            lastTriggerElement = document.activeElement;
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            const icon = document.getElementById('modalIcon');
+            if (isError) {
+                icon.textContent = "!";
+                icon.className = "w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center text-sm font-bold";
+            } else {
+                icon.textContent = "✓";
+                icon.className = "w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center text-sm font-bold";
+            }
+            modal.classList.remove('hidden');
+            document.getElementById('modalCloseBtn').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+            if (lastTriggerElement) {
+                lastTriggerElement.focus();
+            }
+        }
+
+        document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+
+        window.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('customModal');
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        function forwardFisherYates(array) {
+            let currentDeck = [...array];
+            let n = currentDeck.length;
+
+            for (let i = 0; i < n; i++) {
+                let randomIdx = i + Math.floor(Math.random() * (n - i));
+                let temp = currentDeck[i];
+                currentDeck[i] = currentDeck[randomIdx];
+                currentDeck[randomIdx] = temp;
+            }
+            return currentDeck;
+        }
+
+        function generateSmartShuffle(deckArray, totalLoops) {
+            let loops = [];
+            let lastCardOfPreviousLoop = null;
+            let n = deckArray.length;
+
+            if (n === 0) return [];
+
+            for (let i = 0; i < totalLoops; i++) {
+                let currentDeck = forwardFisherYates(deckArray);
+
+                if (lastCardOfPreviousLoop !== null && currentDeck[0] === lastCardOfPreviousLoop && n > 1) {
+                    let fixIdx = 1 + Math.floor(Math.random() * (n - 1));
+                    let temp = currentDeck[0];
+                    currentDeck[0] = currentDeck[fixIdx];
+                    currentDeck[fixIdx] = temp;
+                }
+
+                lastCardOfPreviousLoop = currentDeck[n - 1];
+                loops.push(currentDeck);
+            }
+            return loops;
+        }
+
+        let currentGeneratedLoops = [];
+
+        document.getElementById('shuffleBtn').addEventListener('click', () => {
+            const rawInput = document.getElementById('deckInput').value;
+            const loopInput = parseInt(document.getElementById('loopCount').value, 10);
+
+            const deckItems = [...new Set(rawInput.split(',').map(item => item.trim()).filter(Boolean))];
+
+            if (deckItems.length === 0) {
+                showModal("Invalid Input", "Please enter at least one valid item separated by commas.", true);
+                return;
+            }
+
+            const validLoopInput = Math.min(500, Math.max(1, isNaN(loopInput) ? 1 : loopInput));
+            document.getElementById('loopCount').value = validLoopInput;
+
+            currentGeneratedLoops = generateSmartShuffle(deckItems, validLoopInput);
+            renderOutput(currentGeneratedLoops);
+        });
+
+        function renderOutput(loops) {
+            const container = document.getElementById('csvOutputContainer');
+            const statusBadge = document.getElementById('loopStatusBadge');
+            const copyBtn = document.getElementById('copyCsvBtn');
+
+            container.innerHTML = '';
+            statusBadge.textContent = `(${loops.length} loop${loops.length === 1 ? '' : 's'})`;
+
+            if (loops.length === 0) {
+                container.innerHTML = `<div class="text-slate-500 text-center py-8 w-full">No loops generated.</div>`;
+                copyBtn.style.display = 'none';
+                return;
+            }
+
+            copyBtn.style.display = 'flex';
+
+            const colorClasses = [
+                'text-teal-300',
+                'text-amber-200'
+            ];
+
+            loops.forEach((loop, loopIndex) => {
+                const colorClass = colorClasses[loopIndex % colorClasses.length];
+                const isLastLoop = (loopIndex === loops.length - 1);
+
+                const div = document.createElement('div');
+                div.className = `${colorClass} tracking-wide py-0.5 select-all`;
+
+                let lineText = loop.join(', ');
+
+                if (!isLastLoop) {
+                    lineText += ',';
+                }
+
+                div.textContent = lineText;
+                container.appendChild(div);
+            });
+        }
+
+        async function copyText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return ok;
+            }
+        }
+
+        document.getElementById('copyCsvBtn').addEventListener('click', async () => {
+            if (currentGeneratedLoops.length === 0) return;
+
+            let flatItems = [];
+            currentGeneratedLoops.forEach((loop, loopIndex) => {
+                const isLastLoop = (loopIndex === currentGeneratedLoops.length - 1);
+                loop.forEach((item, itemIndex) => {
+                    const isLastItemOfLastLoop = isLastLoop && (itemIndex === loop.length - 1);
+                    flatItems.push(isLastItemOfLastLoop ? item : item + ',');
+                });
+            });
+
+            const continuousCsvText = flatItems.join(' ');
+            const ok = await copyText(continuousCsvText);
+            
+            ok ? showModal("Copied to Clipboard", "Continuous CSV sentence was successfully copied.")
+               : showModal("Copy Failed", "Could not copy text.", true);
+        });
+
+        window.onload = function() {
+            document.getElementById('shuffleBtn').click();
+        };
+    </script>
+</body>
+</html>
