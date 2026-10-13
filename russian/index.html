@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Russian Alphabet Deck</title>
+<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+<style>
+:root{--bg:#eef1f6;--card:#fff;--ink:#14213d;--mute:#6b7690;--line:#d5dbe7;--hit:#c8102e;--w:min(520px,100%,calc((100vh - 185px)*.75));box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@supports (height:100dvh){:root{--w:min(520px,100%,calc((100dvh - 185px)*.75))}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1420;--card:#1a2133;--ink:#eef1f6;--mute:#8e9ab5;--line:#2b3550;--hit:#ff6b7a}}
+:root[data-theme="dark"]{--bg:#0f1420;--card:#1a2133;--ink:#eef1f6;--mute:#8e9ab5;--line:#2b3550;--hit:#ff6b7a}
+*{box-sizing:border-box}
+html{height:100%}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:12px;overflow-x:hidden}
+.top,.bar{display:flex;align-items:center;justify-content:space-between;width:var(--w)}
+.seg{display:flex;padding:3px;background:var(--card);border:1px solid var(--line);border-radius:999px}
+.seg button{border:0;background:none;border-radius:999px;padding:7px 16px;font-size:.85rem;font-weight:600;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.stack{position:relative;width:var(--w);aspect-ratio:3/4;margin-bottom:8px}
+.card{position:absolute;inset:0;overflow:hidden;background:var(--card) center/cover no-repeat;border:1px solid var(--line);border-radius:24px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:20px 16px;text-align:center;user-select:none;-webkit-user-select:none;box-shadow:0 12px 32px rgba(20,33,61,.1)}
+.card>*{position:relative;z-index:1}
+.card.back{transform:scale(.94) translateY(14px);pointer-events:none;box-shadow:none}
+.card.front{touch-action:pan-y;cursor:grab;will-change:transform}
+.card.front:active{cursor:grabbing}
+.card.has-img{--hit:#ff9aa5;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.65)}
+.card.has-img::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.45),transparent 38%,transparent 62%,rgba(0,0,0,.45))}
+.card:focus-visible,button:focus-visible{outline:3px solid var(--hit);outline-offset:3px}
+.title{font-size:clamp(1.05rem,4.5vw,1.4rem);font-weight:600;letter-spacing:.01em;text-wrap:balance}
+.gloss{font-weight:400;font-size:.8em;opacity:.85}
+.ru{font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.8rem,9vw,2.7rem);line-height:1.1;overflow-wrap:anywhere}
+.ru b{color:var(--hit);font-weight:700}
+button{font:inherit;font-weight:600;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 22px;cursor:pointer}
+button:active{transform:scale(.96)}
+.icon{width:38px;height:38px;border-radius:50%;padding:0;font-size:1.1rem;line-height:1;display:grid;place-items:center}
+.nav{width:50px;height:50px;border-radius:50%;padding:0;display:grid;place-items:center}
+.nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.count{color:var(--mute);font-variant-numeric:tabular-nums}
+dialog{width:min(520px,92vw);max-height:84vh;overflow:auto;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:22px 22px 18px}
+dialog::backdrop{background:rgba(8,12,24,.55)}
+dialog h2{margin:0 0 6px;font-size:1.15rem}
+dialog p{margin:0 0 12px;color:var(--mute);font-size:.88rem}
+dialog ol{margin:0 0 16px;padding-left:20px;line-height:1.5;font-size:.95rem}
+dialog li{margin-bottom:9px}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="seg" role="group" aria-label="Card order">
+	<button id="mShuffle" aria-pressed="false">Shuffle</button>
+	<button id="mOrder" aria-pressed="true">In Order</button>
+  </div>
+  <button class="icon" id="tips" aria-label="Things to watch out for" title="Things to watch out for">!</button>
+</div>
+<div class="stack">
+  <div class="card back" id="cardB" aria-hidden="true"><div class="title"></div><div class="ru" lang="ru"></div></div>
+  <div class="card front" id="cardF" tabindex="0" role="button" aria-label="Flashcard. Tap or swipe for the next one."><div class="title"></div><div class="ru" lang="ru"></div></div>
+</div>
+<div class="bar">
+  <button class="nav" id="prev" aria-label="Previous card"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <div class="count" id="count"></div>
+  <button class="nav" id="next" aria-label="Next card"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+</div>
+
+<dialog id="dlg">
+  <h2>Things to watch out for</h2>
+  <p>Russian examples are followed by their English spelling in brackets. Card spellings are approximate: Russian has sounds English can't spell exactly, and some letters change at the end of a word.</p>
+  <ol>
+    <li><b>False friends.</b> В (V), Н (N), Р (R), С (S) and У (oo) look like English letters but sound different.</li>
+    <li><b>Look-alikes by shape.</b> Д (d) vs Л (l), И (ee) vs Н (n), П (p) vs Т (t), Б (b) vs В (v). Say each letter aloud when you flip the card.</li>
+    <li><b>Е vs Э.</b> Е is "ye", as in Елена (Yelena). Э is a plain "eh", as in Эльвира (Elvira).</li>
+    <li><b>Four letters carry a "y" sound:</b> Я (ya) as in Яна (Yana), Ю (yu) as in Юлия (Yulia), Е (ye) and Ё (yo). The dots on Ё are often dropped in everyday writing, so Алёна (Alyona) is often printed as Алена.</li>
+    <li><b>Ш vs Щ.</b> Ш is "sh", as in шоколад (shokolad). Щ is a longer, softer "shch", as in щенок (shchenok).</li>
+    <li><b>New sounds.</b> Ж (zh) as in Жанна (Zhanna), Х (kh, like Scottish "loch") as in хлеб (khleb), Ц (ts) as in цветок (tsvetok), Ч (ch) as in чай (chai).</li>
+    <li><b>Ы is not И.</b> Ы is a deep "ih" made further back in the mouth, as in сыр (syr). И is "ee", as in Ирина (Irina).</li>
+    <li><b>Й is a glide,</b> not a full vowel. It tucks onto the vowel before it, as in Майя (Maya) and чай (chai).</li>
+    <li><b>Ь is the soft sign.</b> It has no sound of its own and softens the consonant before it. In Любовь (Lyubov), the В (v) is soft.</li>
+    <li><b>Ъ is the hard sign.</b> It has no sound of its own and keeps sounds apart. In подъезд (podyezd), it separates Д (d) from Е (ye).</li>
+    <li><b>Д and Б at the end of a word sound like "t" and "p".</b> шоколад (shokolad) ends with a "t" sound, and хлеб (khleb) ends with a "p" sound.</li>
+    <li><b>Some letters can't start a word:</b> Ё, Й, Ъ, Ы and Ь. Those cards show the letter inside the word.</li>
+  </ol>
+  <form method="dialog"><button>Close</button></form>
+</dialog>
+
+<script>
+// [sound-first title, English meaning (words only), Russian, target letter, image file key]
+const DECK=[
+["Anna","","Анна","А","anna"],["Bella","","Белла","Б","bella"],["Vera","","Вера","В","vera"],["Galina","","Галина","Г","galina"],
+["Darya","","Дарья","Д","darya"],["Yelena","","Елена","Е","yelena"],["Alyona","","Алёна","Ё","alyona"],["Zhanna","","Жанна","Ж","zhanna"],
+["Zlata","","Злата","З","zlata"],["Irina","","Ирина","И","irina"],["Maya","","Майя","Й","maya"],["Ksenia","","Ксения","К","ksenia"],
+["Lydia","","Лидия","Л","lydia"],["Maria","","Мария","М","maria"],["Natalya","","Наталья","Н","natalya"],["Olga","","Ольга","О","olga"],
+["Polina","","Полина","П","polina"],["Roza","","Роза","Р","roza"],["Sofia","","София","С","sofia"],["Tatyana","","Татьяна","Т","tatyana"],
+["Ulyana","","Ульяна","У","ulyana"],["Foto","photo","фото","ф","photo"],["Khleb","bread","хлеб","х","bread"],["Tsvetok","flower","цветок","ц","flower"],
+["Chai","tea","чай","ч","tea"],["Shokolad","chocolate","шоколад","ш","chocolate"],["Shchenok","puppy","щенок","щ","puppy"],["Podyezd","entrance","подъезд","ъ","entrance"],
+["Syr","cheese","сыр","ы","cheese"],["Lyubov","","Любовь","ь","lyubov"],["Elvira","","Эльвира","Э","elvira"],["Yulia","","Юлия","Ю","yulia"],["Yana","","Яна","Я","yana"]
+];
+const N=DECK.length;
+
+// Card images live in a folder next to this file, named by each card's file key (last field above):
+// images/anna.png, images/tea.png, images/entrance.png ... images/default.jpg is the fallback.
+// A card with no image at all simply shows the plain background.
+const IMG_DIR="images/";
+const probes={}, cache={};
+const probe=url=>probes[url]||(probes[url]=new Promise(res=>{const i=new Image();i.onload=()=>res(url);i.onerror=()=>res(null);i.src=url;}));
+async function imageFor(k){
+  if(!(k in cache)) cache[k]=(await probe(IMG_DIR+k+".png"))||(await probe(IMG_DIR+"default.jpg"));
+  return cache[k];
+}
+
+// Forward Fisher-Yates, plus a guard so a new pass never opens with the previous pass's last card.
+function shuffled(prevLast){
+  const a=DECK.map((_,i)=>i);
+  for(let i=0;i<N-1;i++){
+    const j=i+Math.floor(Math.random()*(N-i));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  if(prevLast!==undefined && a[0]===prevLast){
+    const k=1+Math.floor(Math.random()*(N-1));
+    [a[0],a[k]]=[a[k],a[0]];
+  }
+  return a;
+}
+
+const $=id=>document.getElementById(id);
+const F=$("cardF"), B=$("cardB");
+const DUR=matchMedia("(prefers-reduced-motion: reduce)").matches?0:260;
+const ids=()=>DECK.map((_,i)=>i);
+let mode="order", seq=ids(), pos=0, busy=false;
+
+function paint(el,u){
+  el.style.backgroundImage=u?'url("'+u+'")':"";
+  el.classList.toggle("has-img",!!u);
+}
+function fill(el,idx){
+  const [en,gloss,ru,letter,k]=DECK[idx];
+  const ti=el.querySelector(".title");
+  ti.textContent=en;
+  if(gloss){const g=document.createElement("span");g.className="gloss";g.textContent=" ("+gloss+")";ti.appendChild(g);}
+  const parts=[...ru], target=letter.toLowerCase();
+  const hit=parts.findIndex(p=>p.toLowerCase()===target);
+  const r=el.querySelector(".ru");
+  r.textContent="";
+  parts.forEach((p,i)=>{
+    if(i===hit){const b=document.createElement("b");b.textContent=p;r.appendChild(b);}
+    else r.appendChild(document.createTextNode(p));
+  });
+  const t=el._t=(el._t||0)+1;
+  if(k in cache) paint(el,cache[k]);
+  else{paint(el,null);imageFor(k).then(u=>{if(el._t===t)paint(el,u);});}
+}
+// Always keep one card queued after the current one (new shuffled pass, or A to Я again).
+function ensure(){
+  while(seq.length<=pos+1) seq=seq.concat(mode==="shuffle"?shuffled(seq[seq.length-1]):ids());
+}
+function show(){
+  ensure();
+  fill(F,seq[pos]);
+  fill(B,seq[pos+1]);
+  $("count").textContent=((pos%N)+1)+" / "+N;
+  [1,-1].forEach(d=>{const i=seq[pos+d];if(i!==undefined)imageFor(DECK[i][4]);}); // warm up neighbours
+}
+
+function setMode(m){
+  if(busy||m===mode)return;
+  const cur=seq[pos];
+  mode=m;
+  if(m==="order"){seq=ids();pos=cur;}                       // carry on from this letter
+  else{seq=[cur].concat(shuffled().filter(i=>i!==cur));pos=0;} // current card first, rest shuffled
+  $("mShuffle").setAttribute("aria-pressed",m==="shuffle");
+  $("mOrder").setAttribute("aria-pressed",m==="order");
+  show();
+}
+
+function bounce(){
+  F.style.transition="transform .16s ease-out";
+  F.style.transform="translateX(18px)";
+  setTimeout(()=>{F.style.transform="";},160);
+}
+// dir +1: next card, front flies off to the left. dir -1: previous card, flies off to the right.
+function go(dir){
+  if(busy)return;
+  const target=pos+dir;
+  if(target<0){bounce();return;}
+  busy=true;
+  fill(B,seq[target]);
+  const w=F.offsetWidth*1.4, tr="transform "+DUR+"ms ease-in, opacity "+DUR+"ms ease-in";
+  F.style.transition=B.style.transition=tr;
+  F.style.transform="translateX("+(-dir*w)+"px) rotate("+(-dir*18)+"deg)";
+  F.style.opacity="0";
+  B.style.transform="none";
+  setTimeout(()=>{
+    pos=target;
+    F.style.transition=B.style.transition="none";
+    F.style.transform=F.style.opacity=B.style.transform="";
+    show();
+    busy=false;
+  },DUR+20);
+}
+
+// Drag and swipe on the front card.
+let drag=null;
+F.addEventListener("pointerdown",e=>{
+  if(busy||e.button>0)return;
+  drag={x:e.clientX,t:performance.now(),dx:0,side:0,moved:false};
+  F.setPointerCapture(e.pointerId);
+  F.style.transition="none";
+});
+F.addEventListener("pointermove",e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x;
+  drag.dx=dx;
+  if(!drag.moved&&Math.abs(dx)<6)return;
+  drag.moved=true;
+  const side=dx<0?1:-1;
+  if(side!==drag.side){drag.side=side;const j=seq[pos+side];if(j!==undefined)fill(B,j);}
+  const shown=(side===-1&&pos===0)?dx*.3:dx;   // rubber-band at the first card
+  F.style.transform="translateX("+shown+"px) rotate("+shown/18+"deg)";
+  const p=Math.min(Math.abs(shown)/(F.offsetWidth*.5),1);
+  B.style.transition="none";
+  B.style.transform="scale("+(.94+.06*p)+") translateY("+(14*(1-p))+"px)";
+});
+function endDrag(){
+  if(!drag)return;
+  const d=drag;drag=null;
+  const dist=Math.abs(d.dx), v=d.dx/Math.max(performance.now()-d.t,1), side=d.dx<0?1:-1;
+  if(!d.moved){go(1);return;}   // a tap
+  const commit=(dist>F.offsetWidth*.28||(Math.abs(v)>.5&&dist>30))&&!(side===-1&&pos===0);
+  if(commit){go(side);return;}
+  F.style.transition=B.style.transition="transform .25s ease";
+  F.style.transform=B.style.transform="";
+}
+F.addEventListener("pointerup",endDrag);
+F.addEventListener("pointercancel",()=>{if(!drag)return;drag=null;F.style.transition=B.style.transition="transform .25s ease";F.style.transform=B.style.transform="";}); // browser took over (e.g. vertical scroll): reset, do not count as a tap
+
+$("next").addEventListener("click",()=>go(1));
+$("prev").addEventListener("click",()=>go(-1));
+$("mShuffle").addEventListener("click",()=>setMode("shuffle"));
+$("mOrder").addEventListener("click",()=>setMode("order"));
+
+const dlg=$("dlg");
+$("tips").addEventListener("click",()=>dlg.showModal());
+dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close();});
+
+document.addEventListener("keydown",e=>{
+  if(dlg.open)return;
+  if(e.key==="ArrowRight"||(e.key===" "&&!e.target.closest("button"))){e.preventDefault();go(1);}
+  else if(e.key==="ArrowLeft"){e.preventDefault();go(-1);}
+});
+show();
+</script>
+</body>
+</html>
