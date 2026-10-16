@@ -1,152 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cURL to Windows Terminal Converter</title>
-	<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
-    <!-- Tailwind CSS for rapid styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        darkBg: '#121212',
-                        cardBg: '#1e2227',
-                        cardBorder: '#2d333b',
-                        accentBlue: '#3b82f6',
-                        accentBlueHover: '#2563eb',
-                        outputBg: '#0d1117'
-                    }
-                }
-            }
-        }
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cURL to Windows Terminal Converter</title>
+<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{darkBg:'#121212',cardBg:'#1e2227',cardBorder:'#2d333b',accentBlue:'#3b82f6',accentBlueHover:'#2563eb',outputBg:'#0d1117'}}}}
+</script>
 </head>
 <body class="bg-darkBg text-[#f0f6fc] min-h-screen flex items-center justify-center p-4 sm:p-6 font-sans">
+<div class="w-full max-w-2xl bg-cardBg border border-cardBorder rounded-2xl shadow-2xl p-6 sm:p-8">
 
-    <div class="w-full max-w-2xl bg-cardBg border border-cardBorder rounded-2xl shadow-2xl p-6 sm:p-8">
-        
-        <!-- Header -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold tracking-tight text-white mb-2 flex items-center gap-2">
-                <svg class="w-7 h-7 text-accentBlue" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                cURL to Windows Terminal Converter
-            </h1>
-            <p class="text-sm text-[#8b949e]">Paste your Bash/Linux cURL script below to format it cleanly for Windows PowerShell.</p>
-        </div>
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold tracking-tight text-white mb-2">cURL to Windows Terminal Converter</h1>
+    <p class="text-sm text-[#8b949e]">Paste a bash, Chrome "Copy as cURL" (bash or cmd) or PowerShell command. It converts as you type; Ctrl+Enter works too.</p>
+  </div>
 
-        <!-- Input Section -->
-        <div class="mb-5">
-            <label for="inputCurl" class="block text-sm font-medium text-[#c9d1d9] mb-2">Input cURL Script:</label>
-            <textarea id="inputCurl" rows="6" 
-                class="w-full bg-[#0d1117] border border-cardBorder rounded-xl p-3.5 text-sm font-mono text-[#f0f6fc] focus:outline-none focus:ring-2 focus:ring-accentBlue focus:border-transparent transition resize-y placeholder-[#484f58]"
-                placeholder="curl -X POST 'https://api.example.com/v1/resource' \
-  -H 'Authorization: Bearer YOUR_TOKEN' \
-  -H 'Content-Type: application/json' \
-  -d '{\"name\": \"test\"}'"></textarea>
-        </div>
+  <label for="inputCurl" class="block text-sm font-medium text-[#c9d1d9] mb-2">Input cURL script</label>
+  <textarea id="inputCurl" rows="7" spellcheck="false"
+    class="w-full bg-[#0d1117] border border-cardBorder rounded-xl p-3.5 text-sm font-mono text-[#f0f6fc] focus:outline-none focus:ring-2 focus:ring-accentBlue transition resize-y placeholder-[#484f58]"
+    placeholder="curl -X POST 'https://api.example.com/v1/resource' \
+  -H 'Authorization: Bearer $TOKEN' \
+  -d '{&quot;name&quot;: &quot;test&quot;}'"></textarea>
 
-        <!-- Action Button -->
-        <button onclick="convertCurl()" 
-            class="w-full bg-accentBlue hover:bg-accentBlueHover text-white font-medium py-3 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-            </svg>
-            Convert for Windows
-        </button>
+  <div class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 text-sm text-[#c9d1d9]">
+    <label class="flex items-center gap-2">Target
+      <select id="target" class="bg-[#0d1117] border border-cardBorder rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-accentBlue">
+        <option value="ps7">PowerShell 7.3+</option>
+        <option value="ps5">Windows PowerShell 5.1</option>
+      </select>
+    </label>
+    <label class="flex items-center gap-2"><input id="multi" type="checkbox" checked class="accent-blue-500"> One option per line</label>
+  </div>
 
-        <!-- Output Section -->
-        <div class="mt-6 pt-6 border-t border-cardBorder">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-semibold uppercase tracking-wider text-[#8b949e]">PowerShell / Windows Terminal Format</span>
-                <button id="copyBtn" onclick="copyToClipboard()" 
-                    class="bg-[#30363d] hover:bg-[#3b434b] text-[#c9d1d9] text-xs font-medium py-1.5 px-3 rounded-lg border border-[#484f58] transition flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                    <span id="copyText">Copy</span>
-                </button>
-            </div>
-            <div class="bg-outputBg border border-cardBorder rounded-xl p-4 overflow-x-auto">
-                <pre id="psOutput" class="font-mono text-xs sm:text-sm text-[#7ee787] whitespace-pre-wrap break-all">Converted command will appear here...</pre>
-            </div>
-        </div>
+  <button onclick="convertCurl()" class="mt-4 w-full bg-accentBlue hover:bg-accentBlueHover text-white font-medium py-3 px-4 rounded-xl shadow-lg transition text-sm">Convert for Windows</button>
 
+  <div class="mt-6 pt-6 border-t border-cardBorder">
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm font-medium text-[#8b949e]">PowerShell output <span id="mode" class="text-[#484f58]"></span></span>
+      <button id="copyBtn" onclick="copyToClipboard()" class="bg-[#30363d] hover:bg-[#3b434b] text-[#c9d1d9] text-xs font-medium py-1.5 px-3 rounded-lg border border-[#484f58] transition">Copy</button>
     </div>
+    <div class="bg-outputBg border border-cardBorder rounded-xl p-4 overflow-x-auto">
+      <pre id="psOutput" class="font-mono text-xs sm:text-sm text-[#7ee787] whitespace-pre-wrap break-all">Converted command will appear here...</pre>
+    </div>
+    <ul id="warns" class="mt-3 space-y-1 text-xs text-[#e3b341] list-disc pl-5"></ul>
+  </div>
+</div>
 
-    <script>
-        function convertCurl() {
-            let input = document.getElementById('inputCurl').value.trim();
-            const outputEl = document.getElementById('psOutput');
-            
-            if (!input) {
-                outputEl.innerText = "Please enter a valid cURL script above.";
-                outputEl.className = "font-mono text-xs sm:text-sm text-[#f85149] whitespace-pre-wrap break-all";
-                return;
-            }
+<script>
+let warns, opts;
 
-            // 1. Remove line continuation backslashes and normalize whitespace into a single line
-            let cleaned = input.replace(/\\\s*\r?\n/g, ' ').replace(/\s+/g, ' ');
+// Tokenizer: bash, cmd (^ escapes) and PowerShell (backtick) flavours
+function detect(s){
+  if(/\^[ \t]*\n/.test(s)||/\^"/.test(s)) return 'cmd';
+  if(/`[ \t]*\n/.test(s)||/\$\{?env:/i.test(s)) return 'ps';
+  return 'bash';
+}
 
-            // 2. Replace 'curl' with 'curl.exe' to prevent PowerShell alias conflicts with Invoke-WebRequest
-            cleaned = cleaned.replace(/^curl\b/i, 'curl.exe');
+function tokenize(src, mode){
+  const out=[], n=src.length, VAR=/\$(?:\{(?:env:)?(\w+)\}|(?:env:)?([A-Za-z_]\w*))/y;
+  const contRe=new RegExp('\\'+(mode==='cmd'?'^':mode==='ps'?'`':'\\')+'[ \\t]*\\n','y');
+  let w=null, q='', i=0;
+  const start=()=>{ if(!w) w={p:[],q:false}; };
+  const lit=s=>{
+    start();
+    const l=w.p[w.p.length-1];
+    if(mode==='cmd'&&s==='"'&&l&&l.t==='s'&&l.v.endsWith('\\')) l.v=l.v.slice(0,-1);
+    if(l&&l.t==='s') l.v+=s; else w.p.push({t:'s',v:s});
+  };
+  const vr=nm=>{ start(); w.p.push({t:'v',v:nm}); };
+  const end=()=>{ if(w){ out.push(w); w=null; } };
+  const varAt=()=>{ if(mode==='cmd') return null; VAR.lastIndex=i; const m=VAR.exec(src); return m?{name:m[1]||m[2],len:m[0].length}:null; };
 
-            // 3. Handle quote adjustments for Windows shell safety (convert single quotes to double quotes where applicable)
-            let psCmd = cleaned.replace(/'/g, '"');
+  while(i<n){
+    const c=src[i], d=src[i+1];
+    if(q!=="'"){
+      contRe.lastIndex=i;
+      if(contRe.test(src)){ i=contRe.lastIndex; if(!q) end(); continue; }
+    }
+    if(q==="'"){
+      if(c==="'"){ if(mode==='ps'&&d==="'"){ lit("'"); i+=2; } else { q=''; i++; } }
+      else { lit(c); i++; }
+      continue;
+    }
+    if(q==='"'){
+      if(c==='"'){ q=''; i++; continue; }
+      if(mode==='cmd'&&c==='^'&&d){ lit(d); i+=2; continue; }
+      if(mode==='cmd'&&c==='\\'&&d==='"'){ lit('"'); i+=2; continue; }
+      if(mode==='bash'&&c==='\\'&&d&&'\\"$`'.includes(d)){ lit(d); i+=2; continue; }
+      if(mode==='ps'&&c==='`'&&d){ lit(d); i+=2; continue; }
+      const v=varAt(); if(c==='$'&&v){ vr(v.name); i+=v.len; continue; }
+      lit(c); i++; continue;
+    }
+    if(c==="'"){ q="'"; start(); w.q=true; i++; continue; }
+    if(c==='"'){
+      const l=w&&w.p[w.p.length-1];
+      if(mode==='cmd'&&l&&l.t==='s'&&l.v.endsWith('\\')){ lit('"'); i++; continue; }
+      q='"'; start(); w.q=true; i++; continue;
+    }
+    if(mode==='bash'&&c==='$'&&d==="'"){
+      let j=i+2, s='';
+      while(j<n&&src[j]!=="'"){
+        if(src[j]==='\\'){
+          const e=src[j+1]; j+=2;
+          if(e==='n') s+='\n'; else if(e==='t') s+='\t'; else if(e==='r') s+='\r';
+          else if(e==='u'||e==='x'||e==='U'){
+            const m=/^[0-9a-fA-F]+/.exec(src.slice(j,j+(e==='x'?2:e==='u'?4:8)));
+            if(m){ s+=String.fromCodePoint(parseInt(m[0],16)); j+=m[0].length; }
+          } else s+=e;
+        } else s+=src[j++];
+      }
+      lit(s); w.q=true; i=j+1; continue;
+    }
+    if(mode==='cmd'&&c==='^'&&d){ lit(d); i+=2; continue; }
+    if(mode==='bash'&&c==='\\'&&d){ lit(d); i+=2; continue; }
+    if(mode==='ps'&&c==='`'&&d){ lit(d); i+=2; continue; }
+    if(/\s/.test(c)){ end(); if(c==='\n') out.push({op:'\n'}); i++; continue; }
+    if(c==='#'&&!w){ while(i<n&&src[i]!=='\n') i++; continue; }
+    if(c==='|'||c===';'||(c==='&'&&d==='&')){
+      end();
+      const op=c==='&'?'&&':(c==='|'&&d==='|'?'||':c);
+      out.push({op}); i+=op.length; continue;
+    }
+    const v=varAt(); if(c==='$'&&v){ vr(v.name); i+=v.len; continue; }
+    lit(c); i++;
+  }
+  end();
+  return out;
+}
 
-            outputEl.innerText = psCmd;
-            outputEl.className = "font-mono text-xs sm:text-sm text-[#7ee787] whitespace-pre-wrap break-all";
-        }
+// Rendering
+const txt=w=>w.p.length&&w.p[0].t==='s'?w.p[0].v:'';
+const nat=s=>opts.ps5?s.replace(/(\\*)"/g,'$1$1\\"'):s;   // PS 5.1 needs \" for native args
 
-        function copyToClipboard() {
-            const text = document.getElementById('psOutput').innerText;
-            const copyTextSpan = document.getElementById('copyText');
-            const copyBtn = document.getElementById('copyBtn');
+function arg(w, force){
+  if(!w.p.some(p=>p.t==='v')){
+    const s=w.p.map(p=>p.v).join('');
+    if(s==='/dev/null'){ warns.add('/dev/null was replaced with NUL.'); return 'NUL'; }
+    if(/^(~|\/(home|tmp|Users|var|etc))\//.test(s)||/[=@](~|\/(home|tmp|Users|var|etc))\//.test(s))
+      warns.add('Unix-style file path found. Adjust it to a Windows path.');
+    if(s==='') return "''";
+    if(!force&&(/^-{1,2}[A-Za-z][\w-]*$/.test(s)||/^[\w.\/:+%-]+$/.test(s))) return s;
+    return "'"+nat(s).replace(/'/g,"''")+"'";
+  }
+  const body=w.p.map(p=>p.t==='v'?'${env:'+p.v+'}':nat(p.v).replace(/[`"$]/g,'`$&')).join('');
+  return '"'+body+'"';
+}
 
-            if (!text || text.startsWith("Converted command") || text.startsWith("Please enter")) {
-                return;
-            }
+function stmt(words){
+  let i=0, pre='';
+  for(;i<words.length;i++){
+    const w=words[i], t=txt(w);
+    if(/^(\$|>|sudo|export|time)$/.test(t)&&w.p.length===1&&!w.q) continue;
+    const m=/^([A-Za-z_]\w*)=/.exec(t);
+    if(m){
+      const v={p:[{t:'s',v:t.slice(m[0].length)},...w.p.slice(1)],q:true};
+      pre+='$env:'+m[1]+' = '+arg(v,true)+'\n';
+      continue;
+    }
+    break;
+  }
+  const rest=words.slice(i);
+  if(!rest.length) return pre.trim();
+  const isCurl=rest[0].p.length===1&&/^curl(\.exe)?$/i.test(txt(rest[0]));
+  let line=isCurl?'curl.exe':arg(rest[0]);
+  for(const w of rest.slice(1)){
+    const t=txt(w);
+    const flag=isCurl&&opts.multi&&t.length>1&&/^--?[A-Za-z]/.test(t);
+    line+=(flag?' `\n  ':' ')+arg(w);
+  }
+  return pre+line;
+}
 
-            // Using fallback-safe approach for iFrame limitations if navigator.clipboard is blocked
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showCopiedFeedback(copyTextSpan, copyBtn);
-                }).catch(() => {
-                    fallbackCopy(text, copyTextSpan, copyBtn);
-                });
-            } else {
-                fallbackCopy(text, copyTextSpan, copyBtn);
-            }
-        }
+function convert(input, o){
+  opts=o; warns=new Set();
+  let src=input.replace(/\r\n?/g,'\n').replace(/[\u201c\u201d\u201e]/g,'"').replace(/[\u2018\u2019\u201a]/g,"'").trim();
+  const mode=detect(src);
+  if(/\$\(/.test(src)) warns.add('Command substitution $(...) is not converted.');
+  const items=tokenize(src,mode);
+  let res='', cur=[], sep=null;
+  const flush=()=>{
+    if(!cur.length) return;
+    if(res&&sep) res+=sep;
+    sep=null; res+=stmt(cur); cur=[];
+  };
+  for(const it of items){
+    if(it.op){
+      flush();
+      const s=it.op==='|'?' | ':(it.op==='&&'||it.op==='||')?(o.ps5?'\n':' '+it.op+' '):'\n';
+      if(!sep||sep==='\n') sep=s;
+    } else cur.push(it);
+  }
+  flush();
+  if(/[^\x00-\x7f]/.test(res)&&o.ps5) warns.add('Non-ASCII characters: Windows PowerShell 5.1 may garble them. Use PowerShell 7.3+ or send the body from a UTF-8 file with -d @file.');
+  if(o.ps5&&/&&|\|\|/.test(input)) warns.add('&& and || are not available in PowerShell 5.1, so commands were separated by new lines and will run regardless of earlier failures.');
+  return {text:res, mode, warns:[...warns]};
+}
 
-        function fallbackCopy(text, copyTextSpan, copyBtn) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';  // Avoid scrolling to bottom
-            document.body.appendChild(textarea);
-            textarea.focus();
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                showCopiedFeedback(copyTextSpan, copyBtn);
-            } catch (err) {
-                console.error('Failed to copy text', err);
-            }
-            document.body.removeChild(textarea);
-        }
+// UI
+const $=id=>document.getElementById(id);
+function convertCurl(){
+  const input=$('inputCurl').value.trim(), out=$('psOutput');
+  $('warns').innerHTML=''; $('mode').textContent='';
+  if(!input){
+    out.textContent='Please enter a valid cURL script above.';
+    out.className=out.className.replace('text-[#7ee787]','text-[#f85149]');
+    return;
+  }
+  out.className=out.className.replace('text-[#f85149]','text-[#7ee787]');
+  const r=convert(input,{ps5:$('target').value==='ps5',multi:$('multi').checked});
+  out.textContent=r.text||'Nothing to convert.';
+  $('mode').textContent='(input read as '+r.mode+')';
+  r.warns.forEach(t=>{ const li=document.createElement('li'); li.textContent=t; $('warns').appendChild(li); });
+}
 
-        function showCopiedFeedback(copyTextSpan, copyBtn) {
-            copyTextSpan.innerText = "Copied!";
-            copyBtn.classList.add('bg-[#238636]', 'border-[#2ea043]', 'text-white');
-            setTimeout(() => {
-                copyTextSpan.innerText = "Copy";
-                copyBtn.classList.remove('bg-[#238636]', 'border-[#2ea043]', 'text-white');
-            }, 2000);
-        }
-    </script>
+let timer;
+$('inputCurl').addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(convertCurl,250); });
+$('inputCurl').addEventListener('keydown',e=>{ if(e.ctrlKey&&e.key==='Enter') convertCurl(); });
+$('target').addEventListener('change',convertCurl);
+$('multi').addEventListener('change',convertCurl);
+
+function copyToClipboard(){
+  const text=$('psOutput').textContent;
+  if(!text||text.startsWith('Converted command')||text.startsWith('Please enter')) return;
+  const done=()=>{ const b=$('copyBtn'); b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy',2000); };
+  const fallback=()=>{
+    const t=document.createElement('textarea'); t.value=text; t.style.position='fixed';
+    document.body.appendChild(t); t.select();
+    try{ document.execCommand('copy'); done(); }catch(e){}
+    document.body.removeChild(t);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done,fallback); else fallback();
+}
+</script>
 </body>
 </html>
