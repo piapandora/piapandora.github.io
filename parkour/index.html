@@ -233,11 +233,34 @@
             currentEuler.set(0, 0);
         }
 
+        // Mouse input is summed per frame and passed through a spike filter before it turns the camera.
+        // A lone frame of huge movement after calm input (observed: ~550-650 counts) is dropped.
+        const MOUSE_SPIKE_FILTER = true;
+        const MOUSE_SPIKE_ABS = 300;    // a frame must exceed this many counts to count as a spike...
+        const MOUSE_SPIKE_RATIO = 4;    // ...and be this many times the last accepted frame
+        const MOUSE_SPIKE_FLOOR = 25;   // minimum "recent motion" used for the ratio
+        const MOUSE_FILTER_LOG = false; // set true to log each dropped spike to the console
+        const pendingMouse = { x: 0, y: 0 };
+        let lastAcceptedMouseMag = 0;
+        function applyPendingMouse() {
+            let dx = pendingMouse.x, dy = pendingMouse.y;
+            pendingMouse.x = pendingMouse.y = 0;
+            const mag = Math.hypot(dx, dy);
+            if (MOUSE_SPIKE_FILTER && mag > MOUSE_SPIKE_ABS &&
+                mag > MOUSE_SPIKE_RATIO * Math.max(lastAcceptedMouseMag, MOUSE_SPIKE_FLOOR)) {
+                if (MOUSE_FILTER_LOG) console.warn('[mouse-filter] dropped spike ' + JSON.stringify({ dx, dy, lastAccepted: +lastAcceptedMouseMag.toFixed(1) }));
+                return;
+            }
+            lastAcceptedMouseMag = mag;
+            targetEuler.x -= dx * lookSpeed;
+            targetEuler.y -= dy * lookSpeed;
+            targetEuler.y = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, targetEuler.y));
+        }
+
         window.addEventListener('mousemove', (e) => {
             if (!controls.isLocked) return;
-            targetEuler.x -= e.movementX * lookSpeed;
-            targetEuler.y -= e.movementY * lookSpeed;
-            targetEuler.y = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, targetEuler.y));
+            pendingMouse.x += e.movementX;
+            pendingMouse.y += e.movementY;
         });
 
         const wireframeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true });
@@ -348,10 +371,50 @@
         scene.add(floorMesh);
 
         // Small round-robin audio pools so rapid pickups don't cut each other off
+        // Sounds are decoded once into AudioBuffers and each play() starts its own source, so rapid
+        // back-to-back dings can overlap and never depend on a shared <audio> element's state.
+        // If Web Audio or the fetch fails, it falls back to a (lazily created) pool of <audio> elements.
+        const audioState = { ctx: null, loaders: [] };
+        function initAudio() {
+            if (audioState.ctx) return;
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            audioState.ctx = new AC();
+            audioState.loaders.forEach(load => load());
+        }
+        ['pointerdown', 'keydown', 'click'].forEach(ev => window.addEventListener(ev, () => {
+            initAudio();
+            if (audioState.ctx && audioState.ctx.state === 'suspended') audioState.ctx.resume();
+        }, true));
+
         function makeSoundPool(src, volume, size) {
-            const pool = Array.from({ length: size }, () => { const a = new Audio(src); a.volume = volume; return a; });
-            let n = 0;
-            return () => { const s = pool[n++ % size]; s.currentTime = 0; s.play().catch(() => {}); };
+            let pool = null, n = 0, buffer = null;
+            const playFallback = () => {
+                if (!pool) pool = Array.from({ length: size }, () => { const a = new Audio(src); a.volume = volume; return a; });
+                const s = pool[n++ % size];
+                try { s.currentTime = 0; } catch (e) {}
+                s.play().catch(() => {});
+            };
+            const load = () => {
+                fetch(src)
+                    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+                    .then(data => audioState.ctx.decodeAudioData(data))
+                    .then(buf => { buffer = buf; })
+                    .catch(err => console.warn('[audio] Web Audio load failed for ' + src + ', using <audio> fallback', err));
+            };
+            audioState.loaders.push(load);
+            if (audioState.ctx) load();
+            return () => {
+                const ctx = audioState.ctx;
+                if (!buffer || !ctx) { playFallback(); return; }
+                if (ctx.state === 'suspended') ctx.resume();
+                const source = ctx.createBufferSource();
+                source.buffer = buffer;
+                const gain = ctx.createGain();
+                gain.gain.value = volume;
+                source.connect(gain).connect(ctx.destination);
+                source.start();
+            };
         }
         const playCollect = makeSoundPool('audio/ding.wav', 0.75, 4);
         const playGallery = makeSoundPool('audio/giggle.wav', 0.25, 2);
@@ -387,27 +450,42 @@
             return window.collectibles.some(c => c.visible && Math.abs(c.position.x - wx) < 2.5 && Math.abs(c.position.z - wz) < 2.5);
         }
 
+        // Gallery boxes are 5 wide (+/-2.5) and the player radius is 0.45, so 3.5 keeps a margin.
+        const GALLERY_PLAYER_CLEARANCE = 3.5;
+
         function spawnGalleryBox() {
-            let wx, wz;
-            if (window.landmarkPlazaCenters && window.landmarkPlazaCenters.length > 0) {
-                const landmark = window.landmarkPlazaCenters.pop();
-                wx = landmark.x;
-                wz = landmark.z;
-            } else {
+            const ppos = controls.object.position;
+            const nearPlayer = (cx, cz) =>
+                Math.abs(ppos.x - cx) < GALLERY_PLAYER_CLEARANCE && Math.abs(ppos.z - cz) < GALLERY_PLAYER_CLEARANCE;
+
+            // Proximity is only a preference: try spots away from the player first, then ignore
+            // proximity entirely so a gallery is never skipped (the 100-point gallery must always appear).
+            const tryPick = (allowNear) => {
+                const lm = window.landmarkPlazaCenters || [];
+                for (let i = lm.length - 1; i >= 0; i--) { // same order as the old pop()
+                    if (allowNear || !nearPlayer(lm[i].x, lm[i].z)) {
+                        const c = lm.splice(i, 1)[0];
+                        return { wx: c.x, wz: c.z };
+                    }
+                }
                 const free = [];
                 for (let ix = 1; ix <= 18; ix++) {
                     for (let iz = 1; iz <= 18; iz++) {
                         const key = `${ix},${iz}`;
                         if (!window.reachableCells.has(key) || window.occupiedGridRegistry.has(key) || cellHasCube(ix, iz)) continue;
+                        if (!allowNear && nearPlayer(gridToWorld(ix), gridToWorld(iz))) continue;
                         free.push({ ix, iz });
                     }
                 }
-                if (free.length === 0) return false;
+                if (free.length === 0) return null;
                 const pick = free[Math.floor(Math.random() * free.length)];
                 window.occupiedGridRegistry.add(`${pick.ix},${pick.iz}`);
-                wx = gridToWorld(pick.ix);
-                wz = gridToWorld(pick.iz);
-            }
+                return { wx: gridToWorld(pick.ix), wz: gridToWorld(pick.iz) };
+            };
+
+            const spot = tryPick(false) || tryPick(true);
+            if (!spot) return false; // only if the map has no free cell at all (not a proximity issue)
+            const wx = spot.wx, wz = spot.wz;
 
             const galleryHeight = 20 / 3;
             const galleryWidth = 5;
@@ -649,6 +727,7 @@
             window.collectibles.forEach(cube => { if (cube.visible) cube.rotation.y += 1.5 * delta; });
 
             if (controls.isLocked === true) {
+                applyPendingMouse();
                 currentEuler.lerp(targetEuler, 1 - Math.pow(1 - lerpFactor, delta * 60));
                 camera.quaternion.setFromEuler(new THREE.Euler(currentEuler.y, currentEuler.x, 0, 'YXZ'));
 
@@ -730,7 +809,7 @@
                 for (const box of window.obstacleColliders) {
                     const lx = Math.max(box.min.x, Math.min(px, box.max.x)), lz = Math.max(box.min.z, Math.min(pz, box.max.z));
                     if ((px - lx) * (px - lx) + (pz - lz) * (pz - lz) <= playerRadius * playerRadius) {
-                        if (velocity.y <= 0 && prevFeet >= box.max.y - 0.2 && playerFeet <= box.max.y + 0.1) {
+                        if (velocity.y <= 0 && prevFeet >= box.max.y - 0.05 && playerFeet <= box.max.y + 0.1) {
                             velocity.y = 0; controls.object.position.y = box.max.y + playerHeight; jumpCount = 0;
                         } else if (velocity.y > 0 && prevY <= box.min.y && py >= box.min.y) {
                             velocity.y = 0; controls.object.position.y = box.min.y;
