@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pia Parkour</title>
+	<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; font-family: sans-serif; }
+        canvas { display: block; }
+        #instructions {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; text-align: center; background: rgba(0, 0, 0, 0.85);
+            padding: 25px 45px; border-radius: 12px; cursor: pointer; border: 2px solid #00ffcc; z-index: 100;
+        }
+		#instructions h1 { margin-bottom: 24px ; font-size: 36px; color: #00ffcc; }
+        #instructions p { margin: 10px 0; line-height: 1.4; }
+        
+        #score-board {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            color: #ffffff; background: rgba(0, 0, 0, 0.6); padding: 10px 24px;
+            border-radius: 30px; font-size: 22px; font-weight: bold; letter-spacing: 1px;
+            border: 1px solid rgba(0, 255, 204, 0.4); z-index: 50; pointer-events: none;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+        #score-board span { color: #00ffcc; }
+        
+        #poster-notification {
+            position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%);
+            color: #ffffff; background: rgba(0, 0, 0, 0.6); padding: 10px 24px;
+            border-radius: 30px; font-size: 16px; font-weight: bold; letter-spacing: 1px;
+            border: 1px solid rgba(0, 255, 204, 0.4); z-index: 50; pointer-events: none;
+            opacity: 0; transition: none;
+        }
+        #poster-notification span { color: #00ffcc; }
+
+        @keyframes posterSlideFade {
+            0% { bottom: -60px; opacity: 0; transform: translateX(-50%) scale(0.95); }
+            15% { bottom: 25px; opacity: 1; transform: translateX(-50%) scale(1.0); }
+            85% { bottom: 25px; opacity: 1; transform: translateX(-50%) scale(1.0); }
+            100% { bottom: -60px; opacity: 0; transform: translateX(-50%) scale(0.95); }
+        }
+        .poster-slide { animation: posterSlideFade 5.0s ease forwards; }
+
+        #win-screen {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; text-align: center; background: rgba(0, 0, 0, 0.9);
+            padding: 40px 60px; border-radius: 16px; border: 3px solid #00ffcc;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity 1.0s ease; display: none;
+        }
+        #win-screen.show { opacity: 1; pointer-events: auto; }
+        #win-screen h1 { color: #00ffcc; margin-top: 0; font-size: 36px; }
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        .game-btn {
+            background-color: #00ffcc; color: #111; border: none; padding: 12px 28px;
+            font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s;
+        }
+        .game-btn:hover { background-color: #00cca3; }
+        .game-btn.secondary { background-color: #333; color: #fff; border: 1px solid #555; }
+        .game-btn.secondary:hover { background-color: #444; }
+
+        #hint-notification {
+            position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%);
+            color: #ffffff; background: rgba(0, 0, 0, 0.85); padding: 10px 22px;
+            border-radius: 30px; font-size: 16px; font-weight: bold; letter-spacing: 1px;
+            border: 1px solid rgba(255, 230, 150, 0.4); z-index: 50; pointer-events: none; opacity: 0;
+        }
+        #hint-notification span { color: #ffe696; }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.186.1/three.module.min.js",
+                "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="score-board">Score: <span id="score">0</span> / <span id="target-display">110</span></div>
+    <div id="poster-notification">🖼️ <span>Gallery Unlocked!</span></div>
+    <div id="hint-notification">✨ <span>Almost there, follow the light!</span></div>
+
+    <div id="instructions">
+        <h1>Welcome to Pia Parkour</h1>
+        <p><strong>W A S D</strong> to Move &bull; Hold <strong>LMB</strong> or <strong>SHIFT</strong> to Run &bull; <strong>SPACE</strong> to Jump (x2)</p>
+        <p>Collect orange cubes to score points and unlock poster galleries!</p>
+        <p>Levels are procedurally generated:</p>
+        <p><strong>ENTER</strong> to return to start if you ever get stuck.</p>
+        <p><em>Click Here to Play &bull; Press ESC to release cursor</em></p>
+    </div>
+
+    <div id="win-screen">
+        <h1>Congratulations, You Won!</h1>
+        <p>You successfully reached <span id="win-target-display">110</span> points and unlocked all the galleries!</p>
+        <div class="btn-group">
+            <button id="restart-btn" class="game-btn">Play Again</button>
+            <button id="continue-btn" class="game-btn secondary">Stay on Map</button>
+        </div>
+    </div>
+
+    <script src="posters.js"></script>
+    <script src="builder.js"></script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
+
+        window.THREE = THREE;
+
+        const targetScore = 110;
+        const collectiblesCount = 10;
+        const posterRewardInterval = 10;
+        let score = 0;
+
+        const DEBUG_MODE_DONT_FORGET = false;
+
+        const PLAYER_HEIGHT = 1.6;              
+        const FLOOR_Y = PLAYER_HEIGHT;          
+        const SPAWN = { x: 0, z: 0 };           
+        const MAP_LIMIT = 50.0;                 
+
+        document.getElementById('target-display').textContent = targetScore;
+        document.getElementById('win-target-display').textContent = targetScore;
+
+        let gameFinished = false;
+        let isContinued = false;
+        let inputLocked = false;   
+        let winShown = false;      
+        let winFallbackTimer = null;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111111);
+        window.scene = scene;
+
+        const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+        hemisphereLight.position.set(0, 50, 0);
+        scene.add(hemisphereLight);
+
+        new HDRLoader().load('https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/kloppenheim_06_4k.hdr', (texture) => {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            scene.background = texture; 
+            scene.environment = texture; 
+            scene.environmentIntensity = 1.0;
+        });
+
+        const textureLoader = new THREE.TextureLoader();
+
+        const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(SPAWN.x, FLOOR_Y, SPAWN.z);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new PointerLockControls(camera, renderer.domElement);
+        const instructions = document.getElementById('instructions');
+        const winScreen = document.getElementById('win-screen');
+        const restartBtn = document.getElementById('restart-btn');
+        const continueBtn = document.getElementById('continue-btn');
+        const scoreBoard = document.getElementById('score-board');
+        const posterNotification = document.getElementById('poster-notification');
+
+        function resetInputFlags() {
+            moveForward = false;
+            moveBackward = false;
+            moveLeft = false;
+            moveRight = false;
+            isRunning = false;
+            shiftHeld = false;
+        }
+
+        instructions.addEventListener('click', () => {
+            if (!winScreen.classList.contains('show')) controls.lock();
+        });
+
+        controls.addEventListener('lock', () => {
+            instructions.style.display = 'none';
+        });
+
+        function finishWin() {
+            if (winShown) return;
+            winShown = true;
+            clearTimeout(winFallbackTimer);
+            velocity.set(0, 0, 0);           
+            controls.unlock();
+            winScreen.style.display = 'block';
+            setTimeout(() => winScreen.classList.add('show'), 50);
+        }
+
+        controls.addEventListener('unlock', () => {
+            resetInputFlags();
+            if (gameFinished) {
+                velocity.set(0, 0, 0);       
+                if (!winShown) { finishWin(); return; }   
+            }
+            if (score < targetScore && !winScreen.classList.contains('show')) {
+                instructions.style.display = 'block';
+            } else if (gameFinished && isContinued) {
+                winScreen.style.display = 'block';
+                setTimeout(() => winScreen.classList.add('show'), 50);
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            resetInputFlags();
+        });
+
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, isRunning = false, shiftHeld = false;
+        let jumpCount = 0;
+        const maxJumps = 2;
+        const velocity = new THREE.Vector3();
+        const gravity = 25.0; 
+        const jumpForce = 12.5; 
+        const playerRadius = 0.45;
+        const playerHeight = PLAYER_HEIGHT;
+        const maxRoofHeight = 50.0;
+
+        const lookSpeed = 0.001;
+        const lerpFactor = 0.66;
+        const targetEuler = new THREE.Vector2(0, 0);
+        const currentEuler = new THREE.Vector2(0, 0);
+
+        function teleportToSpawn() {
+            controls.object.position.set(SPAWN.x, FLOOR_Y, SPAWN.z);
+            velocity.set(0, 0, 0);
+            jumpCount = 0;
+            targetEuler.set(0, 0);
+            currentEuler.set(0, 0);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            if (!controls.isLocked) return;
+            targetEuler.x -= e.movementX * lookSpeed;
+            targetEuler.y -= e.movementY * lookSpeed;
+            targetEuler.y = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, targetEuler.y));
+        });
+
+        const wireframeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true });
+        let isWireframeActive = false;
+
+        window.addEventListener('keydown', (e) => {
+            if (DEBUG_MODE_DONT_FORGET && e.code === 'KeyP') {
+                isWireframeActive = !isWireframeActive;
+                scene.overrideMaterial = isWireframeActive ? wireframeMat : null;
+            }
+
+            if (e.code === 'Enter' && controls.isLocked && !inputLocked) teleportToSpawn();
+
+            if (!controls.isLocked || inputLocked) return;
+            if (e.code === 'KeyW') moveForward = true;
+            if (e.code === 'KeyS') moveBackward = true;
+            if (e.code === 'KeyA') moveLeft = true;
+            if (e.code === 'KeyD') moveRight = true;
+            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') shiftHeld = true;
+            if (e.code === 'Space' && !e.repeat && jumpCount < maxJumps) {
+                velocity.y = jumpForce;
+                jumpCount++;
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW') moveForward = false;
+            if (e.code === 'KeyS') moveBackward = false;
+            if (e.code === 'KeyA') moveLeft = false;
+            if (e.code === 'KeyD') moveRight = false;
+            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') shiftHeld = false;
+        });
+        window.addEventListener('mousedown', (e) => { if (e.button === 0 && controls.isLocked && !inputLocked) isRunning = true; });
+        window.addEventListener('mouseup', (e) => { if (e.button === 0) isRunning = false; });
+
+        function setupTex(tex) {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.generateMipmaps = true;
+            tex.minFilter = THREE.LinearMipmapLinearFilter;
+            tex.magFilter = THREE.LinearFilter;
+            tex.needsUpdate = true;
+            tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+        }
+
+        const groundTexture1 = textureLoader.load('images/ground-floor.png', setupTex);
+        const groundTexture2 = textureLoader.load('images/ground-floor-2.png', setupTex);
+        const groundTexture3 = textureLoader.load('images/ground-floor-3.png', setupTex);
+        const groundTexture4 = textureLoader.load('images/ground-floor-4.png', setupTex);
+
+        const groundMaterials = [
+            new THREE.MeshLambertMaterial({ map: groundTexture1 }),
+            new THREE.MeshLambertMaterial({ map: groundTexture2 }),
+            new THREE.MeshLambertMaterial({ map: groundTexture3 }),
+            new THREE.MeshLambertMaterial({ map: groundTexture4 })
+        ];
+
+        const upperTexture = textureLoader.load('images/upper-floor.png', setupTex);
+        const roofTexture = textureLoader.load('images/roof.png', setupTex);
+        const landmarkTexture = textureLoader.load('images/landmark.png', setupTex);
+        const wallTexture = textureLoader.load('images/wall.png', setupTex);
+
+        const posterCanvas = document.createElement('canvas');
+        posterCanvas.width = posterCanvas.height = 512;
+        const pCtx = posterCanvas.getContext('2d');
+        pCtx.fillStyle = '#1a1a24'; pCtx.fillRect(0, 0, 512, 512);
+        pCtx.strokeStyle = '#00ffcc'; pCtx.lineWidth = 16; pCtx.strokeRect(32, 32, 448, 448);
+        pCtx.fillStyle = '#00ffcc'; pCtx.font = 'bold 42px sans-serif'; pCtx.textAlign = 'center';
+        pCtx.fillText("GALLERY POSTER", 256, 256);
+        const posterFallbackTexture = new THREE.CanvasTexture(posterCanvas);
+        posterFallbackTexture.colorSpace = THREE.SRGBColorSpace;
+        const fallbackMaterial = new THREE.MeshBasicMaterial({ map: posterFallbackTexture });
+
+        const posterMatCache = new Map();
+        function loadPosterMaterial(filename) {
+            if (!filename) return fallbackMaterial;
+            if (posterMatCache.has(filename)) return posterMatCache.get(filename);
+            const tex = textureLoader.load(filename, (loadedTex) => {
+                loadedTex.colorSpace = THREE.SRGBColorSpace;
+                loadedTex.needsUpdate = true;
+            });
+            const mat = new THREE.MeshBasicMaterial({ map: tex });
+            posterMatCache.set(filename, mat);
+            return mat;
+        }
+
+        const upperMaterial = new THREE.MeshLambertMaterial({ map: upperTexture });
+        const roofMaterial = new THREE.MeshLambertMaterial({ map: roofTexture });
+        const landmarkMaterial = new THREE.MeshLambertMaterial({ map: landmarkTexture });
+        const wallMaterial = new THREE.MeshLambertMaterial({ map: wallTexture });
+
+        window.groundMaterials = groundMaterials;
+        window.upperMaterial = upperMaterial;
+        window.roofMaterial = roofMaterial;
+        window.landmarkMaterial = landmarkMaterial;
+        window.wallMaterial = wallMaterial;
+
+        // Floor: one instanced plane per tile (1 draw call instead of ~2400 buried cubes)
+        const floorGeo = new THREE.PlaneGeometry(5.0, 5.0);
+        floorGeo.rotateX(-Math.PI / 2);
+        const floorMesh = new THREE.InstancedMesh(floorGeo, landmarkMaterial, 400);
+        const floorM = new THREE.Matrix4();
+        for (let ix = 0; ix < 20; ix++) {
+            for (let iz = 0; iz < 20; iz++) {
+                floorM.makeTranslation((ix - 10) * 5.0 + 2.5, 0, (iz - 10) * 5.0 + 2.5);
+                floorMesh.setMatrixAt(ix * 20 + iz, floorM);
+            }
+        }
+        floorMesh.instanceMatrix.needsUpdate = true;
+        scene.add(floorMesh);
+
+        // Small round-robin audio pools so rapid pickups don't cut each other off
+        function makeSoundPool(src, volume, size) {
+            const pool = Array.from({ length: size }, () => { const a = new Audio(src); a.volume = volume; return a; });
+            let n = 0;
+            return () => { const s = pool[n++ % size]; s.currentTime = 0; s.play().catch(() => {}); };
+        }
+        const playCollect = makeSoundPool('audio/ding.wav', 0.75, 4);
+        const playGallery = makeSoundPool('audio/giggle.wav', 0.25, 2);
+
+        function gridToWorld(index) { return (index - 10) * 5.0 + 2.5; }
+        window.gridToWorld = gridToWorld;
+
+        window.obstacleColliders = [];
+        window.dynamicMeshes = [];
+        window.occupiedGridRegistry = new Set();
+        window.collectibles = [];
+
+        // Shuffled "bag": every poster is shown once before any repeats
+        let posterBag = [];
+        function getRandomPosters(count = 4) {
+            const out = [];
+            while (out.length < count) {
+                if (posterBag.length === 0) {
+                    posterBag = (typeof posterImages !== 'undefined' && posterImages.length > 0) ? [...posterImages] : [];
+                    if (posterBag.length === 0) break;
+                    for (let i = posterBag.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [posterBag[i], posterBag[j]] = [posterBag[j], posterBag[i]];
+                    }
+                }
+                out.push(posterBag.pop());
+            }
+            return out;
+        }
+
+        function cellHasCube(ix, iz) {
+            const wx = gridToWorld(ix), wz = gridToWorld(iz);
+            return window.collectibles.some(c => c.visible && Math.abs(c.position.x - wx) < 2.5 && Math.abs(c.position.z - wz) < 2.5);
+        }
+
+        function spawnGalleryBox() {
+            let wx, wz;
+            if (window.landmarkPlazaCenters && window.landmarkPlazaCenters.length > 0) {
+                const landmark = window.landmarkPlazaCenters.pop();
+                wx = landmark.x;
+                wz = landmark.z;
+            } else {
+                const free = [];
+                for (let ix = 1; ix <= 18; ix++) {
+                    for (let iz = 1; iz <= 18; iz++) {
+                        const key = `${ix},${iz}`;
+                        if (!window.reachableCells.has(key) || window.occupiedGridRegistry.has(key) || cellHasCube(ix, iz)) continue;
+                        free.push({ ix, iz });
+                    }
+                }
+                if (free.length === 0) return false;
+                const pick = free[Math.floor(Math.random() * free.length)];
+                window.occupiedGridRegistry.add(`${pick.ix},${pick.iz}`);
+                wx = gridToWorld(pick.ix);
+                wz = gridToWorld(pick.iz);
+            }
+
+            const galleryHeight = 20 / 3;
+            const galleryWidth = 5;
+            const boxPosters = getRandomPosters(4);
+            const matList = [
+                loadPosterMaterial(boxPosters[0]),
+                loadPosterMaterial(boxPosters[1]),
+                roofMaterial,
+                roofMaterial,
+                loadPosterMaterial(boxPosters[2]),
+                loadPosterMaterial(boxPosters[3])
+            ];
+            const galleryGeo = new THREE.BoxGeometry(galleryWidth, galleryHeight, galleryWidth);
+            const galleryMesh = new THREE.Mesh(galleryGeo, matList);
+            galleryMesh.position.set(wx, galleryHeight / 2, wz);
+            scene.add(galleryMesh);
+            dynamicMeshes.push(galleryMesh);
+
+            galleryMesh.geometry.computeBoundingBox();
+            const newBoxCollider = new THREE.Box3().setFromObject(galleryMesh);
+            obstacleColliders.push(newBoxCollider);
+            return true;
+        }
+
+        buildMap();
+
+        function getGroundCells(avoidCubes = true) {
+            const cells = [];
+            for (let ix = 1; ix <= 18; ix++) {
+                for (let iz = 1; iz <= 18; iz++) {
+                    const wx = gridToWorld(ix), wz = gridToWorld(iz);
+                    if (Math.abs(wx - SPAWN.x) <= 5 && Math.abs(wz - SPAWN.z) <= 5) continue;
+                    if (!window.reachableCells.has(`${ix},${iz}`)) continue;
+                    const solid = window.obstacleColliders.some(b => wx > b.min.x && wx < b.max.x && wz > b.min.z && wz < b.max.z);
+                    if (solid) continue;
+                    const isGalleryCentre = window.landmarkPlazaCenters.some(c => Math.abs(c.x - wx) < 0.1 && Math.abs(c.z - wz) < 0.1);
+                    if (isGalleryCentre) continue;
+                    if (avoidCubes && cellHasCube(ix, iz)) continue;
+                    cells.push({ x: wx, z: wz });
+                }
+            }
+            return cells;
+        }
+
+        function getRandomGridPosition() {
+            let cells = getGroundCells(true);
+            if (cells.length === 0) cells = getGroundCells(false);
+            if (cells.length === 0) return { x: SPAWN.x + 5, z: SPAWN.z };
+            return cells[Math.floor(Math.random() * cells.length)];
+        }
+
+        const cubeGeometry = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+        const cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xff6600, emissive: 0xff3300, emissiveIntensity: 0.2 });
+
+        function spawnCubes() {
+            for (let i = 0; i < collectiblesCount; i++) {
+                const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+                const pos = getRandomGridPosition();
+                cube.position.set(pos.x, 1, pos.z);
+                scene.add(cube);
+                window.collectibles.push(cube);
+            }
+        }
+        spawnCubes();
+
+        const scoreElement = document.getElementById('score');
+
+        restartBtn.addEventListener('click', () => {
+            score = 0;
+            scoreElement.textContent = score;
+            gameFinished = false;
+            isContinued = false;
+            inputLocked = false;
+            winShown = false;
+            clearTimeout(winFallbackTimer);
+            scoreBoard.style.display = 'block';
+            winScreen.classList.remove('show');
+            setTimeout(() => { winScreen.style.display = 'none'; }, 1000);
+
+            window.collectibles.forEach(cube => {
+                scene.remove(cube);
+            });
+            window.collectibles.length = 0;
+
+            const sharedMaterials = new Set([...groundMaterials, upperMaterial, roofMaterial, landmarkMaterial, wallMaterial, fallbackMaterial, ...posterMatCache.values()]);
+            window.dynamicMeshes.forEach(mesh => {
+                scene.remove(mesh);
+                if (mesh.isInstancedMesh) mesh.dispose();
+                if (mesh.geometry) mesh.geometry.dispose();
+                const mats = Array.isArray(mesh.material) ? mesh.material : (mesh.material ? [mesh.material] : []);
+                mats.forEach(m => {
+                    if (sharedMaterials.has(m)) return;
+                    if (m.isMeshBasicMaterial && m.map) m.map.dispose();
+                    m.dispose();
+                });
+            });
+            window.dynamicMeshes.length = 0;
+
+            buildMap();
+            spawnCubes();
+            teleportToSpawn();
+            controls.lock();
+        });
+
+        continueBtn.addEventListener('click', () => {
+            isContinued = true;
+            inputLocked = false;
+            velocity.set(0, 0, 0);
+            resetInputFlags();
+            scoreBoard.style.display = 'none';
+            winScreen.classList.remove('show');
+            setTimeout(() => { winScreen.style.display = 'none'; }, 1000);
+            controls.lock();
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ==========================================
+        // LAST-PICKUP HINTS
+        // ==========================================
+        const HINT_THRESHOLD = 3;                
+        const HINT_HEIGHT = 140;                 
+        const HINT_COLOR = [1.0, 0.90, 0.60];    
+        const SPOT_RADIUS = 3.5;                 
+
+        const hintUniforms = {
+            uTime: { value: 0 },
+            uColor: { value: new THREE.Vector3(...HINT_COLOR) },
+            uHeight: { value: HINT_HEIGHT }
+        };
+
+        const beamMaterial = new THREE.ShaderMaterial({
+            uniforms: hintUniforms,
+            transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false,
+            vertexShader: `
+                uniform float uHeight;
+                varying float vH;
+                varying vec3 vN;
+                varying vec3 vV;
+                void main() {
+                    vH = position.y / uHeight;
+                    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+                    vN = normalize(normalMatrix * normal);
+                    vV = normalize(-mv.xyz);
+                    gl_Position = projectionMatrix * mv;
+                }`,
+            fragmentShader: `
+                uniform vec3 uColor;
+                uniform float uTime;
+                varying float vH;
+                varying vec3 vN;
+                varying vec3 vV;
+                void main() {
+                    float edge = abs(dot(normalize(vN), normalize(vV)));       
+                    float soft = pow(edge, 1.4);                                
+                    float fade = pow(1.0 - clamp(vH, 0.0, 1.0), 1.6);           
+                    float ripple = 0.88 + 0.12 * sin(uTime * 2.2 - vH * 14.0);  
+                    float a = soft * (0.08 + 0.45 * fade) * ripple;
+                    gl_FragColor = vec4(uColor, a);
+                }`
+        });
+
+        const spotMaterial = new THREE.ShaderMaterial({
+            uniforms: hintUniforms,
+            transparent: true, depthWrite: false, fog: false,
+            vertexShader: `
+                varying vec2 vP;
+                void main() {
+                    vP = position.xz;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }`,
+            fragmentShader: `
+                uniform vec3 uColor;
+                uniform float uTime;
+                varying vec2 vP;
+                void main() {
+                    float r = clamp(length(vP) / ${SPOT_RADIUS.toFixed(1)}, 0.0, 1.0);
+                    float pulse = 0.85 + 0.15 * sin(uTime * 2.2);
+                    gl_FragColor = vec4(uColor, pow(1.0 - r, 1.8) * 0.5 * pulse);
+                }`
+        });
+
+        const beamGeometry = new THREE.CylinderGeometry(1.7, 1.1, HINT_HEIGHT, 24, 1, true);
+        beamGeometry.translate(0, HINT_HEIGHT / 2, 0);
+        const spotGeometry = new THREE.CircleGeometry(SPOT_RADIUS, 32);
+        spotGeometry.rotateX(-Math.PI / 2);
+
+        const hintBeams = new Map();     
+        let hintAnnounced = false;
+        const hintToast = document.getElementById('hint-notification');
+
+        function updateHints(delta) {
+            hintUniforms.uTime.value += delta;
+            const alive = window.collectibles.filter(c => c.visible);
+            const active = !gameFinished && alive.length > 0 && alive.length <= HINT_THRESHOLD;
+
+            for (const [cube, group] of hintBeams) {
+                if (!active || !cube.visible || !window.collectibles.includes(cube)) {
+                    scene.remove(group);
+                    hintBeams.delete(cube);
+                }
+            }
+
+            if (active) {
+                alive.forEach(cube => {
+                    cube.scale.setScalar(1.25 + 0.12 * Math.sin(hintUniforms.uTime.value * 3.0));
+                    if (hintBeams.has(cube)) return;
+                    const group = new THREE.Group();
+                    const spot = new THREE.Mesh(spotGeometry, spotMaterial);
+                    spot.position.y = 0.05;
+                    group.add(new THREE.Mesh(beamGeometry, beamMaterial), spot);
+                    group.position.set(cube.position.x, 0, cube.position.z);
+                    scene.add(group);
+                    hintBeams.set(cube, group);
+                });
+                if (!hintAnnounced) {
+                    hintAnnounced = true;
+                    hintToast.classList.remove('poster-slide');
+                    void hintToast.offsetWidth;
+                    hintToast.classList.add('poster-slide');
+                }
+            } else {
+                hintAnnounced = false;
+            }
+        }
+
+        let prevTime = performance.now();
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = performance.now();
+            const delta = Math.min((time - prevTime) / 1000, 0.05);
+
+            updateHints(delta);
+
+            window.collectibles.forEach(cube => { if (cube.visible) cube.rotation.y += 1.5 * delta; });
+
+            if (controls.isLocked === true) {
+                currentEuler.lerp(targetEuler, 1 - Math.pow(1 - lerpFactor, delta * 60));
+                camera.quaternion.setFromEuler(new THREE.Euler(currentEuler.y, currentEuler.x, 0, 'YXZ'));
+
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+                velocity.y -= gravity * delta;
+
+                const yaw = currentEuler.x;
+                const fwdX = -Math.sin(yaw), fwdZ = -Math.cos(yaw);
+                const rightX = Math.cos(yaw), rightZ = -Math.sin(yaw);
+
+                let inputX = Number(moveRight) - Number(moveLeft);
+                let inputZ = Number(moveForward) - Number(moveBackward);
+                const inputLen = Math.sqrt(inputX * inputX + inputZ * inputZ);
+                if (inputLen > 0) { inputX /= inputLen; inputZ /= inputLen; }
+
+                const speed = (isRunning || shiftHeld) ? 10.0 : 20/3;
+                velocity.x += (rightX * inputX + fwdX * inputZ) * speed * 10.0 * delta;
+                velocity.z += (rightZ * inputX + fwdZ * inputZ) * speed * 10.0 * delta;
+
+                const hSteps = Math.max(1, Math.ceil(Math.hypot(velocity.x, velocity.z) * delta / 0.2));
+                for (let hStep = 0; hStep < hSteps; hStep++) {
+                    controls.object.position.x += velocity.x * delta / hSteps;
+                    controls.object.position.z += velocity.z * delta / hSteps;
+
+                    const maxLimit = MAP_LIMIT;
+                    controls.object.position.x = Math.max(-maxLimit, Math.min(maxLimit, controls.object.position.x));
+                    controls.object.position.z = Math.max(-maxLimit, Math.min(maxLimit, controls.object.position.z));
+
+                    for (let iter = 0; iter < 3; iter++) {
+                        for (const box of window.obstacleColliders) {
+                            const px = controls.object.position.x, pz = controls.object.position.z, py = controls.object.position.y;
+                            const playerFeet = py - playerHeight;
+                            const playerHead = py;
+
+                            if (playerHead <= box.min.y || playerFeet >= box.max.y - 0.05) continue;
+
+                            const closestX = Math.max(box.min.x, Math.min(px, box.max.x));
+                            const closestZ = Math.max(box.min.z, Math.min(pz, box.max.z));
+                            const dx = px - closestX, dz = pz - closestZ;
+                            const distSq = dx * dx + dz * dz;
+
+                            if (distSq < playerRadius * playerRadius) {
+                                const dist = Math.sqrt(distSq);
+                                let nx = 0, nz = 0;
+                                if (dist > 0) {
+                                    nx = dx / dist; nz = dz / dist;
+                                    controls.object.position.x += nx * (playerRadius - dist);
+                                    controls.object.position.z += nz * (playerRadius - dist);
+                                } else {
+                                    const pos = controls.object.position;
+                                    const toMinX = px - box.min.x, toMaxX = box.max.x - px;
+                                    const toMinZ = pz - box.min.z, toMaxZ = box.max.z - pz;
+                                    const m = Math.min(toMinX, toMaxX, toMinZ, toMaxZ);
+                                    if (m === toMinX)      { nx = -1; nz = 0; pos.x = box.min.x - playerRadius; }
+                                    else if (m === toMaxX) { nx =  1; nz = 0; pos.x = box.max.x + playerRadius; }
+                                    else if (m === toMinZ) { nx = 0; nz = -1; pos.z = box.min.z - playerRadius; }
+                                    else                   { nx = 0; nz =  1; pos.z = box.max.z + playerRadius; }
+                                }
+                                const dot = velocity.x * nx + velocity.z * nz;
+                                if (dot < 0) { velocity.x -= nx * dot; velocity.z -= nz * dot; }
+                            }
+                        }
+                    }
+                }
+
+                const prevY = controls.object.position.y;
+                controls.object.position.y += velocity.y * delta;
+
+                const px = controls.object.position.x, pz = controls.object.position.z, py = controls.object.position.y;
+                const playerFeet = py - playerHeight, prevFeet = prevY - playerHeight;
+
+                if (py < FLOOR_Y) { velocity.y = 0; controls.object.position.y = FLOOR_Y; jumpCount = 0; }
+                if (controls.object.position.y > maxRoofHeight + playerHeight) {
+                    controls.object.position.y = maxRoofHeight + playerHeight;
+                    if (velocity.y > 0) velocity.y = 0;
+                }
+
+                for (const box of window.obstacleColliders) {
+                    const lx = Math.max(box.min.x, Math.min(px, box.max.x)), lz = Math.max(box.min.z, Math.min(pz, box.max.z));
+                    if ((px - lx) * (px - lx) + (pz - lz) * (pz - lz) <= playerRadius * playerRadius) {
+                        if (velocity.y <= 0 && prevFeet >= box.max.y - 0.2 && playerFeet <= box.max.y + 0.1) {
+                            velocity.y = 0; controls.object.position.y = box.max.y + playerHeight; jumpCount = 0;
+                        } else if (velocity.y > 0 && prevY <= box.min.y && py >= box.min.y) {
+                            velocity.y = 0; controls.object.position.y = box.min.y;
+                        }
+                    }
+                }
+
+                if (gameFinished && !winShown &&
+                    Math.hypot(velocity.x, velocity.z) < 0.05 && jumpCount === 0 && velocity.y === 0) {
+                    finishWin();
+                }
+
+                window.collectibles.forEach((cube) => {
+                    if (cube.visible) {
+                        if (controls.object.position.distanceTo(cube.position) < 2.5) {
+                            score++;
+                            scoreElement.textContent = score;
+                            playCollect();
+
+                            if (score % posterRewardInterval === 0 && score < targetScore && spawnGalleryBox()) {
+                                playGallery();
+                                posterNotification.classList.remove('poster-slide');
+                                void posterNotification.offsetWidth;
+                                posterNotification.classList.add('poster-slide');
+                            }
+
+                            if (score <= targetScore - collectiblesCount) {
+                                const newPos = getRandomGridPosition();
+                                cube.position.set(newPos.x, 1, newPos.z);
+                            } else {
+                                cube.visible = false;
+                                scene.remove(cube);
+                            }
+
+                            if (score >= targetScore && !gameFinished) {
+                                gameFinished = true;
+                                inputLocked = true;
+                                resetInputFlags();
+                                winFallbackTimer = setTimeout(finishWin, 4000);
+                            }
+                        }
+                    }
+                });
+            }
+            prevTime = time;
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
