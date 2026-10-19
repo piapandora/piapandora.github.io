@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flipper</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f19;
+      --panel: #111827;
+      --line: #263146;
+      --text: #f3f4f6;
+      --muted: #8b95a7;
+      --accent: #6366f1;
+      --accent-2: #a855f7;
+      --ok: #34d399;
+      --bad: #fb7185;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; margin: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    main {
+      width: min(92vw, 480px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      text-align: center;
+    }
+
+    #drop {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border: 1.5px dashed var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color .15s, background-color .15s;
+    }
+    #drop:hover, #drop.over { border-color: var(--accent); }
+    #drop.over { background: #151c33; }
+    #drop.loaded { border-style: solid; }
+
+    #hint { text-align: center; padding: 24px; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+    #hint strong { display: block; color: var(--text); font-weight: 500; margin-bottom: 4px; font-size: 1rem; }
+
+    #out {
+      display: none;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    #drop.loaded #out { display: block; }
+    #drop.loaded #hint { display: none; }
+
+    .toggles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .toggles button {
+      font: inherit;
+      font-size: .88rem;
+      font-weight: 500;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: background-color .15s, color .15s, border-color .15s;
+    }
+    .toggles button:hover { color: var(--text); border-color: var(--accent); }
+    .toggles button .state { font-size: .72rem; font-weight: 400; opacity: .8; }
+    .toggles button[aria-pressed="true"] {
+      color: #fff;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+
+    #download {
+      font: inherit;
+      font-weight: 600;
+      font-size: .92rem;
+      color: #fff;
+      background: var(--accent);
+      border: 0;
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: filter .15s, opacity .15s;
+    }
+    #download:hover:not(:disabled) { filter: brightness(1.1); }
+    #download:disabled { opacity: .35; cursor: not-allowed; }
+
+    #status {
+      min-height: 2.6em;
+      margin: 0;
+      text-align: center;
+      font-size: .8rem;
+      line-height: 1.3;
+      color: var(--muted);
+    }
+    #status.error { color: var(--bad); }
+    #status.ok { color: var(--ok); }
+
+    .keys { margin: 0; text-align: center; font-size: .75rem; color: var(--muted); line-height: 1.8; }
+    kbd {
+      font: inherit;
+      font-size: .72rem;
+      padding: 1px 6px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--panel);
+      color: var(--text);
+    }
+
+    button:focus-visible, #drop:focus-visible {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Flipper</h1>
+
+    <div id="drop" tabindex="0" aria-label="Image drop area. Click or drop an image.">
+      <div id="hint">
+        <strong>Drop an image here</strong>
+        or click to choose a file
+      </div>
+      <canvas id="out"></canvas>
+      <input type="file" id="file" accept="image/*" hidden>
+    </div>
+
+    <div class="toggles" role="group" aria-label="Transformations">
+      <button id="btnSwap" type="button" aria-pressed="true">Swap halves <span class="state">On</span></button>
+      <button id="btnFlip" type="button" aria-pressed="false">Flip horizontally <span class="state">Off</span></button>
+    </div>
+
+    <button id="download" type="button" disabled>Download PNG</button>
+
+    <p id="status" role="status">Swap halves converts CrossView to ParallelView, and back.</p>
+    <p class="keys">
+      <kbd>Space</kbd> swap halves &nbsp; <kbd>F</kbd> flip horizontally &nbsp; <kbd>Enter</kbd> download
+    </p>
+  </main>
+
+  <script>
+    const drop = document.getElementById('drop');
+    const fileInput = document.getElementById('file');
+    const out = document.getElementById('out');
+    const ctx = out.getContext('2d');
+    const btnSwap = document.getElementById('btnSwap');
+    const btnFlip = document.getElementById('btnFlip');
+    const btnDownload = document.getElementById('download');
+    const statusEl = document.getElementById('status');
+
+    // The two transformations are independent: any combination can be on or off.
+    const state = { swap: true, flip: false, img: null, name: 'image' };
+
+    // Stop the browser from opening a file that misses the drop area
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('drop', e => e.preventDefault());
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = kind || '';
+    }
+
+    function blurActive() {
+      if (document.activeElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+      }
+    }
+
+    function describe() {
+      if (state.swap && state.flip) return 'Swapped the halves and mirrored the result, so each eye view is flipped in place.';
+      if (state.swap) return 'Swapped the left and right halves.';
+      if (state.flip) return 'Mirrored the whole image horizontally.';
+      return 'No changes applied. Turn on Swap halves or Flip horizontally.';
+    }
+
+    function suffix() {
+      if (state.swap && state.flip) return 'swapped-flipped';
+      if (state.swap) return 'swapped';
+      if (state.flip) return 'flipped';
+      return 'original';
+    }
+
+    function render() {
+      const img = state.img;
+      if (!img) return;
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+
+      // With swap on and an odd width, the single centre column is dropped
+      // so the two halves stay equal.
+      const half = Math.floor(w / 2);
+      const outW = state.swap ? half * 2 : w;
+
+      out.width = outW;
+      out.height = h;
+      ctx.clearRect(0, 0, outW, h);
+
+      ctx.save();
+      if (state.flip) {
+        ctx.translate(outW, 0);
+        ctx.scale(-1, 1);
+      }
+      if (state.swap) {
+        // Each half keeps its own orientation; only their positions trade places.
+        ctx.drawImage(img, w - half, 0, half, h, 0, 0, half, h);
+        ctx.drawImage(img, 0, 0, half, h, half, 0, half, h);
+      } else {
+        ctx.drawImage(img, 0, 0);
+      }
+      ctx.restore();
+
+      setStatus(describe(), 'ok');
+    }
+
+    function syncButtons() {
+      btnSwap.setAttribute('aria-pressed', String(state.swap));
+      btnFlip.setAttribute('aria-pressed', String(state.flip));
+      btnSwap.querySelector('.state').textContent = state.swap ? 'On' : 'Off';
+      btnFlip.querySelector('.state').textContent = state.flip ? 'On' : 'Off';
+    }
+
+    function toggle(which) {
+      state[which] = !state[which];
+      syncButtons();
+      if (state.img) render();
+      else setStatus(describe());
+    }
+
+    function loadFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        setStatus('That file isn’t an image. Try a PNG, JPG, or WebP.', 'error');
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        state.img = img;
+        state.name = file.name.replace(/\.[^.]+$/, '') || 'image';
+        drop.classList.add('loaded');
+        btnDownload.disabled = false;
+        render();
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        setStatus('Couldn’t read that image. Try a different file.', 'error');
+      };
+      img.src = url;
+    }
+
+    function download() {
+      if (!state.img) return;
+      out.toBlob(blob => {
+        if (!blob) { setStatus('Couldn’t create the PNG.', 'error'); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${state.name}-${suffix()}.png`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/png');
+    }
+
+    drop.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => {
+      loadFile(e.target.files[0]);
+      fileInput.value = '';
+    });
+
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault();
+      drop.classList.remove('over');
+      if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    btnSwap.addEventListener('click', () => { toggle('swap'); blurActive(); });
+    btnFlip.addEventListener('click', () => { toggle('flip'); blurActive(); });
+    btnDownload.addEventListener('click', () => { download(); blurActive(); });
+
+    window.addEventListener('keydown', e => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        blurActive();
+        toggle('swap');
+      } else if (e.code === 'KeyF') {
+        e.preventDefault();
+        toggle('flip');
+      } else if (e.code === 'Enter') {
+        if (document.activeElement && document.activeElement.tagName === 'BUTTON') return;
+        e.preventDefault();
+        download();
+      }
+    });
+  </script>
+</body>
+</html>
