@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle & Sphere Calculator</title>
+    <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="container">
+        <h2>Circle & Sphere Calculator</h2>
+
+        <form id="calculatorForm" novalidate>
+            <div class="field">
+                <label for="radiusInput">Radius (cm)</label>
+                <div class="input-group">
+                    <input type="number" id="radiusInput" placeholder="Enter radius..." min="0" step="any">
+                    <button type="submit" id="calculateBtn">Calculate</button>
+                </div>
+            </div>
+        </form>
+
+        <div id="results" aria-live="polite">
+            <p>Enter a radius and click calculate to see results.</p>
+        </div>
+    </main>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
