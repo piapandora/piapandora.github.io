@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandora City</title>
+	<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; }
+        #info {
+            position: absolute; top: 10px; left: 10px;
+            color: white; font-family: monospace;
+            background: rgba(0,0,0,0.8);
+            padding: 15px; border-radius: 6px; width: 310px;
+        }
+        #info h3 { margin: 0 0 8px 0; }
+        #info.collapsed { width: auto; }
+        #infoHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        #toggleBtn {
+            width: auto; margin-top: 0; padding: 4px 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background-color: transparent; color: #50e3c2; border: 1px solid #50e3c2;
+        }
+        #toggleBtn:hover { background-color: rgba(80,227,194,0.15); }
+        #toggleBtn.active { background-color: #50e3c2; color: #111; }
+        #toggleBtn.active:hover { background-color: #3fbda3; }
+        #toggleBtn svg { width: 18px; height: 18px; display: block; }
+        #toggleBtn svg[hidden] { display: none; }
+        button, input[type="file"] {
+            background-color: #50e3c2; color: #111; border: none;
+            padding: 8px 14px; font-family: monospace; font-weight: bold;
+            border-radius: 4px; cursor: pointer; margin-top: 8px;
+            width: 100%; box-sizing: border-box; text-align: center;
+        }
+        button:hover { background-color: #3fbda3; }
+        button:focus-visible, input[type="file"]:focus-visible, input[type="number"]:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        input[type="file"] { background-color: #4a90e2; color: white; }
+        input[type="number"] {
+            background-color: #222; color: #fff; border: 1px solid #444;
+            padding: 8px 14px; font-family: monospace; font-weight: bold;
+            border-radius: 4px; margin-top: 4px;
+            width: 100%; box-sizing: border-box; text-align: center;
+        }
+        label.field-label { display: block; margin-top: 8px; }
+        .small { font-size: 11px; color: #aaa; margin: 8px 0 0 0; line-height: 1.4; }
+        #msg { font-size: 12px; margin: 8px 0 0 0; min-height: 1em; color: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div id="infoHeader">
+            <h3>Pandora City - CSV Suite</h3>
+            <button id="toggleBtn" type="button" aria-expanded="true" aria-controls="infoBody" title="Hide panel contents" aria-label="Hide panel contents">
+                <svg id="eyeOpenIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg id="eyeClosedIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                    <line x1="3" y1="3" x2="21" y2="21"/>
+                </svg>
+            </button>
+        </div>
+        <div id="infoBody">
+        <noscript><p style="color:#ff6b6b;font-size:12px;">This app needs JavaScript to run. Please enable it and reload.</p></noscript>
+        <p id="status">Loading...</p>
+        <label for="gridSizeInput" class="small field-label">Grid size (width &amp; height):</label>
+        <input type="number" id="gridSizeInput" min="5" max="60" step="1" value="24" />
+        <button id="newBtn">Generate new layout</button>
+        <button id="exportBtn">Download level CSV</button>
+        <label for="csvFileInput" class="small field-label">Load a CSV to view:</label>
+        <input type="file" id="csvFileInput" accept=".csv,text/csv" />
+        <p id="msg" role="alert"></p>
+        <p class="small">Codes: 0=paved floor (white), E=leftover ground (purple), W=outer wall (dark green), 1-9=storeys, N=nova, Q=quad, L=link, P=podium, a-z=models.</p>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        // Fatal-error helper: shows a readable message and hides the controls that can't work.
+        function showFatal(text) {
+            const status = document.getElementById('status');
+            status.textContent = text;
+            status.style.color = '#ff6b6b';
+            document.querySelectorAll('#infoBody > :not(#status), #toggleBtn').forEach(el => { el.style.display = 'none'; });
+        }
+
+        // three.js is loaded with dynamic imports so a blocked/offline CDN or a browser without
+        // import-map support produces a message instead of a page stuck on "Loading...".
+        let THREE, OrbitControls;
+        try {
+            const [threeModule, controlsModule] = await Promise.all([
+                import('three'),
+                import('three/addons/controls/OrbitControls.js')
+            ]);
+            THREE = threeModule;
+            OrbitControls = controlsModule.OrbitControls;
+        } catch (err) {
+            console.error(err);
+            showFatal('Could not load the 3D library (three.js). Check your connection or content blockers, then reload the page.');
+            throw err;
+        }
+
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        const DEFAULT_GRID_SIZE = 24;      // used on first load and whenever the grid size field is left empty/invalid
+        const MIN_GRID_SIZE = 5;           // below this the border rings and nova/quad footprints no longer fit sensibly
+        const MAX_GRID_SIZE = 60;          // sanity ceiling so a mistyped huge number can't freeze the tab with cubes
+
+        // Generator tuning
+        const BORDER_RINGS = 2;           // thickness of the outline pathway around the map (in cells)
+        const BUILDING_COVERAGE = 0.40;   // multi-cell buildings cover this share of the empty space left after novas, quads and links
+        const BUILDING_MIX = { big3x3: 0.15, medium: 0.25, small: 0.30, tower1x1: 0.30 };   // shares of the building budget (should add up to 1)
+        const ATTEMPTS_PER_CELL = 1.0;    // placement tries per empty cell (min 50), so big maps get proportionally more tries
+        const CUBE_SIZE = 5;
+
+        // Limits for loaded CSV files (the generator has its own cap above)
+        const MAX_CSV_BYTES = 1024 * 1024;           // refuse files larger than 1 MB before even reading them
+        const MAX_CSV_DIMENSION = MAX_GRID_SIZE;     // max rows and max columns of a loaded CSV
+        const MAX_CUBES = 25000;                     // total cubes a loaded CSV may create (e.g. a grid full of 9s would be huge)
+
+        // ==========================================
+        // CSV CELL CODES
+        // Height semantics: every "0" is a full ground cube at level 0 (white if paved, purple if
+        // filled in later). A storey code "n" (1-9) sits on a ground cube and stacks n cubes on top
+        // of it, occupying levels 1..n, so "1" is one level above the ground and "9" is nine levels up.
+        // The outer border wall (BORDER_RINGS thick) uses code 'W': it sits on a ground cube and
+        // its wall cube is one level above the ground, drawn dark green. A '1' is always a storey.
+        // 0 = paved ground cube (white) | E = leftover ground cube (purple) | 1..9 = building storeys above the ground cube
+        // W = outer wall (dark green, one level above ground) | N = nova | Q = quad | L = link | P = podium | a-z = custom model placeholders
+        // ==========================================
+        const FLOOR = '0', NOVA = 'N', QUAD = 'Q', LINK = 'L', PODIUM = 'P', EMPTY = 'E', WALL = 'W';
+
+        // <<LOGIC
+        function isValidCode(v) {
+            if (v === FLOOR || v === EMPTY || v === WALL || v === NOVA || v === QUAD || v === LINK || v === PODIUM) return true;
+            if (/^[1-9]$/.test(v)) return true; // building storeys 1-9
+            if (/^[a-z]$/.test(v)) return true; // custom models lowercase a-z
+            return false;
+        }
+
+        // Returns true when (x, y) falls inside the outer border-wall ring for a grid of the given
+        // dimensions. Takes cols/rows separately so it stays correct for a loaded, non-square CSV.
+        function isBorderRingCell(x, y, cols, rows) {
+            const rings = Math.min(BORDER_RINGS, Math.floor(Math.min(cols, rows) / 2));
+            return Math.min(x, y, cols - 1 - x, rows - 1 - y) < rings;
+        }
+
+        function clampGridSize(n) {
+            if (!Number.isFinite(n)) return DEFAULT_GRID_SIZE;
+            return Math.min(MAX_GRID_SIZE, Math.max(MIN_GRID_SIZE, Math.round(n)));
+        }
+
+        function generateLevel(gridSize) {
+            const grid = Array(gridSize).fill(0).map(() => Array(gridSize).fill(EMPTY));
+            const novasList = [];
+            const quadsList = [];
+
+            function tryPlaceFeature(width, height, typeCode) {
+                const maxStartX = Math.max(0, gridSize - width);
+                const maxStartY = Math.max(0, gridSize - height);
+
+                for (let attempts = 0; attempts < 100; attempts++) {
+                    const startX = Math.floor(Math.random() * (maxStartX + 1));
+                    const startY = Math.floor(Math.random() * (maxStartY + 1));
+                    const coords = [];
+                    let overlap = false;
+
+                    for (let dy = 0; dy < height && !overlap; dy++) {
+                        for (let dx = 0; dx < width; dx++) {
+                            const nx = startX + dx, ny = startY + dy;
+                            if (nx >= gridSize || ny >= gridSize || grid[ny][nx] !== EMPTY) { overlap = true; break; }
+                            coords.push({ x: nx, y: ny });
+                        }
+                    }
+                    if (overlap) continue;
+
+                    coords.forEach(c => { grid[c.y][c.x] = typeCode; });
+                    if (typeCode === NOVA) {
+                        grid[startY + 1][startX + 1] = PODIUM;
+                        novasList.push({ cells: coords });
+                    } else if (typeCode === QUAD) {
+                        quadsList.push(coords);
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            function drawLink(a, b) {
+                let cx = a.x, cy = a.y;
+
+                const walkX = () => {
+                    while (cx !== b.x) {
+                        cx += (b.x > cx) ? 1 : -1;
+                        if (grid[cy][cx] === EMPTY) grid[cy][cx] = LINK;
+                    }
+                };
+                const walkY = () => {
+                    while (cy !== b.y) {
+                        cy += (b.y > cy) ? 1 : -1;
+                        if (grid[cy][cx] === EMPTY) grid[cy][cx] = LINK;
+                    }
+                };
+
+                // 50/50 coin flip: horizontal-then-vertical or vertical-then-horizontal
+                if (Math.random() < 0.5) { walkX(); walkY(); }
+                else { walkY(); walkX(); }
+            }
+
+            const dist = (p, q) => Math.abs(p.x - q.x) + Math.abs(p.y - q.y);
+
+            // Step 1: outline wall. Cells within BORDER_RINGS of the edge become the wall
+            // (code 'W', rendered dark green) before anything else is placed.
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (isBorderRingCell(x, y, gridSize, gridSize)) grid[y][x] = WALL;
+                }
+            }
+
+            // Feature counts are based on the free interior, not the whole grid
+            const freeCells = grid.reduce((sum, row) => sum + row.filter(v => v === EMPTY).length, 0);
+            const targetNovaCount = Math.max(1, Math.ceil(freeCells / 40));
+            const targetQuadCount = targetNovaCount;
+
+            for (let i = 0; i < targetNovaCount; i++) tryPlaceFeature(3, 3, NOVA);
+            for (let i = 0; i < targetQuadCount; i++) tryPlaceFeature(2, 2, QUAD);
+
+            // Link each nova to its closest quad
+            novasList.forEach(nova => {
+                if (quadsList.length === 0) return;
+                const from = nova.cells[Math.floor(Math.random() * nova.cells.length)];
+                let best = quadsList[0], bestDist = Infinity;
+                quadsList.forEach(quad => quad.forEach(cell => {
+                    const d = dist(cell, from);
+                    if (d < bestDist) { bestDist = d; best = quad; }
+                }));
+                drawLink(from, best[Math.floor(Math.random() * best.length)]);
+            });
+
+            // Rescue quads that ended up with no connection
+            // Walls are not connectors: only links, novas and podiums count as a connection.
+            const isConnector = v => v === LINK || v === NOVA || v === PODIUM;
+            quadsList.forEach(quad => {
+                let connected = false;
+                quad.forEach(cell => {
+                    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([ox, oy]) => {
+                        const nx = cell.x + ox, ny = cell.y + oy;
+                        if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && isConnector(grid[ny][nx])) connected = true;
+                    });
+                });
+                if (connected) return;
+
+                const from = quad[Math.floor(Math.random() * quad.length)];
+                const targets = [...novasList.flatMap(n => n.cells), ...quadsList.flat()]
+                    .filter(t => !quad.some(q => q.x === t.x && q.y === t.y));
+                let best = null, bestDist = Infinity;
+                targets.forEach(t => { const d = dist(t, from); if (d < bestDist) { bestDist = d; best = t; } });
+                if (best) drawLink(from, best);
+            });
+
+            // Buildings: skyscrapers of differing height, stamped into every footprint cell.
+            // Code '0' is the ground cube (zero storeys), so buildings start at code '1' - a
+            // single storey stacked on the ground cube, occupying level 1.
+            let emptyCount = 0;
+            for (let y = 0; y < gridSize; y++) for (let x = 0; x < gridSize; x++) if (grid[y][x] === EMPTY) emptyCount++;
+
+            const maxAttempts = Math.max(50, Math.ceil(emptyCount * ATTEMPTS_PER_CELL));   // bigger maps get more tries
+            const coverageCells = emptyCount * BUILDING_COVERAGE;                          // total cells the buildings should cover
+
+            function towerHeight() {
+                const roll = Math.floor(Math.random() * 6) + 1;
+                if (roll <= 4) return String(Math.floor(Math.random() * 3) + 1); // '1'-'3' (most common)
+                if (roll === 5) return String(Math.floor(Math.random() * 2) + 4); // '4'-'5'
+                return String(Math.floor(Math.random() * 2) + 6);                   // '6'-'7' (rare skyscrapers)
+            }
+
+            function placeBuildings(shapes, quotaCells) {
+                let allocated = 0;
+                for (let attempts = 0; attempts < maxAttempts && allocated < quotaCells; attempts++) {
+                    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                    const x = Math.floor(Math.random() * gridSize);
+                    const y = Math.floor(Math.random() * gridSize);
+                    const cells = [];
+                    let fits = true;
+                    for (let dy = 0; dy < shape.h && fits; dy++) {
+                        for (let dx = 0; dx < shape.w; dx++) {
+                            const nx = x + dx, ny = y + dy;
+                            if (nx >= gridSize || ny >= gridSize || grid[ny][nx] !== EMPTY) { fits = false; break; }
+                            cells.push({ x: nx, y: ny });
+                        }
+                    }
+                    if (!fits) continue;
+
+                    // 1x1 slots are sometimes left as a paved floor tile ('0', pure white) rather
+                    // than a tower, giving some variety to the small-plot footprints.
+                    if (shape.w === 1 && shape.h === 1 && Math.random() < 0.15) {
+                        const c = cells[0];
+                        grid[c.y][c.x] = FLOOR;
+                        allocated += 1;
+                        continue;
+                    }
+
+                    let storeys;
+                    if (shape.w === 1 && shape.h === 1) storeys = towerHeight();
+                    else if (shape.w === 3 && shape.h === 3) storeys = String(Math.floor(Math.random() * 4) + 1);   // '1'-'4'
+                    else storeys = String(Math.floor(Math.random() * 5) + 1);                                       // '1'-'5'
+
+                    cells.forEach(c => { grid[c.y][c.x] = storeys; });
+                    allocated += cells.length;
+                }
+            }
+
+            // Biggest shapes first so they still fit, 1x1 towers last
+            placeBuildings([{ w: 3, h: 3 }], Math.floor(coverageCells * BUILDING_MIX.big3x3));
+            placeBuildings([{ w: 2, h: 3 }, { w: 3, h: 2 }], Math.floor(coverageCells * BUILDING_MIX.medium));
+            placeBuildings([{ w: 1, h: 2 }, { w: 2, h: 1 }, { w: 2, h: 2 }, { w: 1, h: 3 }, { w: 3, h: 1 }], Math.floor(coverageCells * BUILDING_MIX.small));
+            placeBuildings([{ w: 1, h: 1 }], Math.floor(coverageCells * BUILDING_MIX.tower1x1));
+
+            // Cells never touched by the generator stay EMPTY ('E'). buildLevel() renders them as
+            // purple leftover ground, distinct from the pure-white '0' paved tiles.
+            return { grid };
+        }
+
+        function gridToCSV(grid) {
+            return grid.map(row => row.join(',')).join('\r\n') + '\r\n';
+        }
+
+        // Number of cubes buildLevel() will create for one cell code
+        function cubesForCode(v) {
+            if (v === WALL || v === PODIUM) return 2;
+            if (/^[1-9]$/.test(v)) return 1 + parseInt(v, 10);
+            return 1;
+        }
+
+        function parseCSV(text) {
+            const lines = text.replace(/^\uFEFF/, '').split(/\r\n|\n|\r/).map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length === 0) throw new Error('The file is empty.');
+            if (lines.length > MAX_CSV_DIMENSION) {
+                throw new Error(`The file has ${lines.length} rows; the maximum is ${MAX_CSV_DIMENSION}.`);
+            }
+
+            // Codes are case-sensitive: N/Q/L/P/E/W are special cells, lowercase a-z are custom models.
+            const grid = lines.map((line, r) => line.split(/[,;\t]/).map((cell, c) => {
+                const v = cell.trim();
+                if (v === '' || !isValidCode(v)) {
+                    throw new Error(`Row ${r + 1}, column ${c + 1}: "${v}" is not a valid cell code (use 0, E, W, N, Q, L, P, 1-9 or lowercase a-z).`);
+                }
+                return v;
+            }));
+
+            const width = grid[0].length;
+            if (width > MAX_CSV_DIMENSION) {
+                throw new Error(`The file has ${width} columns; the maximum is ${MAX_CSV_DIMENSION}.`);
+            }
+            grid.forEach((row, r) => {
+                if (row.length !== width) {
+                    throw new Error(`Row ${r + 1} has ${row.length} columns, expected ${width}.`);
+                }
+            });
+
+            const totalCubes = grid.reduce((sum, row) => sum + row.reduce((s, v) => s + cubesForCode(v), 0), 0);
+            if (totalCubes > MAX_CUBES) {
+                throw new Error(`This level would need ${totalCubes.toLocaleString()} cubes; the maximum is ${MAX_CUBES.toLocaleString()}.`);
+            }
+            return grid;
+        }
+        // LOGIC>>
+
+        // ==========================================
+        // SCENE
+        // ==========================================
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x2a1a3a);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer;
+        try {
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+        } catch (err) {
+            console.error(err);
+            showFatal('WebGL is not available in this browser, so the 3D view cannot start. Try another browser or enable hardware acceleration.');
+            throw err;
+        }
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(50, 100, 50);
+        scene.add(dirLight);
+
+        // Floor ('0') has two looks depending on how the cell came to be floor: a deliberately
+        // paved 1x1 plot is pure white, while ground left empty by the generator and swept to
+        // floor at the end is purple.
+        const materialFloorPaved = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const materialFloorPlain = new THREE.MeshLambertMaterial({ color: 0x8e44ad });
+        const materialNova  = new THREE.MeshLambertMaterial({ color: 0x50e3c2 });
+        const materialPodium = new THREE.MeshLambertMaterial({ color: 0x4a90e2 });
+        const materialQuad = new THREE.MeshLambertMaterial({ color: 0xd0021b });
+        const materialLink = new THREE.MeshLambertMaterial({ color: 0xf8e71c });
+        const materialBorderWall = new THREE.MeshLambertMaterial({ color: 0x1b5e20 }); // dark green outer wall
+        const materialCustomModel = new THREE.MeshLambertMaterial({ color: 0xff9800 }); // placeholder for a-z custom model codes
+
+        // Building storeys '1'-'9'. Storey 1 is light gray; each higher storey is a step darker,
+        // so the lightest building tone stays distinguishable from the white paved floor and the
+        // dark-green border wall.
+        const buildingMaterials = {};
+        const colors = [0xd9d9d9, 0xbfbfbf, 0xa5a5a5, 0x8b8b8b, 0x717171, 0x575757, 0x3d3d3d, 0x232323, 0x0a0a0a];
+        for (let i = 1; i <= 9; i++) {
+            buildingMaterials[String(i)] = new THREE.MeshLambertMaterial({ color: colors[i - 1] });
+        }
+
+        const cubeGeometry = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
+        const levelGroup = new THREE.Group();
+        scene.add(levelGroup);
+        let currentGrid = null;
+
+        function addCube(material, col, level, row) {
+            const cube = new THREE.Mesh(cubeGeometry, material);
+            cube.position.set(col * CUBE_SIZE + CUBE_SIZE / 2, level * CUBE_SIZE + CUBE_SIZE / 2, row * CUBE_SIZE + CUBE_SIZE / 2);
+            levelGroup.add(cube);
+        }
+
+        function buildLevel(grid, sourceLabel) {
+            currentGrid = grid;
+            const rows = grid.length, cols = grid[0].length;
+
+            // Clear previous level (including its grid helper)
+            while (levelGroup.children.length) {
+                const child = levelGroup.children.pop();
+                if (child.isGridHelper) { child.geometry.dispose(); child.material.dispose(); }
+            }
+
+            let novas = 0, quadCells = 0;
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const v = grid[row][col];
+                    if (v === FLOOR) {
+                        addCube(materialFloorPaved, col, 0, row);     // paved floor tile: pure white
+                    } else if (v === EMPTY) {
+                        addCube(materialFloorPlain, col, 0, row);     // leftover ground: purple
+                    } else if (v === WALL) {
+                        addCube(materialFloorPaved, col, 0, row);   // ground cube under the outer wall
+                        addCube(materialBorderWall, col, 1, row);   // wall storey sits one level above ground
+                    } else if (/^[1-9]$/.test(v)) {
+                        const heightNum = parseInt(v, 10);
+                        addCube(materialFloorPaved, col, 0, row);   // ground cube under the storeys
+                        for (let h = 1; h <= heightNum; h++) {
+                            addCube(buildingMaterials[v], col, h, row);
+                        }
+                    } else if (v === NOVA) {
+                        addCube(materialNova, col, 0, row);
+                    } else if (v === PODIUM) {
+                        addCube(materialNova, col, 0, row);
+                        addCube(materialPodium, col, 1, row);
+                        novas++;
+                    } else if (v === QUAD) {
+                        addCube(materialQuad, col, 0, row);
+                        quadCells++;
+                    } else if (v === LINK) {
+                        addCube(materialLink, col, 0, row);
+                    } else if (/^[a-z]$/.test(v)) {
+                        // Custom model codes aren't tied to a specific mesh yet, so render a
+                        // visible placeholder cube instead of silently leaving an empty gap.
+                        addCube(materialCustomModel, col, 0, row);
+                    }
+                }
+            }
+
+            const width = cols * CUBE_SIZE, depth = rows * CUBE_SIZE, longest = Math.max(width, depth);
+            const gridHelper = new THREE.GridHelper(longest, Math.max(rows, cols), 0xffffff, 0x444444);
+            gridHelper.position.set(longest / 2, 0, longest / 2);
+            levelGroup.add(gridHelper);
+
+            controls.target.set(width / 2, 0, depth / 2);
+            camera.position.set(width / 2, longest * 1.2, depth / 2 + longest * 1.3);
+            controls.update();
+
+            document.getElementById('status').textContent =
+                `Grid ${cols}x${rows} | Novas ${novas} | Quads ${Math.floor(quadCells / 4)} | ${sourceLabel}`;
+        }
+
+        function showMessage(text) { document.getElementById('msg').textContent = text; }
+
+        // ==========================================
+        // UI
+        // ==========================================
+        // Visibility toggle: hides everything in the panel except the title row and this button
+        const infoPanel = document.getElementById('info');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const eyeOpenIcon = document.getElementById('eyeOpenIcon');
+        const eyeClosedIcon = document.getElementById('eyeClosedIcon');
+        const infoBody = document.getElementById('infoBody');
+
+        function setPanelVisible(visible) {
+            infoBody.hidden = !visible;
+            infoPanel.classList.toggle('collapsed', !visible);
+            eyeOpenIcon.hidden = !visible;
+            eyeClosedIcon.hidden = visible;
+            toggleBtn.classList.toggle('active', !visible);
+            toggleBtn.setAttribute('aria-expanded', String(visible));
+            const label = visible ? 'Hide panel contents' : 'Show panel contents';
+            toggleBtn.title = label;
+            toggleBtn.setAttribute('aria-label', label);
+        }
+
+        toggleBtn.addEventListener('click', () => setPanelVisible(infoBody.hidden));
+
+        const gridSizeInput = document.getElementById('gridSizeInput');
+
+        function readGridSizeFromInput() {
+            const raw = gridSizeInput.value.trim();
+            const parsed = clampGridSize(raw === '' ? NaN : Number(raw));
+            gridSizeInput.value = String(parsed); // reflect any clamping back into the field
+            return parsed;
+        }
+
+        document.getElementById('newBtn').addEventListener('click', () => {
+            showMessage('');
+            const { grid } = generateLevel(readGridSizeFromInput());
+            buildLevel(grid, 'generated');
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            if (!currentGrid) return;
+            const blob = new Blob([gridToCSV(currentGrid)], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `pandora_level_${Date.now()}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        });
+
+        document.getElementById('csvFileInput').addEventListener('change', (event) => {
+            const input = event.target;
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > MAX_CSV_BYTES) {
+                showMessage(`That file is ${(file.size / 1024).toFixed(0)} KB; the maximum is ${MAX_CSV_BYTES / 1024} KB.`);
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const grid = parseCSV(reader.result);
+                    showMessage('');
+                    buildLevel(grid, `loaded ${file.name}`);
+                } catch (err) {
+                    showMessage(err.message);
+                }
+                input.value = ''; // allows re-loading the same file
+            };
+            reader.onerror = () => { showMessage('Could not read that file.'); input.value = ''; };
+            reader.readAsText(file);
+        });
+
+        {
+            const { grid } = generateLevel(readGridSizeFromInput());
+            buildLevel(grid, 'generated');
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
