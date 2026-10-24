@@ -19,13 +19,13 @@
 
   .viewer {
     display:flex;
-    width:1920px;
-    height:1080px;
+    width:100vw;
+    height:100vh;
   }
 
   .half {
-    width:960px;
-    height:1080px;
+    width:50vw;
+    height:100vh;
     overflow:hidden;
     position:relative;
   }
@@ -33,13 +33,16 @@
   video {
     position:absolute;
     top:0;
-    width:1920px;
+    width:200%;
     height:100%;
-    object-fit:cover;
+    object-fit:contain;
   }
 
-  #left video { left:-960px; }
+  #left video  { left:-100%; }
   #right video { left:0; }
+
+  .viewer.swapped #left video  { left:0; }
+  .viewer.swapped #right video { left:-100%; }
 
   #messageWrapper {
     position:absolute;
@@ -67,12 +70,13 @@
     Drop a Video to Start<br><br>
     <span>
       Press <b>M</b> to Toggle Audio<br>
+      Press <b>S</b> to Swap Eyes<br>
       Press <b>Spacebar</b> to Pause/Play
     </span>
   </div>
 </div>
 
-<div class="viewer">
+<div class="viewer" id="viewer">
   <div class="half" id="left"><video autoplay muted playsinline></video></div>
   <div class="half" id="right"><video autoplay muted playsinline></video></div>
 </div>
@@ -81,6 +85,7 @@
 const leftVid = document.querySelector('#left video');
 const rightVid = document.querySelector('#right video');
 const messageWrapper = document.getElementById('messageWrapper');
+const viewer = document.getElementById('viewer');
 const body = document.body;
 
 let audioOn = false;
@@ -92,8 +97,8 @@ function loadVideo(file){
   messageWrapper.style.display='none';
   body.style.background = '#000000';
 
-  try { document.documentElement.requestFullscreen(); }
-  catch(err){ console.warn('Fullscreen request failed', err); }
+  const fs = document.documentElement.requestFullscreen?.();
+  if (fs && fs.catch) fs.catch(err => console.warn('Fullscreen request failed', err));
 
   const url = URL.createObjectURL(file);
   leftVid.src = rightVid.src = url;
@@ -113,18 +118,20 @@ function loadVideo(file){
   };
 }
 
-// Drag & drop support (functionality only)
 window.addEventListener('dragover', e => e.preventDefault());
 window.addEventListener('drop', e => {
   e.preventDefault();
   if (e.dataTransfer.files.length > 0) loadVideo(e.dataTransfer.files[0]);
 });
 
-// Keyboard controls
 window.addEventListener('keydown', e=>{
-  if(e.key.toLowerCase()==='m'){ // audio toggle
+  const key = e.key.toLowerCase();
+  if(key==='m'){
     audioOn = !audioOn;
     leftVid.muted = !audioOn;
+  }
+  if(key==='s'){
+    viewer.classList.toggle('swapped');
   }
   if(e.code==='Space'){
     e.preventDefault();
