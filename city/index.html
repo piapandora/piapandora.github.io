@@ -44,6 +44,7 @@
         label.field-label { display: block; margin-top: 8px; }
         .small { font-size: 11px; color: #aaa; margin: 8px 0 0 0; line-height: 1.4; }
         #msg { font-size: 12px; margin: 8px 0 0 0; min-height: 1em; color: #ff6b6b; }
+        #msg.note { color: #ffd166; }   /* a note about a map that still opened, not an error */
     </style>
 </head>
 <body>
@@ -72,7 +73,7 @@
         <label for="csvFileInput" class="small field-label">Load a CSV to view:</label>
         <input type="file" id="csvFileInput" accept=".csv,text/csv" />
         <p id="msg" role="alert"></p>
-        <p class="small">Codes: 0=paved floor (white), E=leftover ground (purple), W=outer wall (dark green), 1-9=storeys, N=nova, Q=quad, L=link, P=podium, a-z=models.</p>
+        <p class="small">Codes: 0=paved floor (white), E=leftover ground (purple), W=outer wall (dark green), S=central spawn (pink), 1-9=storeys, N=nova, Q=quad, L=link, P=podium, a-z=models.</p>
         </div>
     </div>
 
@@ -121,6 +122,7 @@
         const BUILDING_COVERAGE = 0.40;   // multi-cell buildings cover this share of the empty space left after novas, quads and links
         const BUILDING_MIX = { big3x3: 0.15, medium: 0.25, small: 0.30, tower1x1: 0.30 };   // shares of the building budget (should add up to 1)
         const ATTEMPTS_PER_CELL = 1.0;    // placement tries per empty cell (min 50), so big maps get proportionally more tries
+        const KEEP_STREETS_CONNECTED = true;   // like the game: a building of 2+ storeys is only kept if every open cell can still be walked to from the spawn (false = the old, looser layouts)
         const CUBE_SIZE = 5;
 
         // Limits for loaded CSV files (the generator has its own cap above)
@@ -137,12 +139,15 @@
         // its wall cube is one level above the ground, drawn dark green. A '1' is always a storey.
         // 0 = paved ground cube (white) | E = leftover ground cube (purple) | 1..9 = building storeys above the ground cube
         // W = outer wall (dark green, one level above ground) | N = nova | Q = quad | L = link | P = podium | a-z = custom model placeholders
+        // S = the spawn: a ground cube at level 0 like '0', but drawn pink. It marks the cells at the centre of
+        // the map where Pia Parkour starts the player: a 2x2 block when the size is even, a single cell when it
+        // is odd (see spawnZoneCells). The generator always stamps it, and the game expects it exactly there.
         // ==========================================
-        const FLOOR = '0', NOVA = 'N', QUAD = 'Q', LINK = 'L', PODIUM = 'P', EMPTY = 'E', WALL = 'W';
+        const FLOOR = '0', NOVA = 'N', QUAD = 'Q', LINK = 'L', PODIUM = 'P', EMPTY = 'E', WALL = 'W', SPAWN = 'S';
 
         // <<LOGIC
         function isValidCode(v) {
-            if (v === FLOOR || v === EMPTY || v === WALL || v === NOVA || v === QUAD || v === LINK || v === PODIUM) return true;
+            if (v === FLOOR || v === EMPTY || v === WALL || v === SPAWN || v === NOVA || v === QUAD || v === LINK || v === PODIUM) return true;
             if (/^[1-9]$/.test(v)) return true; // building storeys 1-9
             if (/^[a-z]$/.test(v)) return true; // custom models lowercase a-z
             return false;
@@ -158,6 +163,44 @@
         function clampGridSize(n) {
             if (!Number.isFinite(n)) return DEFAULT_GRID_SIZE;
             return Math.min(MAX_GRID_SIZE, Math.max(MIN_GRID_SIZE, Math.round(n)));
+        }
+
+        // The cells where the game starts the player: the centre of the map. In each direction that is 2 cells
+        // when the size is even and 1 cell when it is odd, the same rule Pia Parkour uses. Takes cols/rows
+        // separately so it works for a loaded, non-square CSV. Returns [{x, y}].
+        function spawnZoneCells(cols, rows) {
+            const span = n => { const size = n % 2 === 0 ? 2 : 1, start = (n - size) / 2; return Array.from({ length: size }, (_, i) => start + i); };
+            const cells = [];
+            span(rows).forEach(y => span(cols).forEach(x => cells.push({ x, y })));
+            return cells;
+        }
+
+        // A cell the player cannot walk through: the outer wall, or a building of 2+ storeys (a double jump
+        // clears 1 storey but not 2). The same rule as the game.
+        function isSolidCode(v) {
+            return v === WALL || (/^[1-9]$/.test(v) && Number(v) >= 2);
+        }
+
+        // Which cells can be walked to from the spawn cells: a flood fill that never enters a solid cell.
+        // Returns { seen, count, cols }: seen[y * cols + x] is 1 for every reachable cell, count is how many.
+        function reachableFromSpawn(grid) {
+            const rows = grid.length, cols = grid[0].length;
+            const seen = new Uint8Array(cols * rows);
+            let count = 0;
+            const stack = spawnZoneCells(cols, rows).map(c => c.y * cols + c.x);
+            while (stack.length) {
+                const i = stack.pop();
+                if (seen[i]) continue;
+                const x = i % cols, y = (i - x) / cols;
+                if (isSolidCode(grid[y][x])) continue;
+                seen[i] = 1;
+                count++;
+                if (x + 1 < cols) stack.push(i + 1);
+                if (x > 0) stack.push(i - 1);
+                if (y + 1 < rows) stack.push(i + cols);
+                if (y > 0) stack.push(i - cols);
+            }
+            return { seen, count, cols };
         }
 
         function generateLevel(gridSize) {
@@ -227,6 +270,11 @@
                 }
             }
 
+            // Step 2: the spawn. The cells at the centre of the map (see spawnZoneCells: 2x2 on even sizes, one
+            // cell on odd sizes) become 'S' before novas/quads/buildings are placed, so nothing can claim them,
+            // and links only overwrite EMPTY cells, so they route around it too.
+            spawnZoneCells(gridSize, gridSize).forEach(c => { grid[c.y][c.x] = SPAWN; });
+
             // Feature counts are based on the free interior, not the whole grid
             const freeCells = grid.reduce((sum, row) => sum + row.filter(v => v === EMPTY).length, 0);
             const targetNovaCount = Math.max(1, Math.ceil(freeCells / 40));
@@ -277,6 +325,9 @@
             const maxAttempts = Math.max(50, Math.ceil(emptyCount * ATTEMPTS_PER_CELL));   // bigger maps get more tries
             const coverageCells = emptyCount * BUILDING_COVERAGE;                          // total cells the buildings should cover
 
+            // The cells that can be walked to from the spawn right now (kept up to date as towers go up)
+            let reach = KEEP_STREETS_CONNECTED ? reachableFromSpawn(grid) : null;
+
             function towerHeight() {
                 const roll = Math.floor(Math.random() * 6) + 1;
                 if (roll <= 4) return String(Math.floor(Math.random() * 3) + 1); // '1'-'3' (most common)
@@ -316,6 +367,19 @@
                     else storeys = String(Math.floor(Math.random() * 5) + 1);                                       // '1'-'5'
 
                     cells.forEach(c => { grid[c.y][c.x] = storeys; });
+
+                    // A building of 2+ storeys blocks the street (a double jump clears 1 storey, not 2), so it is
+                    // kept only if no open cell gets cut off from the spawn. Otherwise it is undone and another
+                    // spot is tried, the same rule the game's own generator follows.
+                    if (KEEP_STREETS_CONNECTED && Number(storeys) >= 2) {
+                        const after = reachableFromSpawn(grid);
+                        const covered = cells.filter(c => reach.seen[c.y * reach.cols + c.x]).length;
+                        if (after.count !== reach.count - covered) {
+                            cells.forEach(c => { grid[c.y][c.x] = EMPTY; });
+                            continue;
+                        }
+                        reach = after;
+                    }
                     allocated += cells.length;
                 }
             }
@@ -349,11 +413,11 @@
                 throw new Error(`The file has ${lines.length} rows; the maximum is ${MAX_CSV_DIMENSION}.`);
             }
 
-            // Codes are case-sensitive: N/Q/L/P/E/W are special cells, lowercase a-z are custom models.
+            // Codes are case-sensitive: N/Q/L/P/E/W/S are special cells, lowercase a-z are custom models.
             const grid = lines.map((line, r) => line.split(/[,;\t]/).map((cell, c) => {
                 const v = cell.trim();
                 if (v === '' || !isValidCode(v)) {
-                    throw new Error(`Row ${r + 1}, column ${c + 1}: "${v}" is not a valid cell code (use 0, E, W, N, Q, L, P, 1-9 or lowercase a-z).`);
+                    throw new Error(`Row ${r + 1}, column ${c + 1}: "${v}" is not a valid cell code (use 0, E, W, S, N, Q, L, P, 1-9 or lowercase a-z).`);
                 }
                 return v;
             }));
@@ -373,6 +437,40 @@
                 throw new Error(`This level would need ${totalCubes.toLocaleString()} cubes; the maximum is ${MAX_CUBES.toLocaleString()}.`);
             }
             return grid;
+        }
+
+        // Notes about how a loaded map treats the spawn, in the game's terms (rows and columns count from 1).
+        // They are only notes: the map is shown either way, so older maps without an S still open.
+        function spawnNotes(grid) {
+            const rows = grid.length, cols = grid[0].length, notes = [];
+            const zone = spawnZoneCells(cols, rows);
+            const inZone = new Set(zone.map(c => `${c.x},${c.y}`));
+            const where = c => `row ${c.y + 1}, col ${c.x + 1}`;
+            const list = cells => cells.slice(0, 3).map(where).join('; ') + (cells.length > 3 ? ` (+${cells.length - 3} more)` : '');
+            const span = (nums, one, many) => Math.min(...nums) === Math.max(...nums) ? `${one} ${nums[0]}` : `${many} ${Math.min(...nums)}-${Math.max(...nums)}`;
+            const zoneText = `${span(zone.map(c => c.y + 1), 'row', 'rows')}, ${span(zone.map(c => c.x + 1), 'column', 'columns')}`;
+
+            const missing = zone.filter(c => grid[c.y][c.x] !== SPAWN);
+            const extra = [];
+            grid.forEach((row, y) => row.forEach((v, x) => { if (v === SPAWN && !inZone.has(`${x},${y}`)) extra.push({ x, y }); }));
+            if (missing.length === zone.length && extra.length === 0) {
+                notes.push(`No spawn: the game starts the player on the S cells at the centre of the map (${zoneText}), and this map has none.`);
+            } else if (missing.length || extra.length) {
+                let text = `Spawn: the game expects S exactly on ${zoneText}.`;
+                if (missing.length) text += ` Not S: ${list(missing)}.`;
+                if (extra.length) text += ` Extra S: ${list(extra)}.`;
+                notes.push(text);
+            }
+
+            const reach = reachableFromSpawn(grid);
+            if (reach.count === 0) {
+                notes.push(`The centre of the map (${zoneText}) is blocked by a wall or a tall building, so the player could not start there.`);
+            } else {
+                const cut = [];
+                grid.forEach((row, y) => row.forEach((v, x) => { if (!isSolidCode(v) && !reach.seen[y * cols + x]) cut.push({ x, y }); }));
+                if (cut.length) notes.push(`${cut.length} open cell${cut.length === 1 ? '' : 's'} can't be walked to from the spawn (first: ${where(cut[0])}).`);
+            }
+            return notes;
         }
         // LOGIC>>
 
@@ -407,7 +505,8 @@
         // floor at the end is purple.
         const materialFloorPaved = new THREE.MeshLambertMaterial({ color: 0xffffff });
         const materialFloorPlain = new THREE.MeshLambertMaterial({ color: 0x8e44ad });
-        const materialNova  = new THREE.MeshLambertMaterial({ color: 0x50e3c2 });
+        const materialSpawn = new THREE.MeshLambertMaterial({ color: 0xff69b4 }); // pink central spawn squares
+        const materialNova  =new THREE.MeshLambertMaterial({ color: 0x50e3c2 });
         const materialPodium = new THREE.MeshLambertMaterial({ color: 0x4a90e2 });
         const materialQuad = new THREE.MeshLambertMaterial({ color: 0xd0021b });
         const materialLink = new THREE.MeshLambertMaterial({ color: 0xf8e71c });
@@ -452,6 +551,8 @@
                         addCube(materialFloorPaved, col, 0, row);     // paved floor tile: pure white
                     } else if (v === EMPTY) {
                         addCube(materialFloorPlain, col, 0, row);     // leftover ground: purple
+                    } else if (v === SPAWN) {
+                        addCube(materialSpawn, col, 0, row);          // spawn: ground-level cube, pink
                     } else if (v === WALL) {
                         addCube(materialFloorPaved, col, 0, row);   // ground cube under the outer wall
                         addCube(materialBorderWall, col, 1, row);   // wall storey sits one level above ground
@@ -493,7 +594,11 @@
                 `Grid ${cols}x${rows} | Novas ${novas} | Quads ${Math.floor(quadCells / 4)} | ${sourceLabel}`;
         }
 
-        function showMessage(text) { document.getElementById('msg').textContent = text; }
+        function showMessage(text, isNote = false) {
+            const el = document.getElementById('msg');
+            el.textContent = text;
+            el.classList.toggle('note', isNote && text !== '');   // amber note instead of a red error (never on an empty message)
+        }
 
         // ==========================================
         // UI
@@ -561,8 +666,8 @@
             reader.onload = () => {
                 try {
                     const grid = parseCSV(reader.result);
-                    showMessage('');
                     buildLevel(grid, `loaded ${file.name}`);
+                    showMessage(spawnNotes(grid).join(' '), true);   // empty when the map follows the game's spawn rules
                 } catch (err) {
                     showMessage(err.message);
                 }
