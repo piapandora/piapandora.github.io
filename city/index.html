@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pandora City</title>
+    <title>City Generator</title>
 	<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
     <style>
         body { margin: 0; overflow: hidden; background-color: #111; }
@@ -49,7 +49,7 @@
 <body>
     <div id="info">
         <div id="infoHeader">
-            <h3>Pandora City - CSV Suite</h3>
+            <h3>City Generator - CSV Suite</h3>
             <button id="toggleBtn" type="button" aria-expanded="true" aria-controls="infoBody" title="Hide panel contents" aria-label="Hide panel contents">
                 <svg id="eyeOpenIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
@@ -540,7 +540,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `pandora_level_${Date.now()}.csv`;
+            link.download = `city_map_${Date.now()}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
