@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Life Odds</title>
+<link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --ink: #1c2a44;
+    --muted: #5b6780;
+    --line: #c9d0db;
+    --alive: #2e7a5a;
+    --alive-soft: rgba(46, 122, 90, 0.14);
+    --gone: #a8475e;
+    --focus: #3b62c4;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121a29;
+      --surface: #1a2436;
+      --ink: #e6ebf3;
+      --muted: #98a3b8;
+      --line: #2c3850;
+      --alive: #5cc296;
+      --alive-soft: rgba(92, 194, 150, 0.16);
+      --gone: #e08197;
+      --focus: #8fb0ff;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121a29;
+    --surface: #1a2436;
+    --ink: #e6ebf3;
+    --muted: #98a3b8;
+    --line: #2c3850;
+    --alive: #5cc296;
+    --alive-soft: rgba(92, 194, 150, 0.16);
+    --gone: #e08197;
+    --focus: #8fb0ff;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 5vw, 3.5rem) clamp(1.1rem, 4vw, 2rem) 4rem;
+  }
+  h1 {
+    font-family: "Spectral", Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+    font-style: italic;
+    color: var(--muted);
+    margin: 0 0 2rem;
+  }
+
+  /* The question */
+  .ask {
+    font-family: "Spectral", Georgia, serif;
+    font-size: clamp(2rem, 7vw, 3.25rem);
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
+  }
+  .ask input {
+    font: inherit;
+    color: var(--alive);
+    width: 2.3ch;
+    padding: 0;
+    border: 0;
+    border-bottom: 2px solid var(--line);
+    background: transparent;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .ask input::-webkit-outer-spin-button,
+  .ask input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .ask input:focus { outline: none; border-bottom-color: var(--alive); }
+  .ask input:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+  .ask input.three { width: 3.3ch; }
+
+  .preset {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.2rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    margin-bottom: 2.5rem;
+  }
+  .preset button {
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    cursor: pointer;
+  }
+  .preset button[aria-checked="true"] { background: var(--ink); color: var(--bg); }
+  .preset button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  /* The answer */
+  .answer {
+    font-family: "Spectral", Georgia, serif;
+    font-size: clamp(1.25rem, 3.4vw, 1.6rem);
+    line-height: 1.45;
+    margin: 0 0 1rem;
+    max-width: 34ch;
+  }
+  .answer .pct {
+    display: block;
+    font-size: clamp(4rem, 17vw, 7.5rem);
+    line-height: 1;
+    font-weight: 600;
+    color: var(--alive);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+  .answer strong { font-weight: 600; }
+  .error { color: var(--gone); font-size: 1rem; font-family: "Figtree", system-ui, sans-serif; min-height: 1.5em; margin: 0 0 1rem; }
+
+  .slider-row { display: flex; align-items: center; gap: 0.75rem; margin: 0 0 2rem; color: var(--muted); font-size: 0.9rem; }
+  input[type="range"] {
+    flex: 1;
+    accent-color: var(--alive);
+    min-width: 0;
+    height: 2rem;
+  }
+  input[type="range"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+
+  /* Chart */
+  figure { margin: 0 0 2.5rem; }
+  .chart-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.5rem 0.25rem;
+    touch-action: pan-y;
+  }
+  svg { display: block; width: 100%; height: auto; cursor: crosshair; user-select: none; }
+  svg text { font-family: "Figtree", system-ui, sans-serif; font-size: 11px; fill: var(--muted); }
+  figcaption { color: var(--muted); font-size: 0.875rem; margin-top: 0.6rem; }
+
+  /* Facts */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1.5rem 2rem;
+    margin: 0 0 2.5rem;
+  }
+  .facts dt { color: var(--muted); font-size: 0.875rem; }
+  .facts dd {
+    margin: 0.15rem 0 0;
+    font-family: "Spectral", Georgia, serif;
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+  .facts dd small { display: block; font-family: "Figtree", system-ui, sans-serif; font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+
+  h2 {
+    font-family: "Spectral", Georgia, serif;
+    font-weight: 400;
+    font-size: 1.35rem;
+    margin: 0 0 1rem;
+  }
+  .milestones { list-style: none; padding: 0; margin: 0 0 2.5rem; }
+  .milestones li {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr 4rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+  .milestones .bar { height: 0.5rem; background: var(--alive-soft); border-radius: 999px; overflow: hidden; }
+  .milestones .bar span { display: block; height: 100%; background: var(--alive); border-radius: 999px; }
+  .milestones .val { text-align: right; }
+  .milestones .none { color: var(--muted); grid-template-columns: 1fr; }
+
+  details {
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  summary { cursor: pointer; color: var(--ink); font-weight: 500; }
+  summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+  details p { max-width: 65ch; }
+  code { font-size: 0.9em; color: var(--ink); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .milestones .bar span { transition: width 0.25s ease; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Your odds of still being here</h1>
+
+  <p class="ask"><label for="age">I’m <input id="age" type="number" min="15" max="109" step="1" value="40" inputmode="numeric" aria-describedby="age-error"> years old.</label></p>
+
+  <div class="preset" role="radiogroup" aria-label="Population to compare with">
+    <button type="button" role="radio" data-preset="all" aria-checked="true">Everyone</button>
+    <button type="button" role="radio" data-preset="women" aria-checked="false">Women</button>
+    <button type="button" role="radio" data-preset="men" aria-checked="false">Men</button>
+  </div>
+
+  <p id="age-error" class="error" role="alert"></p>
+
+  <div id="results">
+    <p class="answer" aria-live="polite">
+      <span class="pct" id="pct">96%</span>
+      chance you’ll still be alive in <strong id="yrs">10 years</strong>, at age <strong id="at-age">50</strong>.
+    </p>
+
+    <div class="slider-row">
+      <span>1 yr</span>
+      <input type="range" id="years" min="1" max="70" value="10" aria-label="Years from now">
+      <span id="years-max">70 yrs</span>
+    </div>
+
+    <figure>
+      <div class="chart-box">
+        <svg id="chart" viewBox="0 0 640 300" role="img" aria-label="Survival curve"></svg>
+      </div>
+      <figcaption>Chance of being alive at each future age. Tap or drag on the curve to move the marker.</figcaption>
+    </figure>
+
+    <dl class="facts">
+      <div>
+        <dt>Most likely age at death</dt>
+        <dd id="median">81<small>Half of people your age live past this</small></dd>
+      </div>
+      <div>
+        <dt>Your risk this year</dt>
+        <dd id="risk">0.25%<small>About 1 in 400</small></dd>
+      </div>
+      <div>
+        <dt>Your risk doubles every</dt>
+        <dd id="doubling">9 years<small>A 49-year-old has twice your risk</small></dd>
+      </div>
+    </dl>
+
+    <h2>Reaching milestones</h2>
+    <ul class="milestones" id="milestones"></ul>
+  </div>
+
+  <details>
+    <summary>How this is calculated</summary>
+    <p>This uses the Gompertz law of mortality from 1825: after early adulthood, the yearly risk of dying grows exponentially with age, roughly doubling every 9 years. The risk at age <em>x</em> is <code>a·e^(b·x)</code>, and the chance of surviving <em>t</em> more years is <code>exp(−(a/b)·e^(b·x)·(e^(b·t) − 1))</code>.</p>
+    <p>The parameters are rough, illustrative fits to modern US death rates: a yearly risk at age 40 of about 0.25% overall, 0.18% for women and 0.32% for men, all doubling every 9.2 years. The law fits ages 30 to 90 best. It understates accidents in young adults and may overstate risk past 100.</p>
+    <p>These are population averages. Your own odds depend on health, habits, genetics and circumstances, so treat this as a curiosity, not a forecast.</p>
+  </details>
+</main>
+
+<script>
+(function () {
+  // ---- Model: Gompertz law ----
+  const DOUBLING_YEARS = 9.2;
+  const B = Math.LN2 / DOUBLING_YEARS;
+  const RISK_AT_40 = { all: 0.0025, women: 0.0018, men: 0.0032 };
+  const MAX_AGE = 110;
+
+  function paramA(preset) { return RISK_AT_40[preset] / Math.exp(B * 40); }
+
+  // Chance of surviving t more years from age x
+  function survival(a, x, t) {
+    return Math.exp(-(a / B) * Math.exp(B * x) * (Math.exp(B * t) - 1));
+  }
+  // Years until survival chance falls to 50%
+  function medianYears(a, x) {
+    return Math.log(1 + Math.LN2 / ((a / B) * Math.exp(B * x))) / B;
+  }
+
+  // ---- Formatting ----
+  function pct(p) {
+    const v = p * 100;
+    if (v >= 99.95) return ">99.9%";
+    if (v < 0.1) return "<0.1%";
+    if (v < 10 || v > 90) return v.toFixed(1) + "%";
+    return Math.round(v) + "%";
+  }
+  function oneIn(p) {
+    const n = 1 / p;
+    if (n < 20) return Math.round(n);
+    if (n < 200) return Math.round(n / 5) * 5;
+    if (n < 2000) return Math.round(n / 50) * 50;
+    return Math.round(n / 500) * 500;
+  }
+  const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
+
+  // ---- Elements ----
+  const $ = id => document.getElementById(id);
+  const ageInput = $("age"), yearsInput = $("years"), chart = $("chart");
+  const presetButtons = document.querySelectorAll(".preset button");
+
+  // ---- State ----
+  const state = { age: 40, years: 10, preset: "all" };
+
+  // ---- Chart geometry ----
+  const W = 640, H = 300, PL = 40, PR = 14, PT = 14, PB = 30;
+  let xMin = 40;
+  const sx = age => PL + (age - xMin) / (MAX_AGE - xMin) * (W - PL - PR);
+  const sy = p => PT + (1 - p) * (H - PT - PB);
+
+  function drawChart(a, age, target, medianAge) {
+    xMin = age;
+    const steps = Math.max(20, (MAX_AGE - age) * 2);
+    let line = "";
+    for (let i = 0; i <= steps; i++) {
+      const x = age + (MAX_AGE - age) * i / steps;
+      const p = survival(a, age, x - age);
+      line += (i ? "L" : "M") + sx(x).toFixed(1) + "," + sy(p).toFixed(1);
+    }
+    const area = line + "L" + sx(MAX_AGE) + "," + sy(0) + "L" + sx(age) + "," + sy(0) + "Z";
+
+    let grid = "";
+    [0, 0.25, 0.5, 0.75, 1].forEach(p => {
+      grid += `<line x1="${PL}" x2="${W - PR}" y1="${sy(p)}" y2="${sy(p)}" stroke="var(--line)" stroke-width="1"/>`;
+      grid += `<text x="${PL - 6}" y="${sy(p) + 4}" text-anchor="end">${p * 100}%</text>`;
+    });
+    const firstTick = Math.ceil(age / 10) * 10;
+    for (let t = firstTick; t <= MAX_AGE; t += 10) {
+      grid += `<text x="${sx(t)}" y="${H - 10}" text-anchor="middle">${t}</text>`;
+    }
+    if (firstTick - age > 2) grid += `<text x="${sx(age)}" y="${H - 10}" text-anchor="start">${age}</text>`;
+
+    const tp = survival(a, age, target - age);
+    const mx = sx(medianAge);
+    const medLabelAnchor = mx > W - 110 ? "end" : "start";
+    const medLabelX = medLabelAnchor === "end" ? mx - 6 : mx + 6;
+
+    chart.innerHTML = grid +
+      `<path d="${area}" fill="var(--alive-soft)"/>` +
+      `<path d="${line}" fill="none" stroke="var(--alive)" stroke-width="2.5" stroke-linejoin="round"/>` +
+      (medianAge <= MAX_AGE ?
+        `<line x1="${mx}" x2="${mx}" y1="${sy(0.5)}" y2="${sy(0)}" stroke="var(--muted)" stroke-dasharray="3 4"/>` +
+        `<text x="${medLabelX}" y="${sy(0) - 8}" text-anchor="${medLabelAnchor}">median ${Math.round(medianAge)}</text>` : "") +
+      `<line x1="${sx(target)}" x2="${sx(target)}" y1="${PT}" y2="${sy(0)}" stroke="var(--ink)" stroke-width="1" opacity="0.35"/>` +
+      `<circle cx="${sx(target)}" cy="${sy(tp)}" r="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2.5"/>`;
+    chart.setAttribute("aria-label",
+      `Survival curve from age ${age} to ${MAX_AGE}. Chance of being alive at ${target}: ${pct(tp)}.`);
+  }
+
+  // ---- Render everything ----
+  function render() {
+    const raw = ageInput.value.trim();
+    const age = Number(raw);
+    ageInput.classList.toggle("three", raw.length >= 3);
+    if (raw === "" || !Number.isInteger(age) || age < 15 || age > 109) {
+      $("age-error").textContent = "Enter a whole number between 15 and 109.";
+      $("results").style.opacity = "0.35";
+      return;
+    }
+    $("age-error").textContent = "";
+    $("results").style.opacity = "";
+    state.age = age;
+
+    const a = paramA(state.preset);
+    const maxYears = MAX_AGE - age;
+    yearsInput.max = maxYears;
+    $("years-max").textContent = maxYears + " yrs";
+    state.years = Math.min(Math.max(1, state.years), maxYears);
+    yearsInput.value = state.years;
+
+    const target = age + state.years;
+    $("pct").textContent = pct(survival(a, age, state.years));
+    $("yrs").textContent = plural(state.years, "year");
+    $("at-age").textContent = target;
+
+    const med = age + medianYears(a, age);
+    $("median").innerHTML = Math.round(med) + "<small>Half of people your age live past this</small>";
+
+    const risk = 1 - survival(a, age, 1);
+    $("risk").innerHTML = pct(risk) + `<small>About 1 in ${oneIn(risk).toLocaleString()}</small>`;
+
+    const twice = age + Math.round(DOUBLING_YEARS);
+    $("doubling").innerHTML = Math.round(DOUBLING_YEARS) + " years" +
+      (twice <= MAX_AGE ? `<small>A ${twice}-year-old has about twice your risk</small>` : "<small>Roughly, at every age</small>");
+
+    const ms = [70, 80, 90, 100].filter(m => m > age);
+    $("milestones").innerHTML = ms.length ? ms.map(m => {
+      const p = survival(a, age, m - age);
+      return `<li><span>Age ${m}</span><span class="bar"><span style="width:${(p * 100).toFixed(1)}%"></span></span><span class="val">${pct(p)}</span></li>`;
+    }).join("") : `<li class="none">You’ve already passed every milestone on this list.</li>`;
+
+    drawChart(a, age, target, med);
+  }
+
+  // ---- Interactions ----
+  ageInput.addEventListener("input", render);
+  yearsInput.addEventListener("input", () => { state.years = Number(yearsInput.value); render(); });
+  presetButtons.forEach(btn => btn.addEventListener("click", () => {
+    state.preset = btn.dataset.preset;
+    presetButtons.forEach(b => b.setAttribute("aria-checked", String(b === btn)));
+    render();
+  }));
+  // Arrow keys within the radio group
+  document.querySelector(".preset").addEventListener("keydown", e => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const list = [...presetButtons];
+    const i = list.findIndex(b => b.getAttribute("aria-checked") === "true");
+    const next = list[(i + (e.key === "ArrowRight" ? 1 : -1) + list.length) % list.length];
+    next.click(); next.focus();
+  });
+
+  // Tap or drag on the chart to pick a future age
+  let dragging = false;
+  function pickFromPointer(e) {
+    const rect = chart.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width * W;
+    const ageAt = xMin + (x - PL) / (W - PL - PR) * (MAX_AGE - xMin);
+    state.years = Math.round(Math.min(Math.max(ageAt - state.age, 1), MAX_AGE - state.age));
+    render();
+  }
+  chart.addEventListener("pointerdown", e => { dragging = true; chart.setPointerCapture(e.pointerId); pickFromPointer(e); });
+  chart.addEventListener("pointermove", e => { if (dragging) pickFromPointer(e); });
+  chart.addEventListener("pointerup", () => { dragging = false; });
+  chart.addEventListener("pointercancel", () => { dragging = false; });
+
+  render();
+})();
+</script>
+</body>
+</html>
