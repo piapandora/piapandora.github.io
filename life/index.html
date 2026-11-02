@@ -258,8 +258,8 @@
         <dd id="risk">0.25%<small>About 1 in 400</small></dd>
       </div>
       <div>
-        <dt>Your risk doubles every</dt>
-        <dd id="doubling">9 years<small>A 49-year-old has twice your risk</small></dd>
+        <dt>Your yearly risk doubles by</dt>
+        <dd id="doubling">Age 53<small>About 13 years from now</small></dd>
       </div>
     </dl>
 
@@ -269,29 +269,76 @@
 
   <details>
     <summary>How this is calculated</summary>
-    <p>This uses the Gompertz law of mortality from 1825: after early adulthood, the yearly risk of dying grows exponentially with age, roughly doubling every 9 years. The risk at age <em>x</em> is <code>a·e^(b·x)</code>, and the chance of surviving <em>t</em> more years is <code>exp(−(a/b)·e^(b·x)·(e^(b·t) − 1))</code>.</p>
-    <p>The parameters are rough, illustrative fits to modern US death rates: a yearly risk at age 40 of about 0.25% overall, 0.18% for women and 0.32% for men, all doubling every 9.2 years. The law fits ages 30 to 90 best. It understates accidents in young adults and may overstate risk past 100.</p>
+    <p>This uses the Gompertz law of mortality from 1825: after early adulthood, the risk of dying from aging grows exponentially, multiplying by a fixed factor every year. A second term, in the style of the Heligman–Pollard model from 1980, adds the extra risk younger and middle-aged adults face from accidents and other causes not driven by aging. Together they give the odds of dying within a year at age <em>x</em>: <code>e^(α + β·ln x + γ·(ln x)²) + G·H^x</code>.</p>
+    <p>The parameters are fitted separately for everyone, women and men to the US Social Security 2023 period life table. Across ages 15 to 100, the most likely age at death lands within a few months of the official table, and the milestone chances within about one percentage point.</p>
     <p>These are population averages. Your own odds depend on health, habits, genetics and circumstances, so treat this as a curiosity, not a forecast.</p>
   </details>
 </main>
 
 <script>
 (function () {
-  // ---- Model: Gompertz law ----
-  const DOUBLING_YEARS = 9.2;
-  const B = Math.LN2 / DOUBLING_YEARS;
-  const RISK_AT_40 = { all: 0.0025, women: 0.0018, men: 0.0032 };
+  // ---- Model: Gompertz's law plus a young-adult term ----
+  // Odds of dying within the year at age x:
+  //   q/(1-q) = e^(α + β·ln x + γ·(ln x)²)  +  G·H^x
+  //   The first term is the extra risk of younger and middle-aged adults
+  //   (accidents and other causes not driven by aging), as in Heligman–Pollard (1980).
+  //   The second term is Gompertz's law: aging risk that multiplies by H every year.
+  // Fitted to the US Social Security 2023 period life table (2026 Trustees Report).
+  const PARAMS = {
+    all:   { al: -13.331998, be: 2.030157, ga: -0.0137330, G: 1.469784e-6, H: 1.1370683 },
+    men:   { al: -12.656682, be: 1.896706, ga: -0.0070067, G: 2.075194e-6, H: 1.1341187 },
+    women: { al: -14.563644, be: 2.286145, ga: -0.0218693, G: 9.569477e-7, H: 1.1409414 },
+  };
   const MAX_AGE = 110;
+  const MIN_AGE = 15;
+  const TABLE_END = 125;
 
-  function paramA(preset) { return RISK_AT_40[preset] / Math.exp(B * 40); }
+  // Chance of dying within one year at exact age x
+  function yearlyRisk(p, x) {
+    const lx = Math.log(x);
+    const odds = Math.exp(p.al + p.be * lx + p.ga * lx * lx) + p.G * Math.pow(p.H, x);
+    return odds / (1 + odds);
+  }
+
+  // Build a life table once per group: how many of 1 person at age 15 are alive at each age
+  const LIFE = {};
+  for (const key in PARAMS) {
+    const l = [1];
+    for (let k = MIN_AGE; k < TABLE_END; k++) l.push(l[l.length - 1] * (1 - yearlyRisk(PARAMS[key], k)));
+    LIFE[key] = l;
+  }
+  function alive(key, age) {
+    // Between whole years, risk is spread evenly (log-linear interpolation)
+    const i = Math.min(Math.max(age - MIN_AGE, 0), TABLE_END - MIN_AGE - 1e-9);
+    const k = Math.floor(i), f = i - k, l = LIFE[key];
+    return l[k] * Math.pow(l[k + 1] / l[k], f);
+  }
+
+  function params(preset) { return preset; }
 
   // Chance of surviving t more years from age x
-  function survival(a, x, t) {
-    return Math.exp(-(a / B) * Math.exp(B * x) * (Math.exp(B * t) - 1));
+  function survival(key, x, t) {
+    return alive(key, x + t) / alive(key, x);
   }
-  // Years until survival chance falls to 50%
-  function medianYears(a, x) {
-    return Math.log(1 + Math.LN2 / ((a / B) * Math.exp(B * x))) / B;
+  // Years until survival chance falls to 50% (found by halving the search range)
+  function medianYears(key, x) {
+    let lo = 0, hi = TABLE_END - x;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (survival(key, x, mid) > 0.5) lo = mid; else hi = mid;
+    }
+    return lo;
+  }
+  // Age at which the yearly risk is twice the risk at age x
+  function twiceRiskAge(key, x) {
+    const target = 2 * yearlyRisk(PARAMS[key], x);
+    let lo = x, hi = TABLE_END;
+    if (yearlyRisk(PARAMS[key], hi) < target) return Infinity;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (yearlyRisk(PARAMS[key], mid) < target) lo = mid; else hi = mid;
+    }
+    return lo;
   }
 
   // ---- Formatting ----
@@ -378,7 +425,7 @@
     $("results").style.opacity = "";
     state.age = age;
 
-    const a = paramA(state.preset);
+    const a = params(state.preset);
     const maxYears = MAX_AGE - age;
     yearsInput.max = maxYears;
     $("years-max").textContent = maxYears + " yrs";
@@ -394,11 +441,12 @@
     $("median").innerHTML = Math.round(med) + "<small>Half of people your age live past this</small>";
 
     const risk = 1 - survival(a, age, 1);
-    $("risk").innerHTML = pct(risk) + `<small>About 1 in ${oneIn(risk).toLocaleString()}</small>`;
+    $("risk").innerHTML = (risk < 0.01 ? (risk * 100).toFixed(2) + "%" : pct(risk)) + `<small>About 1 in ${oneIn(risk).toLocaleString()}</small>`;
 
-    const twice = age + Math.round(DOUBLING_YEARS);
-    $("doubling").innerHTML = Math.round(DOUBLING_YEARS) + " years" +
-      (twice <= MAX_AGE ? `<small>A ${twice}-year-old has about twice your risk</small>` : "<small>Roughly, at every age</small>");
+    const twice = Math.round(twiceRiskAge(a, age));
+    $("doubling").innerHTML = twice <= MAX_AGE
+      ? `Age ${twice}<small>About ${plural(twice - age, "year")} from now</small>`
+      : `Past ${MAX_AGE}<small>Beyond the ages this app covers</small>`;
 
     const ms = [70, 80, 90, 100].filter(m => m > age);
     $("milestones").innerHTML = ms.length ? ms.map(m => {
