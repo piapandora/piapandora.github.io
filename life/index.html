@@ -250,7 +250,7 @@
 
     <dl class="facts">
       <div>
-        <dt>Most likely age at death</dt>
+        <dt>Median age at death</dt>
         <dd id="median">81<small>Half of people your age live past this</small></dd>
       </div>
       <div>
@@ -269,9 +269,9 @@
 
   <details>
     <summary>How this is calculated</summary>
-    <p>This uses the Gompertz law of mortality from 1825: after early adulthood, the risk of dying from aging grows exponentially, multiplying by a fixed factor every year. A second term, in the style of the Heligman–Pollard model from 1980, adds the extra risk younger and middle-aged adults face from accidents and other causes not driven by aging. Together they give the odds of dying within a year at age <em>x</em>: <code>e^(α + β·ln x + γ·(ln x)²) + G·H^x</code>.</p>
-    <p>The parameters are fitted separately for everyone, women and men to the US Social Security 2023 period life table. Across ages 15 to 100, the most likely age at death lands within a few months of the official table, and the milestone chances within about one percentage point.</p>
-    <p>These are population averages. Your own odds depend on health, habits, genetics and circumstances, so treat this as a curiosity, not a forecast.</p>
+    <p>This uses the Gompertz law of mortality from 1825: after early adulthood, the risk of dying from aging grows exponentially, multiplying by a fixed factor every year. A second term, in the style of the Heligman–Pollard model from 1980, shapes the risk in early and middle adulthood, when accidents and other causes matter more and aging has less effect. Together they give the odds of dying within a year at age <em>x</em>: <code>e^(α + β·ln x + γ·(ln x)²) + G·H^x</code>.</p>
+    <p>The parameters are fitted to the women’s and men’s death rates in the US Social Security 2023 period life table. Across ages 15 to 100, the median age at death lands within a few months of the official table, and the milestone chances within about one percentage point.</p>
+    <p>The official table assumes today’s death rates stay the same for the rest of your life. Historically they’ve kept falling, so for younger visitors the real odds are likely somewhat better. These are population averages. Your own odds depend on health, habits, genetics and circumstances, so treat this as a curiosity, not a forecast.</p>
   </details>
 </main>
 
@@ -285,7 +285,6 @@
   //   The second term is Gompertz's law: aging risk that multiplies by H every year.
   // Fitted to the US Social Security 2023 period life table (2026 Trustees Report).
   const PARAMS = {
-    all:   { al: -13.331998, be: 2.030157, ga: -0.0137330, G: 1.469784e-6, H: 1.1370683 },
     men:   { al: -12.656682, be: 1.896706, ga: -0.0070067, G: 2.075194e-6, H: 1.1341187 },
     women: { al: -14.563644, be: 2.286145, ga: -0.0218693, G: 9.569477e-7, H: 1.1409414 },
   };
@@ -316,9 +315,16 @@
 
   function params(preset) { return preset; }
 
-  // Chance of surviving t more years from age x
+  // Chance of surviving t more years from age x.
+  // "Everyone" is a group of people aged x that is half women and half men,
+  // so its chance is the average of the women's and men's chances.
   function survival(key, x, t) {
+    if (key === "all") return (survival("women", x, t) + survival("men", x, t)) / 2;
     return alive(key, x + t) / alive(key, x);
+  }
+  // Yearly risk at age y for the people from age x who are still alive then
+  function riskAt(key, x, y) {
+    return 1 - survival(key, x, y - x + 1) / survival(key, x, y - x);
   }
   // Years until survival chance falls to 50% (found by halving the search range)
   function medianYears(key, x) {
@@ -331,12 +337,12 @@
   }
   // Age at which the yearly risk is twice the risk at age x
   function twiceRiskAge(key, x) {
-    const target = 2 * yearlyRisk(PARAMS[key], x);
-    let lo = x, hi = TABLE_END;
-    if (yearlyRisk(PARAMS[key], hi) < target) return Infinity;
+    const target = 2 * riskAt(key, x, x);
+    let lo = x, hi = TABLE_END - 1;
+    if (riskAt(key, x, hi) < target) return Infinity;
     for (let i = 0; i < 60; i++) {
       const mid = (lo + hi) / 2;
-      if (yearlyRisk(PARAMS[key], mid) < target) lo = mid; else hi = mid;
+      if (riskAt(key, x, mid) < target) lo = mid; else hi = mid;
     }
     return lo;
   }
