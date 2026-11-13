@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Pandora Tree</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      user-select: none;
+    }
+
+    .app-container {
+      width: 640px;
+      max-width: calc(100vw - 32px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #tree {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      -webkit-user-drag: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .counter {
+      padding: 14px 16px;
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      background-color: #252738;
+      border: 1px solid #3d405b;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <img id="tree" src="tree.jpg" alt="The Pandora Tree. Click to make it grow." draggable="false">
+    <div class="counter" id="counter">Connecting to the Pandora Tree…</div>
+  </div>
+
+  <script>
+    // The address of your Cloudflare Worker.
+    const SERVER_URL = 'wss://pandora-tree.beyazkus.workers.dev/ws';
+
+    const tree = document.getElementById('tree');
+    const counter = document.getElementById('counter');
+    let socket;
+
+    function connect() {
+      socket = new WebSocket(SERVER_URL);
+
+      // The server only ever sends one thing: the current height.
+      socket.onmessage = function(e) {
+        const height = Number(e.data);
+        const unit = height === 1 ? 'meter' : 'meters';
+        counter.textContent = `The Pandora Tree is ${height} ${unit} tall.`;
+      };
+
+      // If the connection drops, try again in two seconds.
+      socket.onclose = function() {
+        counter.textContent = 'Reconnecting to the Pandora Tree…';
+        setTimeout(connect, 2000);
+      };
+    }
+
+    function grow() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send('grow');
+      }
+    }
+
+    tree.addEventListener('click', grow);
+
+    // Space or Enter also waters the tree, like the dollhouse shortcuts.
+    window.addEventListener('keydown', function(e) {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        grow();
+      }
+    });
+
+    connect();
+  </script>
+</body>
+</html>
