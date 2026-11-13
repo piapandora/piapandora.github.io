@@ -57,7 +57,6 @@
   </div>
 
   <script>
-    // The address of your Cloudflare Worker.
     const SERVER_URL = 'wss://pandora-tree.beyazkus.workers.dev/ws';
 
     const tree = document.getElementById('tree');
@@ -67,14 +66,12 @@
     function connect() {
       socket = new WebSocket(SERVER_URL);
 
-      // The server only ever sends one thing: the current height.
       socket.onmessage = function(e) {
         const height = Number(e.data);
         const unit = height === 1 ? 'meter' : 'meters';
         counter.textContent = `The Pandora Tree is ${height} ${unit} tall.`;
       };
 
-      // If the connection drops, try again in two seconds.
       socket.onclose = function() {
         counter.textContent = 'Reconnecting to the Pandora Tree…';
         setTimeout(connect, 2000);
@@ -89,7 +86,6 @@
 
     tree.addEventListener('click', grow);
 
-    // Space or Enter also waters the tree.
     window.addEventListener('keydown', function(e) {
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
