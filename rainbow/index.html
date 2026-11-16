@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rainbow Swap · v05</title>
+  <title>Rainbow Swap</title>
   <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
@@ -51,16 +51,26 @@
     #panel-jimmy { grid-column: 1 / 3; --c: var(--jimmy); }
     #panel-pia   { grid-column: 11 / 13; --c: var(--pia); }
 
+    /* Row-colour legend: a 16px edge (at 1920 wide) between each panel and the board.
+       The panel content keeps the rest (304px), so its buttons split evenly. */
+    .panel { --edge: calc(min(100vw, 177.78vh) / 12 * .1); }
+    #panel-jimmy { padding-right: var(--edge); }
+    #panel-pia   { padding-left:  var(--edge); }
+    .panel::before {
+      content: ''; position: absolute; top: 0; bottom: 0; width: var(--edge); z-index: 3;
+      background: linear-gradient(to bottom,
+        #EF4444 0 20%, #FACC15 20% 40%, #22C55E 40% 60%, #3B82F6 60% 80%, #A855F7 80% 100%);
+      pointer-events: none;
+    }
+    #panel-jimmy::before { right: 0; }
+    #panel-pia::before   { left: 0; }
+
     .panel::after {               /* turn glow */
       content: ''; position: absolute; inset: 0; pointer-events: none;
       box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 35%, transparent);
     }
-    .panel.turn::after { animation: turn-glow 1.6s ease-in-out infinite; }
-    @keyframes turn-glow {
-      0%, 100% { box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--c) 45%, transparent); }
-      50%      { box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--c) 85%, transparent),
-                             inset 0 0 calc(var(--cell-h) * .3) color-mix(in srgb, var(--c) 40%, transparent); }
-    }
+    /* lit border on the player whose turn it is (steady, no pulse) */
+    .panel.turn::after { box-shadow: inset 0 0 0 calc(min(100vw, 177.78vh) / 12 * .05) var(--c); }   /* 8px at 1920 wide */
     /* seat states: free (nobody), mine (you), taken-by-other is for multiplayer later */
     .panel.free::after { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 20%, transparent); }
     .panel.free.claimable { cursor: pointer; }
@@ -74,16 +84,33 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: calc(var(--cell-h) * .04);
     }
-    .p-name .name  { font-size: calc(var(--cell-h) * .3); font-weight: 800; color: var(--c); line-height: 1; }
-    .p-name .label { font-size: calc(var(--cell-h) * .11); font-weight: 600; color: #94a3b8;
+    .p-name .name  { font-size: calc(var(--cell-h) * .26); font-weight: 800; color: var(--c); line-height: 1; }
+    .p-name .label { font-size: calc(var(--cell-h) * .095); font-weight: 600; color: #94a3b8;
                      text-transform: uppercase; letter-spacing: .08em; }
 
     .p-avatar {
       grid-column: 1 / 3; grid-row: 2 / 4;
       position: relative; overflow: hidden;
       display: grid; place-items: center;
-      background: color-mix(in srgb, var(--c) 18%, #1e2132);
+      background: transparent;      /* shows the panel's own tint, same as behind the emote buttons */
     }
+    /* turn feedback, BEHIND the portrait: a white spotlight for the whole turn */
+    .p-avatar .glow {
+      position: absolute; inset: 0; pointer-events: none; opacity: 0;
+    }
+    .p-avatar .glow {
+      background: radial-gradient(ellipse 80% 70% at 50% 45%, rgba(255,255,255,.62), rgba(255,255,255,.18) 60%, rgba(255,255,255,.05) 85%);
+      transition: opacity .5s;
+    }
+    /* solo: a calm, steady spotlight */
+    .panel.turn .p-avatar .glow { opacity: .45; }
+    /* two players: keeps pulsing for the whole turn */
+    .game-wrapper.duo .panel.turn .p-avatar .glow { animation: turn-pulse 1.4s ease-in-out infinite; }
+    @keyframes turn-pulse {
+      0%, 100% { opacity: .3; }
+      50%      { opacity: 1; }
+    }
+
     .p-avatar img {
       position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover; pointer-events: none; -webkit-user-drag: none;
@@ -125,7 +152,7 @@
       border: none;
       border-top: 1px solid rgba(255,255,255,.07);
       background: transparent; color: #fff;
-      font-size: calc(var(--cell-h) * .38);
+      font-size: calc(var(--cell-h) * .32);
       cursor: pointer;
       transition: background-color .15s, transform .1s;
       -webkit-tap-highlight-color: transparent;
@@ -135,7 +162,7 @@
     .p-btn:active:not(:disabled) { background: rgba(255,255,255,.12); }
     .p-btn:disabled { opacity: .35; cursor: default; }
     .p-btn.leave {
-      font-size: calc(var(--cell-h) * .15); font-weight: 800;
+      font-size: calc(var(--cell-h) * .125); font-weight: 800;
       letter-spacing: .06em; text-transform: uppercase;
     }
 
@@ -415,6 +442,7 @@
           <div class="label"></div>
         </div>
         <div class="p-avatar">
+          <div class="glow"></div>
           <span class="initial">${p.name[0]}</span>
           <img src="${p.img}" alt="" draggable="false">
           <div class="shade"></div>
@@ -477,6 +505,9 @@
       }
 
       // dim the board for watchers, but never over a finished rainbow
+      document.getElementById('gameWrapper').classList.toggle('duo',
+        seatOf('jimmy') === 'taken' && seatOf('pia') === 'taken');
+
       boardEl.classList.toggle('empty', !me && !(game && game.status === 'won'));
       boardEl.classList.toggle('locked', !canMove());
 
