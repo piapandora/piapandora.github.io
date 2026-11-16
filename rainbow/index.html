@@ -70,8 +70,8 @@
       box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 35%, transparent);
     }
     /* lit border on the player whose turn it is (steady, no pulse) */
-    .panel.turn::after { box-shadow: inset 0 0 0 calc(min(100vw, 177.78vh) / 12 * .05) var(--c); }   /* 8px at 1920 wide */
-    /* seat states: free (nobody), mine (you), taken-by-other is for multiplayer later */
+    .panel.turn::after { box-shadow: inset 0 0 0 calc(min(100vw, 177.78vh) / 12 * .0375) var(--c); }   /* 6px at 1920 wide */
+    /* seat states: free (nobody) and mine (you) */
     .panel.free::after { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 20%, transparent); }
     .panel.free.claimable { cursor: pointer; }
     .panel.free.claimable:hover::after { box-shadow: inset 0 0 0 3px var(--c); }
@@ -97,8 +97,6 @@
     /* turn feedback, BEHIND the portrait: a white spotlight for the whole turn */
     .p-avatar .glow {
       position: absolute; inset: 0; pointer-events: none; opacity: 0;
-    }
-    .p-avatar .glow {
       background: radial-gradient(ellipse 80% 70% at 50% 45%, rgba(255,255,255,.62), rgba(255,255,255,.18) 60%, rgba(255,255,255,.05) 85%);
       transition: opacity .5s;
     }
@@ -504,10 +502,11 @@
         panel.querySelectorAll('.p-btn').forEach(b => b.disabled = !(mine && connected));
       }
 
-      // dim the board for watchers, but never over a finished rainbow
+      // both seats filled: turns alternate, so the active avatar pulses
       document.getElementById('gameWrapper').classList.toggle('duo',
         seatOf('jimmy') === 'taken' && seatOf('pia') === 'taken');
 
+      // dim the board for watchers, but never over a finished rainbow
       boardEl.classList.toggle('empty', !me && !(game && game.status === 'won'));
       boardEl.classList.toggle('locked', !canMove());
 
@@ -849,12 +848,6 @@
       if (boardEl.contains(e.target) || e.target.closest('.overlay') || e.target.closest('button')) return;
       if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
       else document.exitFullscreen?.().catch(() => {});
-    });
-
-    // ================= dev shortcut: Shift + S =================
-    // Server puts every card home except one neighbouring pair (seated players only).
-    document.addEventListener('keydown', (e) => {
-      if (e.shiftKey && e.key.toLowerCase() === 's') send({ type: 'debug_solve' });
     });
 
     // ================= start =================
