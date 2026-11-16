@@ -364,6 +364,7 @@
     const cardEls = [];
     let selected = null;
     let lapTimers = [];
+    let celebratedRows = new Set();   // rows that already got their flourish this game
     let animationFrameId = null;
     let toastFlash = null, toastTimer;
 
@@ -557,6 +558,7 @@
         resetWinScreen();
         clearSelection();
         game.board.forEach((id, pos) => place(id, pos));
+        markCompleteRows();
         cardEls.forEach(el => el.style.visibility = '');
         if (game.status === 'won') showWinScreen();   // joined after the win
       } else {
@@ -568,6 +570,7 @@
               if (id === pos) flashHome(id);
             }
           });
+          celebrateNewRows();
         }
         if (prev.status === 'playing' && game.status === 'won') victoryLap();
       }
@@ -588,9 +591,38 @@
       place(idB, a);
       if (idA === b) flashHome(idA);
       if (idB === a) flashHome(idB);
+      celebrateNewRows();
       pending = true;
       send({ type: 'move', a, b });
       render();
+    }
+
+    // ================= row flourish =================
+    const isSolved = () => board.every((id, pos) => id === pos);
+    const rowComplete = (r) => {
+      for (let c = 0; c < COLS; c++) if (board[r * COLS + c] !== r * COLS + c) return false;
+      return true;
+    };
+
+    // Rows already complete when a game starts (or when you join) count as celebrated.
+    function markCompleteRows() {
+      celebratedRows = new Set();
+      for (let r = 0; r < ROWS; r++) if (rowComplete(r)) celebratedRows.add(r);
+    }
+
+    // The first time a row is completed in a game, its cards flash left to right
+    // (same flash and spacing as the victory lap). Never twice for the same row,
+    // and never on the winning move: that one gets the full victory lap.
+    function celebrateNewRows() {
+      if (isSolved()) return;
+      const step = LAP_SWEEP_MS / (ROWS * COLS);
+      for (let r = 0; r < ROWS; r++) {
+        if (celebratedRows.has(r) || !rowComplete(r)) continue;
+        celebratedRows.add(r);
+        for (let c = 0; c < COLS; c++) {
+          lapTimers.push(flashCard(board[r * COLS + c], 'lap', LAP_START_MS + c * step));
+        }
+      }
     }
 
     // ================= win =================
