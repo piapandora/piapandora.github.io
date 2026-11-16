@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tic-Tac-Toe: Jimmy vs Pia</title>
+  <title>Tic-Tac-Toe</title>
   <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
   <style>
     :root {
@@ -150,12 +150,12 @@
       pointer-events: none;
       filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
     }
-    .emote.show { animation: emote 10s ease-out forwards; }
+    .emote.show { animation: emote 3.5s ease-out forwards; }
     @keyframes emote {
       0%   { opacity: 0; transform: scale(0.4); }
-      4%   { opacity: 1; transform: scale(1.2); }
-      8%   { transform: scale(1); }
-      85%  { opacity: 1; }
+      8.5% { opacity: 1; transform: scale(1.2); }
+      15.5% { transform: scale(1); }
+      64%  { opacity: 1; }
       100% { opacity: 0; transform: scale(1); }
     }
 
@@ -508,6 +508,28 @@
     leaveButton.addEventListener('click', () => send({ type: 'leave' }));
     rematchButton.addEventListener('click', () => send({ type: 'rematch' }));
     retryButton.addEventListener('click', connect);
+
+    // Double-click anywhere to toggle fullscreen. Buttons and seat panels are
+    // skipped, so fast clicks on cells or emotes never flip the screen.
+    function toggleFullscreen() {
+      const doc = document;
+      const el = doc.documentElement;
+      const isFull = doc.fullscreenElement || doc.webkitFullscreenElement;
+      try {
+        if (!isFull) {
+          const req = el.requestFullscreen || el.webkitRequestFullscreen;
+          if (req) Promise.resolve(req.call(el)).catch(() => {});
+        } else {
+          const exit = doc.exitFullscreen || doc.webkitExitFullscreen;
+          if (exit) Promise.resolve(exit.call(doc)).catch(() => {});
+        }
+      } catch {}
+    }
+
+    document.addEventListener('dblclick', (e) => {
+      if (e.target.closest('button, .panel')) return;
+      toggleFullscreen();
+    });
 
     render();
     connect();
