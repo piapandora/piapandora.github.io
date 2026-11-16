@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rainbow Swap · v04</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+
+    :root {
+      /* one grid cell's height: the wrapper is 16:9 and has 5 rows */
+      --cell-h: calc(min(56.25vw, 100vh) / 5);
+      --jimmy: #3b82f6;
+      --pia: #ef4444;
+    }
+
+    body, html {
+      width: 100vw; height: 100vh; overflow: hidden;
+      background-color: #0b0d12;
+      display: flex; justify-content: center; align-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      touch-action: none;
+      color: #fff;
+    }
+
+    .game-wrapper {
+      position: relative;
+      width: 100vw; height: 56.25vw;
+      max-height: 100vh; max-width: 177.78vh;
+      background-color: #11141d;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 0;
+    }
+
+    /* ---------- player panels (2 cols x 5 rows = 10 squares) ---------- */
+    .panel {
+      --c: #888;
+      grid-row: 1 / 6;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: repeat(5, 1fr);
+      background: color-mix(in srgb, var(--c) 10%, #151927);
+      position: relative;
+      transition: opacity .3s, filter .3s;
+    }
+    #panel-jimmy { grid-column: 1 / 3; --c: var(--jimmy); }
+    #panel-pia   { grid-column: 11 / 13; --c: var(--pia); }
+
+    .panel::after {               /* turn glow */
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 35%, transparent);
+    }
+    .panel.turn::after { animation: turn-glow 1.6s ease-in-out infinite; }
+    @keyframes turn-glow {
+      0%, 100% { box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--c) 45%, transparent); }
+      50%      { box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--c) 85%, transparent),
+                             inset 0 0 calc(var(--cell-h) * .3) color-mix(in srgb, var(--c) 40%, transparent); }
+    }
+    /* seat states: free (nobody), mine (you), taken-by-other is for multiplayer later */
+    .panel.free::after { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 20%, transparent); }
+    .panel.free.claimable { cursor: pointer; }
+    .panel.free.claimable:hover::after { box-shadow: inset 0 0 0 3px var(--c); }
+    .panel.free.claimable:hover .p-avatar .initial { color: var(--c); }
+    .panel.free:not(.claimable) { opacity: .45; }
+    .panel.mine { background: color-mix(in srgb, var(--c) 18%, #151927); }
+
+    .p-name {
+      grid-column: 1 / 3; grid-row: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: calc(var(--cell-h) * .04);
+    }
+    .p-name .name  { font-size: calc(var(--cell-h) * .3); font-weight: 800; color: var(--c); line-height: 1; }
+    .p-name .label { font-size: calc(var(--cell-h) * .11); font-weight: 600; color: #94a3b8;
+                     text-transform: uppercase; letter-spacing: .08em; }
+
+    .p-avatar {
+      grid-column: 1 / 3; grid-row: 2 / 4;
+      position: relative; overflow: hidden;
+      display: grid; place-items: center;
+      background: color-mix(in srgb, var(--c) 18%, #1e2132);
+    }
+    .p-avatar img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; pointer-events: none; -webkit-user-drag: none;
+      opacity: 0; transition: opacity .4s;
+    }
+    .p-avatar .initial {
+      font-size: calc(var(--cell-h) * 1); font-weight: 900; line-height: 1;
+      color: color-mix(in srgb, var(--c) 60%, transparent);
+      transition: color .2s, opacity .4s;
+    }
+    .p-avatar .shade {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(to bottom, rgba(15,23,42,.35) 0%, transparent 25%, transparent 75%, rgba(15,23,42,.5) 100%);
+      opacity: 0; transition: opacity .4s;
+    }
+    /* portrait only when the seat is taken and the image loaded */
+    .panel.seated.has-art .p-avatar img,
+    .panel.seated.has-art .p-avatar .shade { opacity: 1; }
+    .panel.seated.has-art .p-avatar .initial { opacity: 0; }
+    .panel.away .p-avatar img { opacity: .35 !important; filter: grayscale(.7); }
+    .panel.taken:not(.mine) .p-btn { opacity: .35; }
+    .emote {
+      position: absolute; z-index: 2;
+      font-size: calc(var(--cell-h) * .9); line-height: 1;
+      opacity: 0; pointer-events: none;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+    }
+    .emote.show { animation: emote 3s ease-out forwards; }
+    @keyframes emote {
+      /* 3s: pop in 0.24s, settle by 0.42s, hold to ~2.5s, drift up + fade over 0.5s */
+      0%   { opacity: 0; transform: scale(0.4); }
+      8%   { opacity: 1; transform: scale(1.2); }
+      14%  { transform: scale(1); }
+      83%  { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-12%) scale(0.95); }
+    }
+
+    .p-btn {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.07);
+      background: transparent; color: #fff;
+      font-size: calc(var(--cell-h) * .38);
+      cursor: pointer;
+      transition: background-color .15s, transform .1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .p-btn:nth-of-type(odd) { border-right: 1px solid rgba(255,255,255,.07); }
+    .p-btn:hover:not(:disabled)  { background: rgba(255,255,255,.06); }
+    .p-btn:active:not(:disabled) { background: rgba(255,255,255,.12); }
+    .p-btn:disabled { opacity: .35; cursor: default; }
+    .p-btn.leave {
+      font-size: calc(var(--cell-h) * .15); font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+
+    /* ---------- board (middle 8 cols x 5 rows) ---------- */
+    .board {
+      grid-column: 3 / 11; grid-row: 1 / 6;
+      position: relative;
+      background: #0b0d12;
+      touch-action: none;
+    }
+
+    .card {
+      --bg: #444; --fg: #fff;
+      position: absolute;
+      left: 0; top: 0;
+      width: 12.5%; height: 20%;
+      display: grid; place-items: center;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.22), transparent 60%),
+        linear-gradient(160deg, var(--bg), color-mix(in srgb, var(--bg) 70%, #000));
+      border: 1px solid rgba(0, 0, 0, 0.35);
+      color: var(--fg);
+      font-size: calc(var(--cell-h) * .58);
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 2px 6px rgba(0,0,0,.25);
+      cursor: grab;
+      touch-action: none;
+      /* position lives in one transform, so a release is one straight slide */
+      transition: transform .2s cubic-bezier(.25, .8, .25, 1), filter .15s, box-shadow .15s;
+      will-change: transform;
+    }
+
+    /* one-off flash when a card lands in its rightful place */
+    .card::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: #fff; opacity: 0;
+    }
+    .card.flash::after { animation: home-flash .6s ease-out; }
+    .card.lap::after   { animation: home-flash .5s ease-out; }   /* victory-lap flash */
+    @keyframes home-flash {
+      0%   { opacity: 0; }
+      25%  { opacity: .65; }
+      100% { opacity: 0; }
+    }
+
+    .card.dragging {
+      z-index: 20; cursor: grabbing;
+      transition: none;
+      box-shadow: 0 12px 30px rgba(0,0,0,.65);
+    }
+    .card.settling { z-index: 20; }
+    .card.target   { z-index: 15; transition: none; filter: brightness(1.2); }
+    .card.selected { z-index: 10; box-shadow: inset 0 0 0 4px #fff, 0 0 24px rgba(255,255,255,.35); }
+    .card.hint     { filter: brightness(1.18); }
+    .board.locked .card { cursor: default; }
+    .board.empty .card { cursor: default; }
+    .board.empty { opacity: .55; transition: opacity .4s; }
+    .board { transition: opacity .4s; }
+
+    /* ---------- overlays ---------- */
+    /* light, see-through: the solved board stays the star */
+    .overlay {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 55% 32% at center,
+                    rgba(8, 11, 18, .62) 0%, rgba(8, 11, 18, .28) 70%, rgba(8, 11, 18, .18) 100%);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      gap: calc(var(--cell-h) * .3);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.7s ease-in-out;
+      z-index: 30;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .overlay-title {
+      background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: calc(var(--cell-h) * .36);
+      font-weight: 900; letter-spacing: -0.02em; text-align: center;
+      white-space: nowrap;
+      padding: 0 .3em;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .8)) drop-shadow(0 0 30px rgba(245, 158, 11, 0.45));
+      animation: pulseWin 2s infinite ease-in-out;
+    }
+    @keyframes pulseWin { 0%, 100% { transform: scale(0.96); } 50% { transform: scale(1.04); } }
+    .overlay-sub { color: #cbd5e1; font-size: calc(var(--cell-h) * .18); font-weight: 600; }
+    .overlay-btn {
+      padding: calc(var(--cell-h) * .1) calc(var(--cell-h) * .35);
+      background: #f59e0b; color: #0f172a;
+      font-weight: 900; font-size: calc(var(--cell-h) * .2);
+      border: none; border-radius: 16px; cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+      transition: transform .15s, background-color .15s;
+    }
+    .overlay-btn:hover  { background: #fbbf24; transform: scale(1.05); }
+    .overlay-btn:active { background: #d97706; transform: scale(.95); }
+
+    .win-wait { color: #e2e8f0; font-size: calc(var(--cell-h) * .16); font-weight: 700;
+                text-shadow: 0 2px 6px rgba(0,0,0,.8); }
+
+    /* small status pill over the top of the board */
+    .toast {
+      position: absolute; z-index: 40;
+      left: 50%; top: calc(var(--cell-h) * .12);
+      transform: translateX(-50%);
+      padding: calc(var(--cell-h) * .05) calc(var(--cell-h) * .16);
+      background: rgba(15, 23, 42, .88);
+      border: 1px solid #3d405b; border-radius: 999px;
+      color: #fff; font-size: calc(var(--cell-h) * .12); font-weight: 700;
+      white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity .25s;
+    }
+    .toast.show { opacity: 1; }
+    .toast.clickable { pointer-events: auto; cursor: pointer; }
+
+    canvas#confetti {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 31;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-wrapper" id="gameWrapper">
+    <div class="panel free" id="panel-jimmy"></div>
+    <div class="board empty" id="board"></div>
+    <div class="panel free" id="panel-pia"></div>
+
+    <div class="overlay" id="winOverlay">
+      <h1 class="overlay-title">Congratulations, You Win!</h1>
+      <button class="overlay-btn" id="newGameBtn">Play Again</button>
+      <p class="win-wait" id="winWait">Waiting for a player to start a new game…</p>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <canvas id="confetti"></canvas>
+  </div>
+
+  <script>
+    // ================= config =================
+    const SERVER_URL = 'wss://rainbow-swap.beyazkus.workers.dev/ws';
+    // For local testing: index.html?server=ws://localhost:8787/ws
+    const WS_URL = new URLSearchParams(location.search).get('server') || SERVER_URL;
+
+    const ROWS = 5;
+    const COLS = 8;
+    const SWAP_THRESHOLD = 0.4;   // drag this fraction of a cell to commit a swap
+
+    // Victory lap: ~4s from the winning swap to a fully visible win screen.
+    //   0.3s pause -> 40 cards flash 65ms apart (2.6s, 0.5s each)
+    //   -> win screen starts fading at 3.3s (0.7s fade) -> fully in at 4.0s
+    const LAP_START_MS   = 300;
+    const LAP_SWEEP_MS   = 2600;
+    const LAP_OVERLAY_MS = 3300;
+
+    // Row order top -> bottom (rainbow). fg = number colour for contrast.
+    const COLORS = [
+      { name: 'red',    bg: '#ef4444', fg: '#ffffff' },
+      { name: 'yellow', bg: '#facc15', fg: '#3a2c00' },
+      { name: 'green',  bg: '#22c55e', fg: '#ffffff' },
+      { name: 'blue',   bg: '#3b82f6', fg: '#ffffff' },
+      { name: 'purple', bg: '#a855f7', fg: '#ffffff' },
+    ];
+
+    const PLAYERS = {
+      jimmy: { name: 'Jimmy', img: 'jimmy.png' },
+      pia:   { name: 'Pia',   img: 'pia.png' },
+    };
+    const EMOJI = { like: '👍', love: '❤️', care: '🤗' };
+
+    const boardEl    = document.getElementById('board');
+    const winOverlay = document.getElementById('winOverlay');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const winWait    = document.getElementById('winWait');
+    const toastEl    = document.getElementById('toast');
+
+    // Per-tab token: survives a refresh, so you can reclaim your seat within 20s.
+    let token;
+    try {
+      token = sessionStorage.getItem('rainbow-swap-token');
+      if (!token) { token = crypto.randomUUID(); sessionStorage.setItem('rainbow-swap-token', token); }
+    } catch {
+      token = crypto.randomUUID();
+    }
+
+    // ================= state =================
+    let socket;
+    let connected = false;
+    let full = false;
+    let me = null;          // 'jimmy' | 'pia' | null
+    let seats = {};         // { jimmy: 'free' | 'taken' | 'away', pia: ... }
+    let game = null;        // { board, status, turn, round } from the server
+    let pending = false;    // a move is on its way to the server
+
+    // A card's id is its home position: id = row * COLS + (number - 1)
+    let board = [];         // what we're showing: board[pos] = card id
+    let posOf = [];
+    const cardEls = [];
+    let selected = null;
+    let lapTimers = [];
+    let animationFrameId = null;
+    let toastFlash = null, toastTimer;
+
+    const RETRY_MIN = 2000, RETRY_MAX = 60000;
+    let retryDelay = RETRY_MIN;
+
+    // ================= helpers =================
+    const rowOf = (p) => Math.floor(p / COLS);
+    const colOf = (p) => p % COLS;
+    const isNeighbour = (a, b) =>
+      Math.abs(rowOf(a) - rowOf(b)) + Math.abs(colOf(a) - colOf(b)) === 1;
+    const neighboursOf = (p) => {
+      const out = [];
+      if (rowOf(p) > 0)        out.push(p - COLS);
+      if (rowOf(p) < ROWS - 1) out.push(p + COLS);
+      if (colOf(p) > 0)        out.push(p - 1);
+      if (colOf(p) < COLS - 1) out.push(p + 1);
+      return out;
+    };
+    const seatOf = (key) => seats[key] || 'free';
+
+    const canMove = () =>
+      connected && !!me && !!game && game.status === 'playing' && game.turn === me && !pending;
+
+    // translate % is relative to the card's own size (= one cell)
+    const cellTransform = (pos, dx = 0, dy = 0) =>
+      `translate(calc(${colOf(pos) * 100}% + ${dx}px), calc(${rowOf(pos) * 100}% + ${dy}px))`;
+
+    function place(id, pos) {
+      board[pos] = id;
+      posOf[id] = pos;
+      cardEls[id].style.transform = cellTransform(pos);
+    }
+
+    function flashCard(id, cls = 'flash', delay = 0) {
+      const el = cardEls[id];
+      const t = setTimeout(() => {
+        el.classList.remove('flash', 'lap');
+        void el.offsetWidth;
+        el.classList.add(cls);
+      }, delay);
+      return t;
+    }
+    const flashHome = (id) => flashCard(id, 'flash', 180);   // after the slide lands
+
+    // ================= cards (built once) =================
+    function buildCards() {
+      for (let id = 0; id < ROWS * COLS; id++) {
+        const color = COLORS[rowOf(id)];
+        const num = colOf(id) + 1;
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.dataset.id = id;
+        el.style.setProperty('--bg', color.bg);
+        el.style.setProperty('--fg', color.fg);
+        el.setAttribute('aria-label', `${color.name} ${num}`);
+        el.textContent = num;
+        el.style.visibility = 'hidden';            // until the first state arrives
+        el.addEventListener('pointerdown', onPointerDown);
+        el.addEventListener('animationend', () => el.classList.remove('flash', 'lap'));
+        boardEl.appendChild(el);
+        cardEls.push(el);
+        place(id, id);
+      }
+    }
+
+    // ================= panels =================
+    function buildPanel(key) {
+      const p = PLAYERS[key];
+      const panel = document.getElementById(`panel-${key}`);
+      panel.innerHTML = `
+        <div class="p-name">
+          <div class="name">${p.name}</div>
+          <div class="label"></div>
+        </div>
+        <div class="p-avatar">
+          <span class="initial">${p.name[0]}</span>
+          <img src="${p.img}" alt="" draggable="false">
+          <div class="shade"></div>
+          <div class="emote"></div>
+        </div>
+        <button class="p-btn" data-emote="like" title="Like">${EMOJI.like}</button>
+        <button class="p-btn" data-emote="love" title="Love">${EMOJI.love}</button>
+        <button class="p-btn" data-emote="care" title="Care">${EMOJI.care}</button>
+        <button class="p-btn leave" data-leave>Leave</button>`;
+
+      const img = panel.querySelector('img');
+      img.addEventListener('load', () => panel.classList.add('has-art'));
+      img.addEventListener('error', () => img.remove());
+
+      panel.querySelectorAll('[data-emote]').forEach(b =>
+        b.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'emote', emote: b.dataset.emote }); }));
+      panel.querySelector('[data-leave]').addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'leave' }); });
+      panel.addEventListener('click', () => {
+        if (!me && seatOf(key) === 'free') send({ type: 'claim', char: key });
+      });
+    }
+
+    function showEmote(key, emote) {
+      const el = document.querySelector(`#panel-${key} .emote`);
+      if (!el || !EMOJI[emote]) return;
+      el.textContent = EMOJI[emote];
+      el.classList.remove('show');
+      void el.offsetWidth;
+      el.classList.add('show');
+    }
+
+    // ================= render =================
+    function render() {
+      const playing = !!game && game.status === 'playing';
+
+      for (const key of Object.keys(PLAYERS)) {
+        const panel = document.getElementById(`panel-${key}`);
+        const state = seatOf(key);
+        const mine = me === key;
+        const taken = state !== 'free';
+        const away = state === 'away';
+        const turn = playing && game.turn === key;
+
+        panel.classList.toggle('mine', mine);
+        panel.classList.toggle('seated', taken);
+        panel.classList.toggle('taken', taken);
+        panel.classList.toggle('away', away);
+        panel.classList.toggle('free', !taken);
+        panel.classList.toggle('claimable', connected && !me && !taken);
+        panel.classList.toggle('turn', turn);
+
+        let label;
+        if (mine)       label = turn && seatOf(other(key)) === 'taken' ? 'You · your turn' : 'You';
+        else if (away)  label = 'Away… (seat held)';
+        else if (taken) label = turn && me ? 'Their turn' : 'Playing';
+        else            label = me || !connected ? 'Free' : 'Free · click to play';
+        panel.querySelector('.label').textContent = label;
+
+        panel.querySelectorAll('.p-btn').forEach(b => b.disabled = !(mine && connected));
+      }
+
+      // dim the board for watchers, but never over a finished rainbow
+      boardEl.classList.toggle('empty', !me && !(game && game.status === 'won'));
+      boardEl.classList.toggle('locked', !canMove());
+
+      newGameBtn.style.display = me ? '' : 'none';
+      winWait.style.display = me ? 'none' : '';
+
+      renderToast();
+    }
+
+    const other = (key) => (key === 'jimmy' ? 'pia' : 'jimmy');
+
+    function renderToast() {
+      let text = '';
+      let clickable = false;
+      if (full)            { text = 'The table is full right now (20 max) · click to retry'; clickable = true; }
+      else if (toastFlash) { text = toastFlash; }
+      else if (!connected) { text = 'Connecting…'; }
+      else if (game && game.status === 'playing' && me && game.turn && game.turn !== me) {
+        text = seatOf(game.turn) === 'away'
+          ? `${PLAYERS[game.turn].name} disconnected, waiting up to 20s…`
+          : `${PLAYERS[game.turn].name}'s turn`;
+      }
+      else if (!me && seatOf('jimmy') !== 'free' && seatOf('pia') !== 'free') { text = 'Watching'; }
+      toastEl.textContent = text;
+      toastEl.classList.toggle('show', !!text);
+      toastEl.classList.toggle('clickable', clickable);
+    }
+
+    function showToast(text) {
+      toastFlash = text;
+      renderToast();
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toastFlash = null; renderToast(); }, 2000);
+    }
+
+    // ================= applying server state =================
+    function applyState(msg) {
+      const prev = game;
+      seats = msg.seats;
+      game = msg.game;
+      pending = false;
+
+      const newRound = !prev || prev.round !== game.round;
+      const changed = game.board.some((id, pos) => board[pos] !== id);
+      if (drag && (newRound || changed)) endDrag(false);
+
+      if (newRound) {
+        resetWinScreen();
+        clearSelection();
+        game.board.forEach((id, pos) => place(id, pos));
+        cardEls.forEach(el => el.style.visibility = '');
+        if (game.status === 'won') showWinScreen();   // joined after the win
+      } else {
+        if (changed) {
+          clearSelection();
+          game.board.forEach((id, pos) => {
+            if (board[pos] !== id) {
+              place(id, pos);
+              if (id === pos) flashHome(id);
+            }
+          });
+        }
+        if (prev.status === 'playing' && game.status === 'won') victoryLap();
+      }
+      render();
+    }
+
+    // Undo an optimistic move the server refused.
+    function resync() {
+      pending = false;
+      if (game) game.board.forEach((id, pos) => { if (board[pos] !== id) place(id, pos); });
+      render();
+    }
+
+    // ================= moves =================
+    function doMove(a, b) {
+      const idA = board[a], idB = board[b];
+      place(idA, b);                  // optimistic: slide right away
+      place(idB, a);
+      if (idA === b) flashHome(idA);
+      if (idB === a) flashHome(idB);
+      pending = true;
+      send({ type: 'move', a, b });
+      render();
+    }
+
+    // ================= win =================
+    function victoryLap() {
+      clearSelection();
+      const total = ROWS * COLS;
+      const step = LAP_SWEEP_MS / total;
+      for (let pos = 0; pos < total; pos++) {
+        lapTimers.push(flashCard(board[pos], 'lap', LAP_START_MS + pos * step));
+      }
+      lapTimers.push(setTimeout(showWinScreen, LAP_OVERLAY_MS));
+    }
+
+    function showWinScreen() {
+      winOverlay.classList.add('show');
+      startConfetti();
+    }
+
+    function resetWinScreen() {
+      lapTimers.forEach(clearTimeout);
+      lapTimers = [];
+      winOverlay.classList.remove('show');
+      stopConfetti();
+    }
+
+    // ================= tap-to-select =================
+    function clearSelection() {
+      selected = null;
+      cardEls.forEach(el => el.classList.remove('selected', 'hint'));
+    }
+
+    function select(pos) {
+      clearSelection();
+      selected = pos;
+      cardEls[board[pos]].classList.add('selected');
+      neighboursOf(pos).forEach(n => cardEls[board[n]].classList.add('hint'));
+    }
+
+    function onTap(pos) {
+      if (!canMove()) return;
+      if (selected === null)  return select(pos);
+      if (selected === pos)   return clearSelection();
+      if (isNeighbour(selected, pos)) {
+        const from = selected;
+        clearSelection();
+        return doMove(from, pos);
+      }
+      select(pos);
+    }
+
+    // ================= drag (one axis, at most one cell) =================
+    let drag = null;
+
+    function onPointerDown(e) {
+      if (drag || !canMove()) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      const el = e.currentTarget;
+      const id = +el.dataset.id;
+      const rect = boardEl.getBoundingClientRect();
+      drag = {
+        el, pos: posOf[id],
+        x0: e.clientX, y0: e.clientY,
+        cw: rect.width / COLS, ch: rect.height / ROWS,
+        moving: false, target: null, pointerId: e.pointerId,
+      };
+      el.setPointerCapture(e.pointerId);
+      el.addEventListener('pointermove', onPointerMove);
+      el.addEventListener('pointerup', onPointerUp);
+      el.addEventListener('pointercancel', onPointerCancel);
+    }
+
+    function setTarget(pos) {
+      if (drag.target === pos) return;
+      if (drag.target !== null) {
+        const old = cardEls[board[drag.target]];
+        old.classList.remove('target');
+        old.style.transform = cellTransform(drag.target);
+      }
+      drag.target = pos;
+      if (pos !== null) cardEls[board[pos]].classList.add('target');
+    }
+
+    function onPointerMove(e) {
+      if (!drag) return;
+      let dx = e.clientX - drag.x0;
+      let dy = e.clientY - drag.y0;
+
+      if (!drag.moving) {
+        if (Math.hypot(dx, dy) < 6) return;
+        drag.moving = true;
+        clearSelection();
+        drag.el.classList.add('dragging');
+      }
+
+      const r = rowOf(drag.pos), c = colOf(drag.pos);
+      let dir = null, frac = 0;
+
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        dy = 0;
+        if ((dx < 0 && c === 0) || (dx > 0 && c === COLS - 1)) dx = 0;
+        dx = Math.max(-drag.cw, Math.min(drag.cw, dx));
+        frac = Math.abs(dx) / drag.cw;
+        if (dx !== 0) dir = dx < 0 ? -1 : 1;
+      } else {
+        dx = 0;
+        if ((dy < 0 && r === 0) || (dy > 0 && r === ROWS - 1)) dy = 0;
+        dy = Math.max(-drag.ch, Math.min(drag.ch, dy));
+        frac = Math.abs(dy) / drag.ch;
+        if (dy !== 0) dir = dy < 0 ? -COLS : COLS;
+      }
+
+      drag.el.style.transform = cellTransform(drag.pos, dx, dy);
+
+      const targetPos = (dir !== null && frac >= SWAP_THRESHOLD) ? drag.pos + dir : null;
+      setTarget(targetPos);
+      if (targetPos !== null) {
+        cardEls[board[targetPos]].style.transform = cellTransform(targetPos, -dx, -dy);
+      }
+    }
+
+    function endDrag(commit) {
+      const d = drag;
+      drag = null;
+      d.el.removeEventListener('pointermove', onPointerMove);
+      d.el.removeEventListener('pointerup', onPointerUp);
+      d.el.removeEventListener('pointercancel', onPointerCancel);
+      try { d.el.releasePointerCapture(d.pointerId); } catch {}
+
+      if (!d.moving) {                 // it was a tap
+        if (commit) onTap(d.pos);
+        return;
+      }
+
+      const target = d.target;
+      const targetEl = target !== null ? cardEls[board[target]] : null;
+
+      d.el.classList.remove('dragging');
+      d.el.classList.add('settling');
+      setTimeout(() => d.el.classList.remove('settling'), 220);
+      if (targetEl) targetEl.classList.remove('target');
+      void d.el.offsetWidth;
+
+      if (commit && target !== null && canMove()) {
+        doMove(d.pos, target);
+      } else {
+        d.el.style.transform = cellTransform(d.pos);
+        if (targetEl) targetEl.style.transform = cellTransform(target);
+      }
+    }
+
+    const onPointerUp = () => endDrag(true);
+    const onPointerCancel = () => endDrag(false);
+
+    // ================= networking =================
+    function send(obj) {
+      if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(obj));
+    }
+
+    function connect() {
+      full = false;
+      render();
+      socket = new WebSocket(`${WS_URL}?t=${encodeURIComponent(token)}`);
+
+      socket.onopen = () => { connected = true; retryDelay = RETRY_MIN; render(); };
+
+      socket.onmessage = (e) => {
+        let msg;
+        try { msg = JSON.parse(e.data); } catch { return; }
+        switch (msg.type) {
+          case 'state': applyState(msg); break;
+          case 'you':   me = msg.char; if (!me) clearSelection(); render(); break;
+          case 'emote': showEmote(msg.char, msg.emote); break;
+          case 'full':  full = true; render(); break;
+          case 'error':
+            if (msg.reason === 'taken')              showToast('Someone just took that seat.');
+            else if (msg.reason === 'slow_down')     showToast('Easy there, one emote per second.');
+            else if (msg.reason === 'not_your_turn') { showToast("Hold on, it's not your turn."); resync(); }
+            else if (msg.reason === 'bad_move' || msg.reason === 'game_over' || msg.reason === 'not_seated') resync();
+            break;
+        }
+      };
+
+      socket.onclose = (e) => {
+        connected = false;
+        me = null;
+        pending = false;
+        if (drag) endDrag(false);
+        clearSelection();
+        document.querySelectorAll('.emote').forEach(el => el.classList.remove('show'));
+
+        if (e.code === 4000 || full) { full = true; render(); return; }
+
+        render();
+        const wait = retryDelay + Math.random() * 1000;
+        retryDelay = Math.min(retryDelay * 2, RETRY_MAX);
+        setTimeout(connect, wait);
+      };
+    }
+
+    toastEl.addEventListener('click', () => { if (full) connect(); });
+    newGameBtn.addEventListener('click', () => send({ type: 'newgame' }));
+
+    // ================= confetti (from the memory game) =================
+    function stopConfetti() {
+      if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+      const canvas = document.getElementById('confetti');
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function startConfetti() {
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      const wrap = document.getElementById('gameWrapper');
+      canvas.width = wrap.offsetWidth;
+      canvas.height = wrap.offsetHeight;
+
+      const palette = COLORS.map(c => c.bg);
+      const particles = Array.from({ length: 180 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        size: Math.random() * 8 + 4,
+        speedY: Math.random() * 4 + 2,
+        speedX: Math.random() * 3 - 1.5,
+        rotation: Math.random() * 360,
+        rotSpeed: Math.random() * 6 - 3,
+      }));
+
+      function frame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.speedY; p.x += p.speedX; p.rotation += p.rotSpeed;
+          if (p.y > canvas.height) p.y = -10;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+        if (winOverlay.classList.contains('show')) animationFrameId = requestAnimationFrame(frame);
+      }
+      frame();
+    }
+
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('confetti');
+      const wrap = document.getElementById('gameWrapper');
+      canvas.width = wrap.offsetWidth;
+      canvas.height = wrap.offsetHeight;
+    });
+
+    // ================= fullscreen: double-click a player panel =================
+    document.addEventListener('dblclick', (e) => {
+      if (boardEl.contains(e.target) || e.target.closest('.overlay') || e.target.closest('button')) return;
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+      else document.exitFullscreen?.().catch(() => {});
+    });
+
+    // ================= dev shortcut: Shift + S =================
+    // Server puts every card home except one neighbouring pair (seated players only).
+    document.addEventListener('keydown', (e) => {
+      if (e.shiftKey && e.key.toLowerCase() === 's') send({ type: 'debug_solve' });
+    });
+
+    // ================= start =================
+    buildPanel('jimmy');
+    buildPanel('pia');
+    buildCards();
+    render();
+    connect();
+  </script>
+</body>
+</html>
