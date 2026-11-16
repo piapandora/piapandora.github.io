@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tic-Tac-Toe: Jimmy vs Pia</title>
+  <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
+  <style>
+    :root {
+      --jimmy: #3b82f6;
+      --pia: #ef4444;
+    }
+
+    body {
+      background-color: #0f172a;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      user-select: none;
+    }
+
+    .app-container {
+      width: 920px;
+      max-width: calc(100vw - 32px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 0;
+    }
+
+    /* Jimmy | board | Pia  (stacks on small screens) */
+    .stage {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      grid-template-areas: "jimmy board pia";
+      gap: 16px;
+      align-items: center;
+    }
+    #panel-jimmy { grid-area: jimmy; }
+    #panel-pia   { grid-area: pia; }
+    #board       { grid-area: board; }
+
+    @media (max-width: 700px) {
+      .stage {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas: "jimmy pia" "board board";
+      }
+    }
+
+    /* --- player panels ------------------------------------------------------ */
+    .panel {
+      --c: #888;
+      position: relative;
+      aspect-ratio: 3 / 4;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--c) 12%, #1e2132);
+      border: 2px solid color-mix(in srgb, var(--c) 35%, transparent);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px;
+      box-sizing: border-box;
+      overflow: hidden;
+      transition: border-color .2s, background .2s, box-shadow .3s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .panel.free { cursor: pointer; }
+    .panel.free:hover { border-color: var(--c); }
+    .panel.mine {
+      border-color: var(--c);
+      background: color-mix(in srgb, var(--c) 24%, #1e2132);
+    }
+    .panel.turn {
+      border-color: var(--c);
+      animation: turn-glow 1.6s ease-in-out infinite;
+    }
+    @keyframes turn-glow {
+      0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 45%, transparent), 0 8px 24px rgba(0,0,0,.5); }
+      50%      { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 80%, transparent), 0 0 32px color-mix(in srgb, var(--c) 50%, transparent); }
+    }
+
+    .portrait {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity .4s;
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+    .shade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(15,23,42,.7) 0%, transparent 30%, transparent 70%, rgba(15,23,42,.8) 100%);
+      opacity: 0;
+      transition: opacity .4s;
+      pointer-events: none;
+    }
+    .panel.has-art.taken .portrait,
+    .panel.has-art.mine .portrait,
+    .panel.has-art.taken .shade,
+    .panel.has-art.mine .shade { opacity: 1; }
+    .panel.has-art.taken.away .portrait { opacity: 0.35; filter: grayscale(0.6); }
+
+    .head, .emote, .label { position: relative; z-index: 1; }
+
+    .head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      align-self: stretch;
+    }
+    .mark-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--c);
+      color: #0f172a;
+      font-weight: 900;
+      font-size: 20px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .panel.free .mark-badge { opacity: 0.4; }
+    .name { font-size: 18px; font-weight: 700; }
+    .score { font-size: 13px; color: #cbd5e1; }
+
+    .label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .emote {
+      font-size: clamp(44px, 9vw, 84px);
+      line-height: 1;
+      opacity: 0;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+    }
+    .emote.show { animation: emote 10s ease-out forwards; }
+    @keyframes emote {
+      0%   { opacity: 0; transform: scale(0.4); }
+      4%   { opacity: 1; transform: scale(1.2); }
+      8%   { transform: scale(1); }
+      85%  { opacity: 1; }
+      100% { opacity: 0; transform: scale(1); }
+    }
+
+    /* --- board -------------------------------------------------------------- */
+    .board {
+      aspect-ratio: 1 / 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 8px;
+      padding: 8px;
+      background-color: #252738;
+      border: 1px solid #3d405b;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
+    }
+    .cell {
+      border: none;
+      border-radius: 8px;
+      background-color: #1a1d2e;
+      color: #fff;
+      font: 900 clamp(40px, 8vw, 88px) / 1 system-ui, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      cursor: default;
+      transition: background-color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cell.x { color: var(--jimmy); }
+    .cell.o { color: var(--pia); }
+    .cell.placed { animation: pop .25s ease-out; }
+    @keyframes pop {
+      0%   { transform: scale(0.3); opacity: 0; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    .cell:not(:disabled) { cursor: pointer; }
+    .cell:not(:disabled):hover { background-color: #2a2e45; }
+    .cell.win.x { background-color: color-mix(in srgb, var(--jimmy) 28%, #1a1d2e); }
+    .cell.win.o { background-color: color-mix(in srgb, var(--pia) 28%, #1a1d2e); }
+    .board.over .cell:not(.win) { opacity: 0.45; }
+
+    /* --- controls ----------------------------------------------------------- */
+    .bar { display: flex; gap: 8px; }
+    .bar button {
+      flex: 1;
+      padding: 12px;
+      font-size: 24px;
+      background-color: #252738;
+      color: #fff;
+      border: 1px solid #3d405b;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .bar button:hover:not(:disabled) { background-color: #2f3248; }
+    .bar button:disabled { opacity: 0.35; cursor: default; }
+    .bar #leave { flex: 0 0 auto; font-size: 15px; font-weight: 700; padding: 12px 18px; }
+
+    .status {
+      padding: 14px 16px;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      background-color: #252738;
+      border: 1px solid #3d405b;
+      border-radius: 6px;
+    }
+
+    .action {
+      display: none;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      background-color: #3d405b;
+      color: #fff;
+      border: 1px solid #565a80;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .action.visible { display: block; }
+    .action:disabled { opacity: 0.6; cursor: default; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="stage">
+      <div class="panel free" id="panel-jimmy"></div>
+      <div class="board" id="board"></div>
+      <div class="panel free" id="panel-pia"></div>
+    </div>
+
+    <div class="bar">
+      <button data-emote="like" title="Like">👍</button>
+      <button data-emote="love" title="Love">❤️</button>
+      <button data-emote="care" title="Care">🤗</button>
+      <button id="leave">Leave</button>
+    </div>
+
+    <div class="status" id="status">Connecting…</div>
+    <button class="action" id="rematch">Rematch</button>
+    <button class="action" id="retry">Try again</button>
+  </div>
+
+  <script>
+    const SERVER_URL = 'wss://tic-tac-toe.beyazkus.workers.dev/ws';
+
+    const CHARS = {
+      jimmy: { name: 'Jimmy', mark: 'X', color: '#3b82f6', img: 'jimmy.png' },
+      pia:   { name: 'Pia',   mark: 'O', color: '#ef4444', img: 'pia.png' },
+    };
+    const MARK_TO_CHAR = { X: 'jimmy', O: 'pia' };
+    const EMOJI = { like: '👍', love: '❤️', care: '🤗' };
+
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const emoteButtons = document.querySelectorAll('[data-emote]');
+    const leaveButton = document.getElementById('leave');
+    const rematchButton = document.getElementById('rematch');
+    const retryButton = document.getElementById('retry');
+
+    // Per-tab token: survives a refresh, so you can reclaim your seat within 20s.
+    let token;
+    try {
+      token = sessionStorage.getItem('ttt-token');
+      if (!token) { token = crypto.randomUUID(); sessionStorage.setItem('ttt-token', token); }
+    } catch {
+      token = crypto.randomUUID();
+    }
+
+    const RETRY_MIN = 2000, RETRY_MAX = 60000;
+    let retryDelay = RETRY_MIN;
+
+    let socket;
+    let connected = false;
+    let full = false;
+    let me = null;              // 'jimmy' | 'pia' | null
+    let seats = {};             // { jimmy: 'free' | 'taken' | 'away', pia: ... }
+    let game = null;            // the Room's game object
+    let lastBoard = Array(9).fill(null);
+    let flash = null;
+    let flashTimer;
+
+    const panels = {};
+    const cells = [];
+
+    // --- build the panels ---------------------------------------------------
+    for (const [id, c] of Object.entries(CHARS)) {
+      const p = document.getElementById(`panel-${id}`);
+      p.style.setProperty('--c', c.color);
+      p.innerHTML = `
+        <img class="portrait" src="${c.img}" alt="" draggable="false">
+        <div class="shade"></div>
+        <div class="head">
+          <div class="mark-badge">${c.mark}</div>
+          <div>
+            <div class="name">${c.name}</div>
+            <div class="score">0 wins</div>
+          </div>
+        </div>
+        <div class="emote"></div>
+        <div class="label">Free</div>`;
+      const img = p.querySelector('.portrait');
+      img.addEventListener('load', () => p.classList.add('has-art'));
+      img.addEventListener('error', () => img.remove());
+      p.addEventListener('click', () => claim(id));
+      panels[id] = p;
+    }
+
+    // --- build the board ----------------------------------------------------
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('button');
+      cell.className = 'cell';
+      cell.disabled = true;
+      cell.setAttribute('aria-label', `Cell ${i + 1}`);
+      cell.addEventListener('click', () => send({ type: 'move', cell: i }));
+      boardEl.appendChild(cell);
+      cells.push(cell);
+    }
+
+    // --- helpers -------------------------------------------------------------
+    const nameOf = (mark) => CHARS[MARK_TO_CHAR[mark]].name;
+    const otherMark = (mark) => (mark === 'X' ? 'O' : 'X');
+    const seatOf = (char) => seats[char] || 'free';
+    const isFree = (char) => seatOf(char) === 'free';
+
+    // --- rendering ----------------------------------------------------------
+    function render() {
+      const myMark = me ? CHARS[me].mark : null;
+      const g = game;
+
+      // Panels
+      for (const [id, c] of Object.entries(CHARS)) {
+        const p = panels[id];
+        const state = seatOf(id);
+        const mine = me === id;
+        const taken = state !== 'free';
+        const away = state === 'away';
+        p.classList.toggle('mine', mine);
+        p.classList.toggle('taken', taken && !mine);
+        p.classList.toggle('away', away && !mine);
+        p.classList.toggle('free', !taken);
+        p.classList.toggle('turn', !!g && g.status === 'playing' && g.turn === c.mark);
+        p.querySelector('.label').textContent =
+          mine ? 'You' : away ? 'Away… (seat held)' : taken ? 'Playing' : 'Free · click to play';
+        const wins = g ? g.score[c.mark] : 0;
+        p.querySelector('.score').textContent = `${wins} ${wins === 1 ? 'win' : 'wins'}`;
+      }
+
+      // Board
+      const board = g ? g.board : Array(9).fill(null);
+      const canPlay = connected && !!me && !!g && g.status === 'playing' && g.turn === myMark;
+      cells.forEach((cell, i) => {
+        const v = board[i];
+        cell.textContent = v || '';
+        cell.classList.toggle('x', v === 'X');
+        cell.classList.toggle('o', v === 'O');
+        cell.classList.toggle('win', !!(g && g.line && g.line.includes(i)));
+        if (v && !lastBoard[i]) {
+          cell.classList.remove('placed');
+          void cell.offsetWidth;
+          cell.classList.add('placed');
+        }
+        cell.disabled = !(canPlay && !v);
+      });
+      lastBoard = board.slice();
+      boardEl.classList.toggle('over', !!g && g.status === 'over' && !!g.line);
+
+      // Buttons
+      emoteButtons.forEach(b => b.disabled = !me);
+      leaveButton.disabled = !me;
+      retryButton.classList.toggle('visible', full);
+
+      const showRematch = !full && connected && !!me && !!g && g.status === 'over';
+      rematchButton.classList.toggle('visible', showRematch);
+      if (showRematch) {
+        const asked = g.rematch[myMark];
+        rematchButton.disabled = asked;
+        rematchButton.textContent = asked ? 'Waiting for your opponent…' : 'Rematch';
+      }
+
+      statusEl.textContent = statusText(myMark);
+    }
+
+    function statusText(myMark) {
+      const g = game;
+      if (full) return 'The table is full right now (20 watchers max).';
+      if (flash) return flash;
+      if (!connected || !g) return 'Connecting…';
+
+      if (g.status === 'waiting') {
+        if (me) return 'Waiting for an opponent…';
+        if (isFree('jimmy') || isFree('pia')) return 'Pick Jimmy or Pia to play, or just watch.';
+        return 'Waiting for the game to start…';
+      }
+
+      if (g.status === 'playing') {
+        const turnChar = MARK_TO_CHAR[g.turn];
+        if (seatOf(turnChar) === 'away') return `${nameOf(g.turn)} disconnected, waiting up to 20s…`;
+        if (me && g.turn === myMark) return 'Your turn!';
+        if (me) return `${nameOf(g.turn)} is thinking…`;
+        return `${nameOf(g.turn)}'s turn.`;
+      }
+
+      // over
+      let result;
+      if (g.winner === 'draw') result = "It's a draw!";
+      else if (me) result = g.winner === myMark ? 'You win!' : 'You lose.';
+      else result = `${nameOf(g.winner)} wins!`;
+      if (g.reason === 'forfeit') result += ' (by forfeit)';
+      return `${result} ${nameOf(otherMark(g.starter))} starts the next game.`;
+    }
+
+    function showFlash(text) {
+      flash = text;
+      render();
+      clearTimeout(flashTimer);
+      flashTimer = setTimeout(() => { flash = null; render(); }, 2000);
+    }
+
+    function showEmote(char, emote) {
+      const el = panels[char]?.querySelector('.emote');
+      if (!el || !EMOJI[emote]) return;
+      el.textContent = EMOJI[emote];
+      el.classList.remove('show');
+      void el.offsetWidth;
+      el.classList.add('show');
+    }
+
+    function clearEmotes() {
+      document.querySelectorAll('.emote').forEach(el => el.classList.remove('show'));
+    }
+
+    // --- networking ---------------------------------------------------------
+    function send(obj) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(obj));
+      }
+    }
+
+    function claim(char) {
+      if (!me && isFree(char)) send({ type: 'claim', char });
+    }
+
+    function connect() {
+      full = false;
+      render();
+      socket = new WebSocket(`${SERVER_URL}?t=${encodeURIComponent(token)}`);
+
+      socket.onopen = () => { connected = true; retryDelay = RETRY_MIN; render(); };
+
+      socket.onmessage = (e) => {
+        let msg;
+        try { msg = JSON.parse(e.data); } catch { return; }
+
+        switch (msg.type) {
+          case 'state': seats = msg.seats; game = msg.game; render(); break;
+          case 'you':   me = msg.char; render(); break;
+          case 'emote': showEmote(msg.char, msg.emote); break;
+          case 'full':  full = true; render(); break;
+          case 'error':
+            if (msg.reason === 'taken') showFlash('Someone just took that seat.');
+            else if (msg.reason === 'slow_down') showFlash('Easy there, one emote per second.');
+            else if (msg.reason === 'not_your_turn') showFlash("Hold on, it's not your turn.");
+            break;
+        }
+      };
+
+      socket.onclose = (e) => {
+        connected = false;
+        me = null;
+        clearEmotes();
+
+        if (e.code === 4000 || full) {
+          full = true;
+          render();
+          return;
+        }
+
+        render();
+        const wait = retryDelay + Math.random() * 1000;
+        retryDelay = Math.min(retryDelay * 2, RETRY_MAX);
+        setTimeout(connect, wait);
+      };
+    }
+
+    // --- input --------------------------------------------------------------
+    emoteButtons.forEach(b => b.addEventListener('click', () => send({ type: 'emote', emote: b.dataset.emote })));
+    leaveButton.addEventListener('click', () => send({ type: 'leave' }));
+    rematchButton.addEventListener('click', () => send({ type: 'rematch' }));
+    retryButton.addEventListener('click', connect);
+
+    render();
+    connect();
+  </script>
+</body>
+</html>
