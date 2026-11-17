@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GibberLink Encoder</title>
+<title>GibberLink Translator</title>
 <link rel="icon" type="image/png" href="https://www.piapandora.com/tickletrio/misc/icons8-feather-55.png">
 <style>
   :root{--bg:#0d0f12;--panel:#161a20;--line:#262c35;--text:#e8ecf1;--muted:#8b95a3;--accent:#5eead4;--accent2:#22d3ee;--err:#f87171}
@@ -12,8 +12,12 @@
   main{width:100%;max-width:680px}
   h1{font:600 26px/1.2 ui-monospace,"SF Mono",Menlo,monospace;margin:0 0 6px;letter-spacing:-.5px}
   h1 span{color:var(--accent)}
-  .sub{color:var(--muted);margin:0 0 24px}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px;width:max-content}
+  .tab{background:transparent;color:var(--muted);padding:8px 20px;border-radius:9px}
+  .tab.on{background:#232a34;color:var(--text)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .pane[hidden]{display:none}
   label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
   textarea{width:100%;min-height:120px;resize:vertical;background:#0b0d10;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;font:15px/1.5 ui-monospace,Menlo,monospace}
   textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
@@ -26,13 +30,24 @@
   button:disabled{opacity:.4;cursor:not-allowed}
   .primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04201c}
   .ghost{background:#202630;color:var(--text);border:1px solid var(--line)}
-  canvas{width:100%;height:90px;display:block;background:#0b0d10;border:1px solid var(--line);border-radius:10px;margin-top:16px}
+  .viz{position:relative;margin-top:16px}
+  .viz canvas{width:100%;display:block;background:#0b0d10;border:1px solid var(--line);border-radius:10px}
+  .viz .wave{height:70px}
+  .viz .spec{height:150px;margin-top:8px}
+  .viz .head{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;box-shadow:0 0 8px #5eead4;pointer-events:none;display:none}
+  .speclabel{font-size:11px;color:var(--muted);margin-top:4px;display:flex;justify-content:space-between}
   .out{margin-top:16px;display:none}
   .out.show{display:block}
   .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
   .status{font-size:13px;color:var(--muted);margin-top:10px;min-height:20px}
   .status.err{color:var(--err)}
   .note{font-size:12px;color:#fbbf24;margin-top:8px}
+  .drop{text-transform:none;letter-spacing:normal;font-size:14px;margin:0;border:1.5px dashed #3a4350;border-radius:12px;padding:30px 16px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .2s,background .2s}
+  .drop:hover,.drop.over{border-color:var(--accent);background:#0f1418}
+  .drop strong{color:var(--text)}
+  .drop input{display:none}
+  .result{background:#0b0d10;border:1px solid var(--line);border-radius:10px;padding:14px;font:16px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;min-height:52px}
+  .result.empty{color:var(--muted);font-family:inherit;font-size:14px}
   details{margin-top:22px;color:var(--muted);font-size:13px}
   summary{cursor:pointer;color:var(--text)}
   code{font-family:ui-monospace,Menlo,monospace;color:var(--accent)}
@@ -40,10 +55,16 @@
 </head>
 <body>
 <main>
-  <h1>Gibber<span>Link</span> Encoder</h1>
-  <p class="sub">Type a message and turn it into the beeping sound AI agents use in GibberLink (the ggwave data-over-sound protocol).</p>
+  <h1>Gibber<span>Link</span> Translator</h1>
+  <p class="sub">Turn text into the beeping sound AI agents use in GibberLink (the ggwave data-over-sound protocol), or decode a GibberLink sound back into text.</p>
 
-  <div class="card">
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-tab="enc" role="tab">Encode</button>
+    <button class="tab" data-tab="dec" role="tab">Decode</button>
+  </div>
+
+  <!-- ===== ENCODE ===== -->
+  <div class="card pane" id="pane-enc">
     <label for="msg">Message</label>
     <textarea id="msg" placeholder="Hello! Are you an AI agent too?">Hello! Are you an AI agent too?</textarea>
     <div class="meta"><span id="bytes">0 bytes</span><span id="chunks"></span></div>
@@ -61,7 +82,12 @@
       <div style="flex:0 0 auto"><button class="primary" id="go" disabled>Loading…</button></div>
     </div>
 
-    <canvas id="wave" width="1280" height="180"></canvas>
+    <div class="viz" id="viz-enc">
+      <canvas class="wave" width="1280" height="140"></canvas>
+      <canvas class="spec" width="1280" height="300"></canvas>
+      <div class="head"></div>
+    </div>
+    <div class="speclabel" id="speclabel-enc"></div>
 
     <div class="out" id="out">
       <div class="btns">
@@ -75,10 +101,34 @@
     <div class="status" id="status"></div>
   </div>
 
+  <!-- ===== DECODE ===== -->
+  <div class="card pane" id="pane-dec" hidden>
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept="audio/*,.wav,.mp3,.ogg,.m4a,.webm,.flac">
+      <strong>Drop a GibberLink sound file here</strong><br>or click to choose one (WAV, MP3 and most audio formats)
+    </label>
+
+    <div id="decout" style="display:none">
+      <div class="viz" id="viz-dec">
+        <canvas class="wave" width="1280" height="140"></canvas>
+        <canvas class="spec" width="1280" height="300"></canvas>
+        <div class="head"></div>
+      </div>
+      <div class="speclabel" id="speclabel-dec"></div>
+      <div class="btns"><button class="ghost" id="playdec">▶ Play</button></div>
+
+      <label style="margin-top:18px">Decoded message</label>
+      <div class="result empty" id="result"></div>
+      <div class="btns"><button class="ghost" id="copy" style="display:none">Copy text</button></div>
+    </div>
+    <div class="status" id="decstatus"></div>
+  </div>
+
   <details>
     <summary>How it works</summary>
-    <p>GibberLink switches agents to <code>ggwave</code>, an open-source library that encodes bytes as short multi-frequency tones with error correction. This page uses the same settings as GibberLink's demo: 48&nbsp;kHz sample rate, the <em>Audible Fast</em> protocol, volume 10. Any ggwave receiver (for example the ggwave web demo) can decode the audio back to your text.</p>
-    <p>One ggwave message holds at most 140 bytes, so longer text is split into several bursts with a short pause between them. MP3 compression can blur the tones a little; WAV is the safest choice for decoding.</p>
+    <p>GibberLink switches agents to <code>ggwave</code>, an open-source library that encodes bytes as short multi-frequency tones with error correction. This page uses the same settings as GibberLink's demo: 48&nbsp;kHz sample rate, the <em>Audible Fast</em> protocol, volume 10. The Decode tab runs the same library in reverse, so it can read files made here or by any other ggwave app.</p>
+    <p><strong>Reading the spectrogram:</strong> time runs left to right and pitch runs bottom to top. ggwave splits each byte into 4-bit pieces and sends six of them at once, each as one tone in its own band of 16 possible pitches. The faint lines mark those six bands; the bright dots are the tones. The fuzzy blocks at the start and end are the markers that tell a receiver a message is beginning and ending.</p>
+    <p>One ggwave message holds at most 140 bytes, so longer text is split into several bursts with a short pause between them, all in one file. MP3 compression can blur the tones a little; WAV is the safest choice for decoding.</p>
   </details>
 </main>
 
@@ -421,14 +471,22 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   const RATE = 48000, VOLUME = 10, MAX = 140, GAP = 0.35;
   const $ = id => document.getElementById(id);
   const msg = $('msg'), go = $('go'), status = $('status'), out = $('out');
-  const enc = new TextEncoder();
-  let gg = null, inst = null, pcm = null, wavBlob = null, mp3Blob = null, actx = null, src = null, downloads = null;
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  let gg = null, txInst = null, pcm = null, wavBlob = null, mp3Blob = null, actx = null, src = null, downloads = null, decPcm = null;
 
   // Optional platform download capability (used when hosted on claude.ai)
   try { if (window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then(d => { downloads = d; }).catch(() => {}); } catch (e) {}
 
-  function setStatus(t, err) { status.textContent = t; status.className = 'status' + (err ? ' err' : ''); }
+  function setStatus(el, t, err) { el.textContent = t; el.className = 'status' + (err ? ' err' : ''); }
 
+  // ---------- Tabs ----------
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+    $('pane-enc').hidden = t.dataset.tab !== 'enc';
+    $('pane-dec').hidden = t.dataset.tab !== 'dec';
+  }));
+
+  // ---------- Text chunking ----------
   // Split text into chunks of <= MAX UTF-8 bytes without breaking characters
   function chunk(text) {
     const parts = []; let cur = '';
@@ -442,7 +500,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   function updateMeta() {
     const n = enc.encode(msg.value).length;
     $('bytes').textContent = n + ' bytes';
-    const c = n ? Math.ceil(chunk(msg.value).length) : 0;
+    const c = n ? chunk(msg.value).length : 0;
     $('chunks').textContent = c > 1 ? c + ' bursts (140-byte limit each)' : '';
   }
   msg.addEventListener('input', updateMeta); updateMeta();
@@ -450,23 +508,31 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   const updateNote = () => { ultraNote.hidden = !proto.value.includes('ULTRASOUND'); };
   proto.addEventListener('change', updateNote); updateNote();
 
-  ggwave_factory().then(g => {
-    gg = g;
-    const p = g.getDefaultParameters();
+  // ---------- ggwave setup ----------
+  function makeInstance() {
+    const p = gg.getDefaultParameters();
     p.sampleRateInp = RATE; p.sampleRateOut = RATE;
     p.soundMarkerThreshold = 4;
-    p.sampleFormatOut = g.SampleFormat.GGWAVE_SAMPLE_FORMAT_I16;
-    inst = g.init(p);
-    go.disabled = false; go.textContent = 'Generate sound';
-  }).catch(e => { go.textContent = 'Failed to load'; setStatus('Could not load the ggwave engine: ' + e, true); });
+    p.sampleFormatInp = gg.SampleFormat.GGWAVE_SAMPLE_FORMAT_I16;
+    p.sampleFormatOut = gg.SampleFormat.GGWAVE_SAMPLE_FORMAT_I16;
+    return gg.init(p);
+  }
 
+  ggwave_factory().then(g => {
+    gg = g;
+    try { gg.disableLog(); } catch (e) {}
+    txInst = makeInstance();
+    go.disabled = false; go.textContent = 'Generate sound';
+  }).catch(e => { go.textContent = 'Failed to load'; setStatus(status, 'Could not load the ggwave engine: ' + e, true); });
+
+  // ---------- Encode ----------
   function encodeAll(text, protoName) {
-    const proto = gg.ProtocolId[protoName];
+    const pid = gg.ProtocolId[protoName];
     const gap = new Int16Array(Math.round(GAP * RATE));
     const pieces = [];
     chunk(text).forEach((part, i) => {
       if (i) pieces.push(gap);
-      const raw = gg.encode(inst, part, proto, VOLUME); // Int8Array of I16 bytes
+      const raw = gg.encode(txInst, part, pid, VOLUME); // Int8Array of I16 bytes
       const copy = new Uint8Array(raw.length); copy.set(new Uint8Array(raw.buffer, raw.byteOffset, raw.length));
       pieces.push(new Int16Array(copy.buffer));
     });
@@ -496,13 +562,134 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     return new Blob(parts, { type: 'audio/mpeg' });
   }
 
-  function draw(samples) {
-    const c = $('wave'), x = c.getContext('2d'), W = c.width, H = c.height;
+  go.addEventListener('click', () => {
+    const text = msg.value;
+    if (!text.trim()) { setStatus(status, 'Type a message first.', true); return; }
+    try {
+      setStatus(status, 'Encoding…');
+      pcm = encodeAll(text, proto.value);
+      wavBlob = makeWav(pcm); mp3Blob = null;
+      drawViz('enc', pcm, proto.value.includes('ULTRASOUND') ? 'ultra' : 'audible');
+      out.classList.add('show');
+      $('dur').textContent = (pcm.length / RATE).toFixed(1) + ' seconds of audio · ' + (wavBlob.size / 1024).toFixed(0) + ' KB WAV';
+      setStatus(status, '');
+    } catch (e) { setStatus(status, 'Encoding failed: ' + e, true); }
+  });
+
+  // ---------- Decode ----------
+  async function fileToPcm(file) {
+    const ab = await file.arrayBuffer();
+    const ctx = new OfflineAudioContext(1, 1, RATE);
+    const ab2 = await ctx.decodeAudioData(ab); // resampled to 48 kHz by the browser
+    const n = ab2.length, chs = ab2.numberOfChannels, mono = new Float32Array(n);
+    for (let c = 0; c < chs; c++) { const d = ab2.getChannelData(c); for (let i = 0; i < n; i++) mono[i] += d[i] / chs; }
+    const s = new Int16Array(n);
+    for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, mono[i])); s[i] = v < 0 ? v * 32768 : v * 32767; }
+    return s;
+  }
+
+  function decodePcm(samples) {
+    const inst = makeInstance(), found = [];
+    const bytes = new Int8Array(samples.buffer, samples.byteOffset, samples.byteLength);
+    const STEP = 1024 * 2;
+    for (let i = 0; i < bytes.length; i += STEP) {
+      const r = gg.decode(inst, bytes.subarray(i, Math.min(i + STEP, bytes.length)));
+      if (r && r.length) found.push(dec.decode(new Uint8Array(r)));
+    }
+    // flush with a little silence in case the file ends right after the end marker
+    const tail = new Int8Array(STEP);
+    for (let k = 0; k < 40; k++) { const r = gg.decode(inst, tail); if (r && r.length) found.push(dec.decode(new Uint8Array(r))); }
+    try { gg.free(inst); } catch (e) {}
+    return found;
+  }
+
+  async function handleFile(file) {
+    if (!file) return;
+    if (!gg) { setStatus($('decstatus'), 'Still loading the decoder, try again in a second.', true); return; }
+    const result = $('result');
+    setStatus($('decstatus'), 'Reading ' + file.name + '…');
+    try {
+      decPcm = await fileToPcm(file);
+      await new Promise(r => setTimeout(r, 20));
+      $('decout').style.display = 'block';
+      drawViz('dec', decPcm, 'auto');
+      setStatus($('decstatus'), 'Decoding…');
+      await new Promise(r => setTimeout(r, 20));
+      const parts = decodePcm(decPcm);
+      if (parts.length) {
+        result.textContent = parts.join('');
+        result.classList.remove('empty');
+        $('copy').style.display = '';
+        setStatus($('decstatus'), file.name + ' · ' + (decPcm.length / RATE).toFixed(1) + ' s · ' + parts.length + (parts.length > 1 ? ' bursts' : ' burst') + ' decoded');
+      } else {
+        result.textContent = 'No GibberLink message found in this file. It may be too quiet, too noisy, heavily compressed, or not a ggwave sound.';
+        result.classList.add('empty');
+        $('copy').style.display = 'none';
+        setStatus($('decstatus'), file.name + ' · ' + (decPcm.length / RATE).toFixed(1) + ' s');
+      }
+    } catch (e) {
+      $('decout').style.display = 'none';
+      setStatus($('decstatus'), 'Could not read this file as audio: ' + (e && e.message ? e.message : e), true);
+    }
+  }
+
+  const drop = $('drop');
+  $('file').addEventListener('change', e => { handleFile(e.target.files[0]); e.target.value = ''; });
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+
+  $('copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('result').textContent); setStatus($('decstatus'), 'Copied to clipboard.'); }
+    catch (e) {
+      const r = document.createRange(); r.selectNodeContents($('result'));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      setStatus($('decstatus'), 'Text selected: press Ctrl+C / Cmd+C to copy.');
+    }
+  });
+
+  // ---------- Playback (with moving playhead) ----------
+  let raf = 0;
+  async function playPcm(samples, vizId) {
+    if (!samples) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)({ sampleRate: RATE });
+      await actx.resume();
+      if (src) { try { src.onended = null; src.stop(); } catch (e) {} }
+      document.querySelectorAll('.viz .head').forEach(h => h.style.display = 'none');
+      cancelAnimationFrame(raf);
+      const b = actx.createBuffer(1, samples.length, RATE), ch = b.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) ch[i] = samples[i] / 32768;
+      src = actx.createBufferSource(); src.buffer = b; src.connect(actx.destination);
+      const head = document.querySelector('#viz-' + vizId + ' .head'), t0 = actx.currentTime + 0.02, dur = b.duration;
+      src.start(t0);
+      head.style.display = 'block';
+      const tick = () => {
+        const f = Math.min(1, Math.max(0, (actx.currentTime - t0) / dur));
+        head.style.left = (f * 100) + '%';
+        if (f < 1) raf = requestAnimationFrame(tick); else head.style.display = 'none';
+      };
+      tick();
+      src.onended = () => { cancelAnimationFrame(raf); head.style.display = 'none'; };
+    } catch (e) { setStatus(vizId === 'enc' ? status : $('decstatus'), 'Playback was blocked: ' + e, true); }
+  }
+  $('play').addEventListener('click', () => playPcm(pcm, 'enc'));
+  $('playdec').addEventListener('click', () => playPcm(decPcm, 'dec'));
+
+  // ---------- Visuals ----------
+  function drawViz(id, samples, band) {
+    const viz = $('viz-' + id);
+    drawWave(viz.querySelector('.wave'), samples);
+    drawSpectrogram(viz.querySelector('.spec'), samples, band, $('speclabel-' + id));
+  }
+
+  function drawWave(c, samples) {
+    const x = c.getContext('2d'), W = c.width, H = c.height;
     x.clearRect(0, 0, W, H);
     const grad = x.createLinearGradient(0, 0, W, 0); grad.addColorStop(0, '#5eead4'); grad.addColorStop(1, '#22d3ee');
     x.fillStyle = grad;
-    const step = samples.length / W;
     let peak = 1; for (let j = 0; j < samples.length; j++) { const a = Math.abs(samples[j]); if (a > peak) peak = a; }
+    const step = samples.length / W;
     for (let i = 0; i < W; i++) {
       let m = 0; const s = Math.floor(i * step), e = Math.floor((i + 1) * step);
       for (let j = s; j < e; j++) { const a = Math.abs(samples[j]); if (a > m) m = a; }
@@ -511,32 +698,72 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     }
   }
 
-  go.addEventListener('click', () => {
-    const text = msg.value;
-    if (!text.trim()) { setStatus('Type a message first.', true); return; }
-    try {
-      setStatus('Encoding…');
-      pcm = encodeAll(text, $('proto').value);
-      wavBlob = makeWav(pcm); mp3Blob = null;
-      draw(pcm);
-      out.classList.add('show');
-      $('dur').textContent = (pcm.length / RATE).toFixed(1) + ' seconds of audio · ' + (wavBlob.size / 1024).toFixed(0) + ' KB WAV';
-      setStatus('');
-    } catch (e) { setStatus('Encoding failed: ' + e, true); }
-  });
+  /* ===== Spectrogram (self-contained: remove this block, the .spec canvases and the
+     drawSpectrogram call in drawViz to drop the feature) ===== */
+  const FFT_N = 1024; // at 48 kHz each bin is 46.875 Hz, exactly one ggwave tone slot
+  const fftTables = (() => {
+    const rev = new Uint32Array(FFT_N), bits = Math.log2(FFT_N);
+    for (let i = 0; i < FFT_N; i++) { let r = 0; for (let b = 0; b < bits; b++) r |= ((i >> b) & 1) << (bits - 1 - b); rev[i] = r; }
+    const cos = new Float64Array(FFT_N / 2), sin = new Float64Array(FFT_N / 2);
+    for (let i = 0; i < FFT_N / 2; i++) { cos[i] = Math.cos(-2 * Math.PI * i / FFT_N); sin[i] = Math.sin(-2 * Math.PI * i / FFT_N); }
+    const win = new Float64Array(FFT_N); for (let i = 0; i < FFT_N; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (FFT_N - 1));
+    return { rev, cos, sin, win };
+  })();
+  function fftMag(samples, start, re, im) {
+    const { rev, cos, sin, win } = fftTables;
+    for (let i = 0; i < FFT_N; i++) { const j = start + i; re[rev[i]] = (j < samples.length ? samples[j] : 0) * win[i]; im[rev[i]] = 0; }
+    for (let size = 2; size <= FFT_N; size <<= 1) {
+      const half = size >> 1, step = FFT_N / size;
+      for (let i = 0; i < FFT_N; i += size) for (let k = 0; k < half; k++) {
+        const a = i + k, b = a + half, c = cos[k * step], s = sin[k * step];
+        const tr = re[b] * c - im[b] * s, ti = re[b] * s + im[b] * c;
+        re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+      }
+    }
+  }
+  const BANDS = { audible: { f0: 1875, label: '1.9 – 6.4 kHz (audible)' }, ultra: { f0: 15000, label: '15 – 19.5 kHz (ultrasound)' } };
+  const DF = RATE / FFT_N;
+  function drawSpectrogram(c, samples, band, labelEl) {
+    const W = c.width, H = c.height, x = c.getContext('2d');
+    const re = new Float64Array(FFT_N), im = new Float64Array(FFT_N);
+    const cols = W, lastStart = Math.max(0, samples.length - FFT_N);
+    // Pick the band: by protocol for encoding, by where the energy is for uploaded files
+    if (band === 'auto') {
+      let ea = 0, eu = 0;
+      const lo = BANDS.audible.f0 / DF, uo = BANDS.ultra.f0 / DF;
+      for (let k = 0; k < 64; k++) {
+        fftMag(samples, Math.floor(k / 63 * lastStart), re, im);
+        for (let b = 0; b < 96; b++) { ea += re[lo + b] ** 2 + im[lo + b] ** 2; eu += re[uo + b] ** 2 + im[uo + b] ** 2; }
+      }
+      band = eu > ea ? 'ultra' : 'audible';
+    }
+    const b0 = Math.round(BANDS[band].f0 / DF) - 6, nb = 96 + 12; // 96 tone slots plus a margin
+    const img = new Float32Array(cols * nb); let max = 1e-9;
+    for (let col = 0; col < cols; col++) {
+      fftMag(samples, Math.floor(col / (cols - 1) * lastStart), re, im);
+      for (let b = 0; b < nb; b++) { const k = b0 + b, m = re[k] * re[k] + im[k] * im[k]; img[col * nb + b] = m; if (m > max) max = m; }
+    }
+    const off = document.createElement('canvas'); off.width = cols; off.height = nb;
+    const ox = off.getContext('2d'), id = ox.createImageData(cols, nb);
+    const stops = [[0, 11, 13, 16], [.35, 19, 78, 74], [.65, 20, 184, 166], [.85, 94, 234, 212], [1, 240, 253, 250]];
+    const color = t => { for (let i = 1; i < stops.length; i++) if (t <= stops[i][0]) { const a = stops[i - 1], b = stops[i], u = (t - a[0]) / (b[0] - a[0]); return [a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u, a[3] + (b[3] - a[3]) * u]; } return stops[4].slice(1); };
+    for (let col = 0; col < cols; col++) for (let b = 0; b < nb; b++) {
+      const db = 10 * Math.log10(img[col * nb + b] / max + 1e-12), t = Math.max(0, Math.min(1, (db + 55) / 55));
+      const [r, g, bl] = color(t), p = ((nb - 1 - b) * cols + col) * 4;
+      id.data[p] = r; id.data[p + 1] = g; id.data[p + 2] = bl; id.data[p + 3] = 255;
+    }
+    ox.putImageData(id, 0, 0);
+    x.imageSmoothingEnabled = false;
+    x.clearRect(0, 0, W, H); x.drawImage(off, 0, 0, W, H);
+    // faint guides between the six 16-slot bands
+    x.strokeStyle = 'rgba(255,255,255,.12)'; x.lineWidth = 1; x.setLineDash([6, 6]);
+    for (let k = 0; k <= 6; k++) { const y = H - ((6 + k * 16) / nb) * H; x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke(); }
+    x.setLineDash([]);
+    labelEl.innerHTML = '<span>Spectrogram · ' + BANDS[band].label + '</span><span>6 bands × 16 tones</span>';
+  }
+  /* ===== end spectrogram ===== */
 
-  $('play').addEventListener('click', async () => {
-    if (!pcm) return;
-    try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)({ sampleRate: RATE });
-      await actx.resume();
-      if (src) { try { src.stop(); } catch (e) {} }
-      const b = actx.createBuffer(1, pcm.length, RATE), ch = b.getChannelData(0);
-      for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i] / 32768;
-      src = actx.createBufferSource(); src.buffer = b; src.connect(actx.destination); src.start();
-    } catch (e) { setStatus('Playback was blocked: ' + e, true); }
-  });
-
+  // ---------- Downloads ----------
   function baseName() {
     const s = msg.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
     return 'gibberlink-' + (s || 'message');
@@ -565,31 +792,31 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     if (downloads) {
       try {
         await downloads.save({ filename: name, data: blob });
-        setStatus('Saved ' + name); return;
+        setStatus(status, 'Saved ' + name); return;
       } catch (e) {
-        if (e && e.code === 'declined') { setStatus('Download cancelled.'); return; }
+        if (e && e.code === 'declined') { setStatus(status, 'Download cancelled.'); return; }
         if (e && (e.code === 'rejected_extension' || e.code === 'extension_not_enabled')) {
           try {
             await downloads.save({ filename: baseName() + '-' + ext + '.zip', data: await zip(name, blob) });
-            setStatus('Saved as a .zip (this viewer does not allow .' + ext + ' downloads directly). Unzip to get ' + name + '.'); return;
-          } catch (e2) { if (e2 && e2.code === 'declined') { setStatus('Download cancelled.'); return; } }
+            setStatus(status, 'Saved as a .zip (this viewer does not allow .' + ext + ' downloads directly). Unzip to get ' + name + '.'); return;
+          } catch (e2) { if (e2 && e2.code === 'declined') { setStatus(status, 'Download cancelled.'); return; } }
         }
       }
     }
-    // Fallback: plain browser download (works when the page is opened as a local file)
+    // Fallback: plain browser download (works on a normal website or when opened as a local file)
     try {
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-      setStatus('Downloading ' + name);
-    } catch (e) { setStatus('Downloads are not available in this view.', true); }
+      setStatus(status, 'Downloading ' + name);
+    } catch (e) { setStatus(status, 'Downloads are not available in this view.', true); }
   }
 
   $('dlwav').addEventListener('click', () => { if (wavBlob) save(wavBlob, 'wav'); });
   $('dlmp3').addEventListener('click', () => {
     if (!pcm) return;
-    try { if (!mp3Blob) { setStatus('Encoding MP3…'); mp3Blob = makeMp3(pcm); } save(mp3Blob, 'mp3'); }
-    catch (e) { setStatus('MP3 encoding failed: ' + e, true); }
+    try { if (!mp3Blob) { setStatus(status, 'Encoding MP3…'); mp3Blob = makeMp3(pcm); } save(mp3Blob, 'mp3'); }
+    catch (e) { setStatus(status, 'MP3 encoding failed: ' + e, true); }
   });
 })();
 </script>
