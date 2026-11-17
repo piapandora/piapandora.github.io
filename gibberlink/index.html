@@ -472,7 +472,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   const $ = id => document.getElementById(id);
   const msg = $('msg'), go = $('go'), status = $('status'), out = $('out');
   const enc = new TextEncoder(), dec = new TextDecoder();
-  let gg = null, txInst = null, pcm = null, wavBlob = null, mp3Blob = null, actx = null, src = null, decPcm = null;
+  let genStamp = Date.now(), gg = null, txInst = null, pcm = null, wavBlob = null, mp3Blob = null, actx = null, src = null, decPcm = null;
 
   function setStatus(el, t, err) { el.textContent = t; el.className = 'status' + (err ? ' err' : ''); }
 
@@ -565,7 +565,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     try {
       setStatus(status, 'Encoding…');
       pcm = encodeAll(text, proto.value);
-      wavBlob = makeWav(pcm); mp3Blob = null;
+      wavBlob = makeWav(pcm); mp3Blob = null; genStamp = Date.now();
       drawViz('enc', pcm, proto.value.includes('ULTRASOUND') ? 'ultra' : 'audible');
       out.classList.add('show');
       $('dur').textContent = (pcm.length / RATE).toFixed(1) + ' seconds of audio · ' + (wavBlob.size / 1024).toFixed(0) + ' KB WAV';
@@ -761,10 +761,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   /* ===== end spectrogram ===== */
 
   // ---------- Downloads ----------
-  function baseName() {
-    const s = msg.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
-    return 'gibberlink-' + (s || 'message');
-  }
+  function baseName() { return 'gibberlink-' + genStamp; }
 
   function save(blob, ext) {
     const name = baseName() + '.' + ext;
