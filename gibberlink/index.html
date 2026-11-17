@@ -472,10 +472,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   const $ = id => document.getElementById(id);
   const msg = $('msg'), go = $('go'), status = $('status'), out = $('out');
   const enc = new TextEncoder(), dec = new TextDecoder();
-  let gg = null, txInst = null, pcm = null, wavBlob = null, mp3Blob = null, actx = null, src = null, downloads = null, decPcm = null;
-
-  // Optional platform download capability (used when hosted on claude.ai)
-  try { if (window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then(d => { downloads = d; }).catch(() => {}); } catch (e) {}
+  let gg = null, txInst = null, pcm = null, wavBlob = null, mp3Blob = null, actx = null, src = null, decPcm = null;
 
   function setStatus(el, t, err) { el.textContent = t; el.className = 'status' + (err ? ' err' : ''); }
 
@@ -769,47 +766,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     return 'gibberlink-' + (s || 'message');
   }
 
-  // Minimal ZIP (store, no compression) for hosts that don't allow .wav/.mp3 saves directly
-  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-  function crc32(u) { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
-  async function zip(name, blob) {
-    const data = new Uint8Array(await blob.arrayBuffer()), fn = enc.encode(name), crc = crc32(data);
-    const lh = new DataView(new ArrayBuffer(30));
-    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint32(14, crc, true);
-    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, fn.length, true);
-    const cd = new DataView(new ArrayBuffer(46));
-    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint32(16, crc, true);
-    cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true); cd.setUint16(28, fn.length, true);
-    const cdOff = 30 + fn.length + data.length;
-    const end = new DataView(new ArrayBuffer(22));
-    end.setUint32(0, 0x06054b50, true); end.setUint16(8, 1, true); end.setUint16(10, 1, true);
-    end.setUint32(12, 46 + fn.length, true); end.setUint32(16, cdOff, true);
-    return new Blob([lh, fn, data, cd, fn, end], { type: 'application/zip' });
-  }
-
-  async function save(blob, ext) {
+  function save(blob, ext) {
     const name = baseName() + '.' + ext;
-    if (downloads) {
-      try {
-        await downloads.save({ filename: name, data: blob });
-        setStatus(status, 'Saved ' + name); return;
-      } catch (e) {
-        if (e && e.code === 'declined') { setStatus(status, 'Download cancelled.'); return; }
-        if (e && (e.code === 'rejected_extension' || e.code === 'extension_not_enabled')) {
-          try {
-            await downloads.save({ filename: baseName() + '-' + ext + '.zip', data: await zip(name, blob) });
-            setStatus(status, 'Saved as a .zip (this viewer does not allow .' + ext + ' downloads directly). Unzip to get ' + name + '.'); return;
-          } catch (e2) { if (e2 && e2.code === 'declined') { setStatus(status, 'Download cancelled.'); return; } }
-        }
-      }
-    }
-    // Fallback: plain browser download (works on a normal website or when opened as a local file)
     try {
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 5000);
       setStatus(status, 'Downloading ' + name);
-    } catch (e) { setStatus(status, 'Downloads are not available in this view.', true); }
+    } catch (e) { setStatus(status, 'Download failed: ' + e, true); }
   }
 
   $('dlwav').addEventListener('click', () => { if (wavBlob) save(wavBlob, 'wav'); });
