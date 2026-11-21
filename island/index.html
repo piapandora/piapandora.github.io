@@ -55,6 +55,7 @@
         #clearBtn { background: #d32f2f; color: white; }
         #smoothBtn { background: #1976d2; color: white; }
         #exportBtn { background: #7b1fa2; color: white; }
+        #csvBtn { background: #c2185b; color: white; }
         
         input[type=text] { 
             box-sizing: border-box; 
@@ -103,6 +104,7 @@
             <label>Export</label>
             <div style="margin-top: 8px;">
                 <button id="exportBtn" class="action-btn">📸 Heightmap</button>
+                <button id="csvBtn" class="action-btn">📄 CSV</button>
             </div>
             
             <div class="legend">
@@ -221,6 +223,22 @@
         link.click();
     }
 
+    function exportCSV() {
+        const seed = document.getElementById('seedInput').value || 'hand-drawn';
+        const rows = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
+            const row = [];
+            for (let x = 0; x < GRID_SIZE; x++) row.push(grid[x][y]);
+            rows.push(row.join(','));
+        }
+        const text = `# seed ${seed}\n` + rows.join('\n') + '\n';
+        const link = document.createElement('a');
+        link.download = `island-${seed}.csv`;
+        link.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
     let isDrawing = false;
     function paint(e) {
         if (!isDrawing || currentBrush === null) return;
@@ -260,6 +278,7 @@
     
     document.getElementById('smoothBtn').onclick = () => { isSmooth = !isSmooth; draw(); };
     document.getElementById('exportBtn').onclick = exportHeightmap;
+    document.getElementById('csvBtn').onclick = exportCSV;
     document.getElementById('clearBtn').onclick = () => {
         grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
         draw();
