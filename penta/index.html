@@ -8,7 +8,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@800&family=Inter:wght@600&display=swap">
 <style>
 :root{
-  --bg:#fafafa; --card:#ffffff; --fg:#09090b; --muted:#71717a; --border:#e4e4e7;
+  --bg:#09090b; --card:#0c0c0f; --fg:#fafafa; --border:#27272a;
+  color-scheme:dark;
   --pop:#facc15; --pop-fg:#09090b; --pop-hover:#eab308;
   --w:clamp(56px,16vw,120px); --h:calc(var(--w)*1.3);
   --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -16,10 +17,6 @@
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){--bg:#09090b;--card:#0c0c0f;--fg:#fafafa;--muted:#a1a1aa;--border:#27272a}
-}
-:root[data-theme="dark"]{--bg:#09090b;--card:#0c0c0f;--fg:#fafafa;--muted:#a1a1aa;--border:#27272a}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;height:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:default;background:var(--bg);color:var(--fg);display:grid;place-items:center;font-family:var(--sans)}
@@ -73,7 +70,7 @@ main{display:flex;flex-direction:column;align-items:center;gap:clamp(20px,4vh,32
   function pick(){return int(2)===0?DIG[int(10)]:LET[int(26)]}
   // Filler characters that blur past during the spin are cosmetic only
   function rand(){return Math.random()<0.5?DIG[Math.floor(Math.random()*10)]:LET[Math.floor(Math.random()*26)]}
-  function cell(c){var s=document.createElement("div");s.className="cell"+(c<="9"?" d":"");s.textContent=c;return s}
+  function cell(c){var s=document.createElement("div");s.className="cell";s.textContent=c;return s}
   function fill(strip,chars){strip.textContent="";chars.forEach(function(c){strip.appendChild(cell(c))})}
 
   for(var i=0;i<COUNT;i++){
@@ -135,7 +132,6 @@ main{display:flex;flex-direction:column;align-items:center;gap:clamp(20px,4vh,32
           if(++done===COUNT){
             setTimeout(function(){busy=false;btn.disabled=false;btn.textContent="Spin";ping();btn.focus({preventScroll:true})},400);
             out.textContent="Result: "+reels.map(function(x){return x.cur}).join(" ");
-            btn.focus({preventScroll:true});
           }
         };
       }
